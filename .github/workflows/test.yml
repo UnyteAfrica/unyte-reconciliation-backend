@@ -1,0 +1,46 @@
+name: Run tests with Codecov
+
+on:
+  pull_request:
+    branches:
+       - dev
+
+permissions:
+  packages: write
+  contents: read
+
+env:
+  FORCE_COLOR: 3
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v2
+            
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run test
+        run: pytest superpool/api/tests/
+      
+      - name: Generate coverage report
+        run: |
+              pip install pytest
+              pip install pytest-cov
+              pytest --cov=./ --cov-report=xml
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./coverage/reports/
+          fail_ci_if_error: true
+          flags: unittests
+          name: codecov-superpoool-v3
+          token: ${{ env.CODECOV_TOKEN }}
+          verbose: true
