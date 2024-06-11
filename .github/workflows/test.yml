@@ -28,7 +28,7 @@ jobs:
       
       - name: Run test
         run: pytest superpool/api/tests/
-      
+
       - name: Generate coverage report
         run: |
               pip install pytest
