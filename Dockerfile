@@ -1,13 +1,16 @@
-FROM python:alpine3.17
+FROM python:3.11.9
 
-RUN python -m pip install --upgrade pip
+WORKDIR /reconciliation-backend/
 
-COPY requirements.txt .
+COPY requirements.txt /reconciliation-backend/
 
-RUN pip install -r requirements.txt
+RUN apt-get update \
+    && apt-get -y install libpq-dev gcc 
 
-COPY . .
+RUN pip install -r requirements.txt 
+
+COPY . /reconciliation-backend/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

@@ -4,7 +4,8 @@ from agents.models import Agent
 
 
 class Insurer(BaseUser):
-    agents = models.ForeignKey("agents.Agent", on_delete=models.CASCADE)
+    location = models.CharField(null=True, blank=True, max_length=200)
+    # agents = models.ForeignKey("agents.Agent", on_delete=models.CASCADE)
     # policies = models.ForeignKey()
 
     def __str__(self):
