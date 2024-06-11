@@ -1,0 +1,13 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 0%
+        base: auto
+        informational: true
+
+codecov:
+  notify:
+    wait_for_ci: false
+  require_ci_to_pass: true
