@@ -13,13 +13,10 @@ from dotenv import load_dotenv, find_dotenv
 from pathlib import Path
 import os
 
-
 load_dotenv(find_dotenv())
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -31,7 +28,6 @@ SECRET_KEY = 'django-insecure-0je%(k1gz3_@+ciu1q7a=gq4&q(l2x3w+%7dwq!w+m&0bzbe_z
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -87,19 +83,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'reconciliation_backend.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-   'default': {
-       'ENGINE': 'django.db.backends.postgresql_psycopg2',
-       'NAME': os.getenv("DB_NAME"),
-       'USER': os.getenv("DB_USER"),
-       'PASSWORD': os.getenv("DB_PASSWORD"),
-       'HOST': os.getenv("DB_HOST"),
-       'PORT': os.getenv("DB_PORT"),
-   }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv("DB_NAME"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
+    }
 }
 
 # DATABASES = {
@@ -128,7 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -140,7 +134,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
@@ -151,3 +144,19 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'user.BaseUser'
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+TO_EMAIL = os.getenv('TO_EMAIL')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+
+
+# EMAIL_HOST_USER = 'therealemailuser96@gmail.com'
+# TO_EMAIL = 'somtochukwuuchegbu@gmail.com'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_HOST_PASSWORD = 'aree zxhf pajh hjvp'
+# EMAIL_PORT = 587
