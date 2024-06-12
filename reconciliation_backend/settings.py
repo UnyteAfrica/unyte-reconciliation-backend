@@ -154,9 +154,3 @@ TO_EMAIL = os.getenv('TO_EMAIL')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = os.getenv('EMAIL_PORT')
 
-
-# EMAIL_HOST_USER = 'therealemailuser96@gmail.com'
-# TO_EMAIL = 'somtochukwuuchegbu@gmail.com'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_HOST_PASSWORD = 'aree zxhf pajh hjvp'
-# EMAIL_PORT = 587
