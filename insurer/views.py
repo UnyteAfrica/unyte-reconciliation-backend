@@ -14,13 +14,25 @@ load_dotenv(find_dotenv())
 
 
 class OTPHandler:
+    """
+    OTP handler class for generating and verifying OTP
+    """
     def __init__(self) -> None:
         self.otp = pyotp.TOTP(pyotp.random_base32(), interval=120)
 
     def gen_otp(self) -> str:
+        """
+        Generate OTP
+        :return: string
+        """
         return f"OTP generated!! as: {self.otp.now()}"
 
     def verify_otp(self, otp: str) -> bool:
+        """
+        Verify OTP
+        :param otp: string
+        :return: string
+        """
         is_valid = False
         if self.otp.verify(otp) is False:
             return is_valid
@@ -28,16 +40,33 @@ class OTPHandler:
         return is_valid
 
 
+"""
+Generate OTP for insurers on registration
+"""
 OTP = OTPHandler()
+
+"""
+Generate new OTP for requesting otp endpoint /api/new-otp
+"""
 new_otp = OTPHandler()
 
 
 def store_insurer_profile_pictures(profile_picture):
+    """
+    Store profile picture in GCP
+    :param profile_picture: string
+    :return: string
+    """
     return
 
 
 @api_view(['POST'])
-def create_insurer(request):
+def create_insurer(request) -> Response:
+    """
+    Create insurer by using params from CreateInsurerSerializer
+    :param request:
+    :return: Response
+    """
     serializer_class = CreateInsurerSerializer(data=request.data)
 
     if not serializer_class.is_valid():
@@ -47,7 +76,9 @@ def create_insurer(request):
         insurer_name = serializer_class.validated_data.get('username')
         insurer_email = serializer_class.validated_data.get('email')
 
-        print(OTP.gen_otp())
+        """
+        Send email to insurer including otp.
+        """
         send_mail(
             subject='Verification email',
             message=f'{OTP.gen_otp()}',
@@ -62,7 +93,12 @@ def create_insurer(request):
 
 
 @api_view(['POST'])
-def login_insurer(request):
+def login_insurer(request) -> Response:
+    """
+    Log insurer into the system by returning refresh tokens
+    :param request:
+    :return: Response[access_token, refresh_token]
+    """
     serializer_class = LoginInsurerSerializer(data=request.data)
 
     if not serializer_class.is_valid():
@@ -86,8 +122,12 @@ def login_insurer(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def verify_otp_token(request):
-
+def verify_otp_token(request) -> Response:
+    """
+    Verify OTP endpoint
+    :param request:
+    :return: Response
+    """
     serializer_class = OTPSerializer(data=request.data)
     user = request.user
 
@@ -132,7 +172,12 @@ def verify_otp_token(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def request_new_otp(request):
+def request_new_otp(request) -> Response:
+    """
+    Request new OTP with the new_otp class instance
+    :param request:
+    :return: Response
+    """
     user = request.user
 
     try:
