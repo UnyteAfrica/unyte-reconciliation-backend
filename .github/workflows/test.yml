@@ -27,7 +27,7 @@ jobs:
         run: pip install -r requirements.txt
       
       - name: Run test
-        run: pytest superpool/api/tests/
+        run: python manage.py test
 
       - name: Generate coverage report
         run: |
