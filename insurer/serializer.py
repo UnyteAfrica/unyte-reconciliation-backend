@@ -37,3 +37,9 @@ class LoginInsurerSerializer(serializers.ModelSerializer):
             'username',
             'password'
         ]
+
+
+class OTPSerializer(serializers.Serializer):
+
+    otp = serializers.CharField(required=False, max_length=6)
+    new_otp = serializers.CharField(required=False, max_length=6)
