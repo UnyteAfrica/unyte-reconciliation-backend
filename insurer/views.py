@@ -8,6 +8,7 @@ from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSeri
 from rest_framework.response import Response
 from .models import Insurer
 from django.conf import settings
+from drf_yasg.utils import swagger_auto_schema
 import pyotp
 
 load_dotenv(find_dotenv())
@@ -17,6 +18,7 @@ class OTPHandler:
     """
     OTP handler class for generating and verifying OTP
     """
+
     def __init__(self) -> None:
         self.otp = pyotp.TOTP(pyotp.random_base32(), interval=120)
 
@@ -60,6 +62,7 @@ def store_insurer_profile_pictures(profile_picture):
     return
 
 
+@swagger_auto_schema(method='POST', request_body=CreateInsurerSerializer)
 @api_view(['POST'])
 def create_insurer(request) -> Response:
     """
@@ -92,6 +95,7 @@ def create_insurer(request) -> Response:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(method='POST', request_body=LoginInsurerSerializer)
 @api_view(['POST'])
 def login_insurer(request) -> Response:
     """
@@ -120,6 +124,7 @@ def login_insurer(request) -> Response:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(method='POST', request_body=OTPSerializer)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_otp_token(request) -> Response:
@@ -170,6 +175,7 @@ def verify_otp_token(request) -> Response:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(method='GET')
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def request_new_otp(request) -> Response:
