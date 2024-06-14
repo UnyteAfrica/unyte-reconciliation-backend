@@ -13,4 +13,4 @@ COPY . /reconciliation-backend/
 
 EXPOSE 8080
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8080"]
+CMD ["gunicorn", "--bind", ":8080","reconciliation_backend.wsgi:application"]
