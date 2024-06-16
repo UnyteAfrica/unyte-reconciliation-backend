@@ -11,6 +11,10 @@ RUN pip install -r requirements.txt
 
 COPY . /reconciliation-backend/
 
+RUN chmod +x /reconciliation-backend/gen_static_files.sh
+
+RUN /reconciliation-backend/gen_static_files.sh
+
 EXPOSE 8080
 
 CMD ["gunicorn", "--bind", ":8080","reconciliation_backend.wsgi:application"]
