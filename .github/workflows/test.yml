@@ -16,6 +16,16 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -30,6 +40,12 @@ jobs:
         run: pip install --upgrade setuptools
       
       - name: Run test
+        env:
+          DATABASE_HOST_TEST: localhost
+          DATABASE_USERNAME_TEST: django_user
+          DATABASE_PASSWORD_TEST: testing321
+          DATABASE_NAME_TEST: test_db
+          DATABASE_PORT_TEST: 5432
         run: python manage.py test
 
       - name: Generate coverage report
