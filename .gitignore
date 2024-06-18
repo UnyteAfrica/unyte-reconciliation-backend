@@ -4,3 +4,5 @@
 **/migrations/__pycache__/
 **/__pycache__/
 static/
+.coverage
+coverage.xml
