@@ -51,8 +51,8 @@ jobs:
       - name: Generate coverage report
         run: |
               pip install coverage
-              pip install pytest-cov
-              coverage report -m 
+              coverage run manage.py test
+              coverage report --omit=*/migrations/* -m 
               coverage xml
       
       - name: Upload coverage to Codecov
