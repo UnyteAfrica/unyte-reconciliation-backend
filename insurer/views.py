@@ -118,7 +118,7 @@ def login_insurer(request) -> Response:
             "access_token": str(auth_token.access_token),
             "refresh_token": str(auth_token)
         }
-        return Response(message, status=status.HTTP_201_CREATED)
+        return Response(message, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
