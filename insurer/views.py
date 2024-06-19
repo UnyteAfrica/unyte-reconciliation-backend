@@ -1,5 +1,6 @@
 from dotenv import load_dotenv, find_dotenv
 from django.core.mail import send_mail
+from pyotp import TOTP
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -7,50 +8,10 @@ from rest_framework import status
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer
 from rest_framework.response import Response
 from .models import Insurer
-from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
-import pyotp
+from .utils import send_otp, verify_otp
 
 load_dotenv(find_dotenv())
-
-
-class OTPHandler:
-    """
-    OTP handler class for generating and verifying OTP
-    """
-
-    def __init__(self) -> None:
-        self.otp = pyotp.TOTP(pyotp.random_base32(), interval=120)
-
-    def gen_otp(self) -> str:
-        """
-        Generate OTP
-        :return: string
-        """
-        return f"OTP generated!! as: {self.otp.now()}"
-
-    def verify_otp(self, otp: str) -> bool:
-        """
-        Verify OTP
-        :param otp: string
-        :return: string
-        """
-        is_valid = False
-        if self.otp.verify(otp) is False:
-            return is_valid
-        is_valid = True
-        return is_valid
-
-
-"""
-Generate OTP for insurers on registration
-"""
-OTP = OTPHandler()
-
-"""
-Generate new OTP for requesting otp endpoint /api/new-otp
-"""
-new_otp = OTPHandler()
 
 
 def store_insurer_profile_pictures(profile_picture):
@@ -62,7 +23,16 @@ def store_insurer_profile_pictures(profile_picture):
     return
 
 
-@swagger_auto_schema(method='POST', request_body=CreateInsurerSerializer)
+@swagger_auto_schema(
+    method='POST',
+    request_body=CreateInsurerSerializer,
+    operation_description="Create new insurer",
+    responses={
+        201: 'Created',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
 @api_view(['POST'])
 def create_insurer(request) -> Response:
     """
@@ -82,20 +52,33 @@ def create_insurer(request) -> Response:
         """
         Send email to insurer including otp.
         """
-        send_mail(
-            subject='Verification email',
-            message=f'{OTP.gen_otp()}',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[settings.TO_EMAIL, insurer_email],
-        )
+        send_otp(request, insurer_email)
         serializer_class.save()
-        return Response({f"Account successfully created for insurer: {insurer_name}"}, status=status.HTTP_201_CREATED)
+
+        insurer = Insurer.objects.get(username=insurer_name)
+        auth_token = RefreshToken.for_user(insurer)
+
+        message = {
+            "message": f"Account successfully created for user: {insurer_name}",
+            "access_token": str(auth_token.access_token),
+            "refresh_token": str(auth_token)
+        }
+        return Response(message, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@swagger_auto_schema(method='POST', request_body=LoginInsurerSerializer)
+@swagger_auto_schema(
+    method='POST',
+    request_body=LoginInsurerSerializer,
+    operation_description='Login Insurer',
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
 @api_view(['POST'])
 def login_insurer(request) -> Response:
     """
@@ -124,7 +107,16 @@ def login_insurer(request) -> Response:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@swagger_auto_schema(method='POST', request_body=OTPSerializer)
+@swagger_auto_schema(
+    method='POST',
+    request_body=OTPSerializer,
+    operation_description='Verify OTP',
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_otp_token(request) -> Response:
@@ -133,6 +125,7 @@ def verify_otp_token(request) -> Response:
     :param request:
     :return: Response
     """
+
     serializer_class = OTPSerializer(data=request.data)
     user = request.user
 
@@ -140,42 +133,34 @@ def verify_otp_token(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        first_otp = serializer_class.validated_data.get('otp')
-        recent_otp = serializer_class.validated_data.get('new_otp')
-
-        if 'otp' in list(serializer_class.validated_data.keys()):
-            if OTP.verify_otp(first_otp) is False:
-                return Response({
-                    "message": "Invalid OTP, request for new OTP!"
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            insurer = Insurer.objects.get(username=user)
-            insurer.is_verified = True
-            insurer.save()
+        otp = serializer_class.validated_data.get('otp')
+        if not verify_otp(request, otp):
 
             return Response({
-                "message": "OTP verified"
-            }, status=status.HTTP_200_OK)
+                "message": "Invalid OTP, request for new OTP!"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        elif 'new_otp' in list(serializer_class.validated_data.keys()):
-            if new_otp.verify_otp(recent_otp) is False:
-                return Response({
-                    "message": "Invalid OTP, request for new OTP!"
-                }, status=status.HTTP_400_BAD_REQUEST)
+        insurer = Insurer.objects.get(username=user)
+        insurer.is_verified = True
+        insurer.save()
 
-            insurer = Insurer.objects.get(username=user)
-            insurer.is_verified = True
-            insurer.save()
-
-            return Response({
-                "message": "OTP verified"
-            }, status=status.HTTP_200_OK)
+        return Response({
+            "message": "OTP Verified and Account activated"
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@swagger_auto_schema(method='GET')
+@swagger_auto_schema(
+    method='GET',
+    operation_description='Request New OTP',
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def request_new_otp(request) -> Response:
@@ -188,21 +173,25 @@ def request_new_otp(request) -> Response:
 
     try:
         insurer = Insurer.objects.get(username=user)
+        insurer_email = insurer.email
 
         if insurer.is_verified:
             return Response({
                 "message": "This insurer is already verified"
             }, status=status.HTTP_200_OK)
 
-        send_mail(
-            subject='Verification email',
-            message=f'{new_otp.gen_otp()}',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[settings.TO_EMAIL, insurer.email],
-        )
+        send_otp(request, insurer_email=insurer_email)
+
         return Response({
             "message": "New otp has been sent out!"
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def forgot_password(request) -> Response:
+    return Response({
+        "message": "New message"
+    }, status=status.HTTP_400_BAD_REQUEST)

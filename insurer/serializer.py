@@ -4,7 +4,7 @@ from .models import Insurer
 
 class CreateInsurerSerializer(serializers.ModelSerializer):
 
-    username = serializers.CharField(max_length=12)
+    username = serializers.CharField(max_length=15)
     email = serializers.EmailField(max_length=255)
     password = serializers.CharField(max_length=255)
 
