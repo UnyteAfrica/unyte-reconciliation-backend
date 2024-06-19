@@ -16,7 +16,6 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:14-alpine
@@ -46,6 +45,12 @@ jobs:
         run: pip install --upgrade setuptools
       
       - name: Run test
+        env:
+          DATABASE_HOST_TEST: localhost
+          DATABASE_USERNAME_TEST: django_user
+          DATABASE_PASSWORD_TEST: testing321
+          DATABASE_NAME_TEST: test_db
+          DATABASE_PORT_TEST: 5432
         run: python manage.py test
 
       - name: Generate coverage report
