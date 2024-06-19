@@ -40,7 +40,10 @@ class LoginInsurerSerializer(serializers.ModelSerializer):
 
 class OTPSerializer(serializers.Serializer):
     otp = serializers.CharField(required=False, max_length=6)
-    new_otp = serializers.CharField(required=False, max_length=6)
+
+
+class VerifyInsurerSerializer(serializers.Serializer):
+    otp = serializers.CharField(required=False, max_length=6)
 
 
 class ForgotPasswordEmailSerializer(serializers.ModelSerializer):
