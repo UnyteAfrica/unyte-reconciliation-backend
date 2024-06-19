@@ -37,7 +37,6 @@ jobs:
       DB_PASSWORD: testing321
       DB_HOST: localhost
       DB_PORT: 5432
-      DATABASE_URL: postgres://myuser:mypassword@127.0.0.1:5432/mydatabase
       ENV: dev
 
     steps:
