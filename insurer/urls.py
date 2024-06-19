@@ -7,5 +7,6 @@ urlpatterns = [
     path('sign-in', views.login_insurer, name='login_insurer'),
     path('verify-otp', views.verify_otp_token, name='verify_otp'),
     path('new-otp', views.request_new_otp, name='get_new_otp'),
-    path('password-reset', views.reset_password, name='reset_password')
+    path('password-reset', views.reset_password, name='reset_password'),
+    path('confirm-email', views.forgot_password_email, name='confirm_email')
 ]

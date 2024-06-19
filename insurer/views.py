@@ -204,6 +204,7 @@ def request_new_otp(request) -> Response:
 @swagger_auto_schema(
     method='POST',
     operation_description='Send Verification OTP to Insurer Email',
+    request_body=ForgotPasswordEmailSerializer,
     responses={
         200: 'OK',
         400: 'Bad Request'
@@ -237,6 +238,7 @@ def forgot_password_email(request) -> Response:
 @swagger_auto_schema(
     method='POST',
     operation_description='Reset Password',
+    request_body=ForgotPasswordResetSerializer,
     responses={
         200: 'OK',
         400: 'Bad Request'
