@@ -30,6 +30,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DB_NAME: test_db
+      DB_USER: django_user
+      DB_PASSWORD: testing321
+      DB_HOST: localhost
+      DB_PORT: 5432
+      ENV: dev
 
     steps:
       - name: Checkout repository
