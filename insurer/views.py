@@ -1,11 +1,11 @@
+from django.contrib.auth import authenticate, login
 from dotenv import load_dotenv, find_dotenv
-from django.core.mail import send_mail
-from pyotp import TOTP
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer
+from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
+    ForgotPasswordResetSerializer
 from rest_framework.response import Response
 from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
@@ -91,8 +91,19 @@ def login_insurer(request) -> Response:
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    insurer_name = serializer_class.validated_data.get('username')
+    password = serializer_class.validated_data.get('password')
+
     try:
-        insurer_name = serializer_class.validated_data.get('username')
+        user = authenticate(username=insurer_name, password=password)
+        if user is None:
+            return Response({
+                "message": "Failed to authenticate user"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # TODO: Fix login functionality
+        # login(request, user)
+
         insurer = Insurer.objects.get(username=insurer_name)
         auth_token = RefreshToken.for_user(insurer)
 
@@ -190,8 +201,74 @@ def request_new_otp(request) -> Response:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
-def forgot_password(request) -> Response:
-    return Response({
-        "message": "New message"
-    }, status=status.HTTP_400_BAD_REQUEST)
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Send Verification OTP to Insurer Email',
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
+@api_view(['POST'])
+def forgot_password_email(request) -> Response:
+    serializer_class = ForgotPasswordEmailSerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    insurer_email = serializer_class.validated_data.get('email')
+
+    try:
+        insurer = Insurer.objects.get(email=insurer_email)
+        auth_token = RefreshToken.for_user(insurer)
+        message = {
+            "access_token": str(auth_token.access_token),
+            "refresh_token": str(auth_token)
+        }
+        return Response(message, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            f"The error '{e}' occurred"
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Reset Password',
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reset_password(request) -> Response:
+    serializer_class = ForgotPasswordResetSerializer(data=request.data)
+    user = request.user
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    new_password = serializer_class.validated_data.get('new_password')
+
+    try:
+        insurer = Insurer.objects.get(username=user)
+        if insurer.check_password(raw_password=new_password):
+            return Response({
+                "message": "New password cannot be the same with old password"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        insurer.set_password(new_password)
+        insurer.save()
+
+        return Response({
+            "message": "Password successfully updated"
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            f"The error '{e}' occurred"
+        }, status=status.HTTP_400_BAD_REQUEST)
