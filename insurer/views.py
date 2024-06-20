@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
-    ForgotPasswordResetSerializer, VerifyInsurerSerializer
+    ForgotPasswordResetSerializer, VerifyInsurerSerializer, SendNewOTPSerializer
 from rest_framework.response import Response
 from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
@@ -55,13 +55,8 @@ def create_insurer(request) -> Response:
         send_otp(request, insurer_email)
         serializer_class.save()
 
-        insurer = Insurer.objects.get(username=insurer_name)
-        auth_token = RefreshToken.for_user(insurer)
-
         message = {
-            "message": f"Account successfully created for user: {insurer_name}",
-            "access_token": str(auth_token.access_token),
-            "refresh_token": str(auth_token)
+            "message": f"Account successfully created for user: {insurer_name}"
         }
         return Response(message, status=status.HTTP_201_CREATED)
 
@@ -120,6 +115,7 @@ def login_insurer(request) -> Response:
 
 @swagger_auto_schema(
     method='GET',
+    request_body=SendNewOTPSerializer,
     operation_description='Request New OTP',
     responses={
         200: 'OK',
@@ -128,23 +124,24 @@ def login_insurer(request) -> Response:
     tags=['Insurer']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def request_new_otp(request):
-    try:
-        user = request.user
-        insurer = Insurer.objects.get(username=user)
+    serializer_class = SendNewOTPSerializer(data=request.data)
 
-        send_otp(request, insurer_email=insurer.email)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    insurer_email = serializer_class.validated_data.get('email')
+
+    if not Insurer.objects.filter(email=insurer_email).exists():
         return Response({
-            "message": "New OTP sent out!"
-        }, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({
-            f"The error '{e}' occurred"
+            "message": f"Email: {insurer_email} does not exists"
         }, status=status.HTTP_400_BAD_REQUEST)
 
+    send_otp(request, insurer_email=insurer_email)
+
+    return Response({
+        "message": "New OTP sent out!"
+    }, status=status.HTTP_200_OK)
 
 @swagger_auto_schema(
     method='POST',

@@ -46,6 +46,16 @@ class VerifyInsurerSerializer(serializers.Serializer):
     otp = serializers.CharField(required=False, max_length=6)
 
 
+class SendNewOTPSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField()
+
+    class Meta:
+        model = Insurer
+        fields = [
+            'email'
+        ]
+
+
 class ForgotPasswordEmailSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
 
