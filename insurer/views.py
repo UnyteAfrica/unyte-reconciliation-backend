@@ -153,7 +153,6 @@ def request_new_otp(request):
     tags=['Insurer']
 )
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def verify_otp_token(request) -> Response:
     """
     Verify OTP endpoint
@@ -162,7 +161,6 @@ def verify_otp_token(request) -> Response:
     """
 
     serializer_class = OTPSerializer(data=request.data)
-    user = request.user
 
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
