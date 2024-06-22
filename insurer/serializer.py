@@ -3,37 +3,62 @@ from .models import Insurer
 
 
 class CreateInsurerSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=15)
-    email = serializers.EmailField(max_length=255)
-    password = serializers.CharField(max_length=255)
+    business_name = serializers.CharField(max_length=50,
+                                          required=True,
+                                          help_text='Insurer business name',
+                                          allow_blank=False,
+                                          allow_null=False)
+    admin_name = serializers.CharField(max_length=20,
+                                       required=True,
+                                       help_text='Insurer account admin (handler) name',
+                                       allow_blank=False,
+                                       allow_null=False)
+    business_registration_number = serializers.CharField(max_length=50,
+                                                         required=True,
+                                                         help_text='Business registration number or Tax ID of insurer')
+    email = serializers.EmailField()
+    password = serializers.CharField(max_length=16,
+                                     allow_null=False,
+                                     allow_blank=False)
+    gampID = serializers.CharField(allow_blank=True,
+                                   allow_null=True)
 
     class Meta:
         model = Insurer
         fields = [
-            'username',
+            'business_name',
+            'admin_name',
+            'business_registration_number',
             'email',
             'password',
+            'gampID'
         ]
 
     def validate(self, attrs):
-        username = attrs.get('username', '')
+        email = attrs.get('email', '')
         password = attrs.get('password', '')
+        business_name = attrs.get('business_name', '')
+        admin_name = attrs.get('admin_name', '')
+        business_registration_number = attrs.get('business_registration_number', '')
+        gampID = attrs.get('gampID', '')
+
         return super().validate(attrs)
 
     def create(self, validated_data):
+        print(validated_data)
         user = Insurer.objects.create_user(**validated_data)
         user.save()
         return user
 
 
 class LoginInsurerSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=12)
+    email = serializers.EmailField()
     password = serializers.CharField(max_length=255)
 
     class Meta:
         model = Insurer
         fields = [
-            'username',
+            'email',
             'password'
         ]
 

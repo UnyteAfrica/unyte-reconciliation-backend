@@ -6,3 +6,6 @@
 static/
 .coverage
 coverage.xml
+db.sqlite3
+main.py
+

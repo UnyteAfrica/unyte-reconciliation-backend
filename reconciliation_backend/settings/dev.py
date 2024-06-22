@@ -6,7 +6,6 @@ import os
 
 load_dotenv(find_dotenv())
 
-
 DEBUG = True
 ALLOWED_HOSTS = []
 
@@ -24,8 +23,6 @@ DATABASES = {
         }
     },
 }
-
-
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
