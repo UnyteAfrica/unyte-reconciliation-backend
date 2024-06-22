@@ -46,7 +46,7 @@ def create_insurer(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        insurer_name = serializer_class.validated_data.get('username')
+        business_name = serializer_class.validated_data.get('business_name')
         insurer_email = serializer_class.validated_data.get('email')
 
         """
@@ -56,7 +56,7 @@ def create_insurer(request) -> Response:
         serializer_class.save()
 
         message = {
-            "message": f"Account successfully created for user: {insurer_name}"
+            "message": f"Account successfully created for user: {business_name}"
         }
         return Response(message, status=status.HTTP_201_CREATED)
 
@@ -86,20 +86,18 @@ def login_insurer(request) -> Response:
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    insurer_name = serializer_class.validated_data.get('username')
+    email = serializer_class.validated_data.get('email')
     password = serializer_class.validated_data.get('password')
 
     try:
-        user = authenticate(username=insurer_name, password=password)
+        user = authenticate(email=email, password=password)
+        print(user)
         if user is None:
             return Response({
                 "message": "Failed to authenticate user"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # TODO: Fix login functionality
-        # login(request, user)
-
-        insurer = Insurer.objects.get(username=insurer_name)
+        insurer = Insurer.objects.get(email=email)
         auth_token = RefreshToken.for_user(insurer)
 
         message = {
@@ -114,7 +112,7 @@ def login_insurer(request) -> Response:
 
 
 @swagger_auto_schema(
-    method='GET',
+    method='POST',
     request_body=SendNewOTPSerializer,
     operation_description='Request New OTP',
     responses={
@@ -123,7 +121,7 @@ def login_insurer(request) -> Response:
     },
     tags=['Insurer']
 )
-@api_view(['GET'])
+@api_view(['POST'])
 def request_new_otp(request):
     serializer_class = SendNewOTPSerializer(data=request.data)
 
@@ -142,6 +140,7 @@ def request_new_otp(request):
     return Response({
         "message": "New OTP sent out!"
     }, status=status.HTTP_200_OK)
+
 
 @swagger_auto_schema(
     method='POST',
