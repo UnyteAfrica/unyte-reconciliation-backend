@@ -4,21 +4,24 @@ from .models import Insurer
 
 
 class InsurerAppTest(TestCase):
-
-    TEST_INSURER_USERNAME = 'Company'
-    TEST_INSURER_PASSWORD = 'testing321'
-    TEST_INSURER_EMAIL = 'company@gmail.com'
-
     def setUp(self) -> None:
         self.insurer_model = Insurer
-        self.insurer = self.insurer_model.objects.create_user(username=self.TEST_INSURER_USERNAME, password=self.TEST_INSURER_PASSWORD)
+        self.insurer = self.insurer_model.objects.create_user(business_name="string",
+                                                              admin_name='string',
+                                                              business_registration_number='string',
+                                                              email='user@example.com',
+                                                              password='testing321',
+                                                              gampID='string')
 
     def test_create_insurer(self):
         route = reverse('insurer:register_insurer')
         data = {
-            "username": "TestInsurer",
-            "email": "testemail@gmail.com",
-            "password": "testing321"
+            "business_name": "string",
+            "admin_name": "string",
+            "business_registration_number": "string",
+            "email": "user@example.com",
+            "password": "string",
+            "gampID": "string"
         }
         response = self.client.post(
             route,
@@ -27,11 +30,12 @@ class InsurerAppTest(TestCase):
         )
         self.assertEqual(response.status_code, 201)
 
+    #
     def test_login_insurer(self):
         route = reverse("insurer:login_insurer")
         data = {
-            "username": self.TEST_INSURER_USERNAME,
-            "password": self.TEST_INSURER_PASSWORD
+            "email": 'user@example.com',
+            "password": 'testing321'
         }
         response = self.client.post(
             route,
@@ -39,4 +43,3 @@ class InsurerAppTest(TestCase):
             format='json'
         )
         self.assertEqual(response.status_code, 200)
-

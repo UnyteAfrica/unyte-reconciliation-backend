@@ -54,6 +54,11 @@ CORS_ALLOWED_ORIGINS = [
     "https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app"
 ]
 
+CORS_ORIGIN_WHITELIST = [
+    'localhost',
+    "https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app"
+]
+
 CORS_ALLOW_METHODS = (
     "GET",
     "PATCH",
