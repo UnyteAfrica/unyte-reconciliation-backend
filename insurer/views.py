@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from dotenv import load_dotenv, find_dotenv
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
@@ -91,13 +91,13 @@ def login_insurer(request) -> Response:
 
     try:
         user = authenticate(email=email, password=password)
-        print(user)
         if user is None:
             return Response({
                 "message": "Failed to authenticate user"
             }, status=status.HTTP_400_BAD_REQUEST)
 
         insurer = Insurer.objects.get(email=email)
+        print(login(request, insurer))
         auth_token = RefreshToken.for_user(insurer)
 
         message = {
