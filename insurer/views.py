@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login
 from dotenv import load_dotenv, find_dotenv
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
     ForgotPasswordResetSerializer, VerifyInsurerSerializer, SendNewOTPSerializer
@@ -153,6 +153,7 @@ def request_new_otp(request):
     tags=['Insurer']
 )
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def verify_otp_token(request) -> Response:
     """
     Verify OTP endpoint
