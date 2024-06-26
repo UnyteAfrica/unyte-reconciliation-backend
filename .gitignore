@@ -8,4 +8,6 @@ static/
 coverage.xml
 db.sqlite3
 main.py
-
+staticfiles/
+debug.log
+test.log

@@ -49,10 +49,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                                       help_text='Date user was created')
     updated_at = models.DateTimeField(auto_now=True,
                                       help_text='Date when any update is made to the user model')
-    gampID = models.EmailField(unique=True,
-                               null=True,
-                               blank=True,
-                               help_text='GAMP ID for users associated with GAMP')
     is_verified = models.BooleanField(default=False,
                                       help_text='Check to know whether an agent or insurer is verified')
 
