@@ -11,6 +11,8 @@ RUN pip install -r requirements.txt
 
 COPY . /reconciliation-backend/
 
+ENV ENV=prod
+
 RUN chmod +x /reconciliation-backend/gen_static_files.sh
 
 RUN /reconciliation-backend/gen_static_files.sh
