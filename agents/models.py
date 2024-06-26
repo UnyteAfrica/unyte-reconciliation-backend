@@ -18,14 +18,17 @@ class Agent(CustomUser):
                                     null=False,
                                     blank=False,
                                     help_text='Agent Bank account')
-    affiliated_company = models.OneToOneField("insurer.Insurer",
-                                              on_delete=models.CASCADE,
-                                              null=False,
-                                              blank=True)
+    affiliated_company = models.ForeignKey("insurer.Insurer",
+                                           on_delete=models.CASCADE,
+                                           null=False,
+                                           blank=True)
     policy = models.ForeignKey("policies.Policies",
                                on_delete=models.CASCADE,
                                blank=True,
                                null=True)
+    agent_gampID = models.CharField(null=True,
+                                    blank=True,
+                                    help_text='GAMP ID for users associated with GAMP')
 
     def __str__(self):
         return self.first_name.upper()

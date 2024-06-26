@@ -18,6 +18,9 @@ class Insurer(CustomUser):
                                                     null=False,
                                                     blank=False,
                                                     help_text='Business registration number of Tax ID of insurer')
+    insurer_gampID = models.CharField(null=True,
+                                  blank=True,
+                                  help_text='GAMP ID for users associated with GAMP')
 
     def __str__(self):
         return self.business_name

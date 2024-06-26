@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from .models import Insurer
+from django.db import transaction
 
 
 class InsurerAppTest(TestCase):
@@ -23,6 +24,7 @@ class InsurerAppTest(TestCase):
             "password": "string",
             "gampID": "string"
         }
+
         response = self.client.post(
             route,
             data,
@@ -30,7 +32,6 @@ class InsurerAppTest(TestCase):
         )
         self.assertEqual(response.status_code, 201)
 
-    #
     def test_login_insurer(self):
         route = reverse("insurer:login_insurer")
         data = {

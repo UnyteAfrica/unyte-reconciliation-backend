@@ -10,6 +10,17 @@ from rest_framework.response import Response
 from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
 from insurer.utils import send_otp, verify_otp
+import logging
+
+
+logging.basicConfig(filename='test.log', format='%(filename)s: %(message)s',
+                    level=logging.DEBUG)
+
+logging.debug('This is a debug message')
+logging.info('This is an info message')
+logging.warning('This is a warning message')
+logging.error('This is an error message')
+logging.critical('This is a critical message')
 
 load_dotenv(find_dotenv())
 
@@ -167,6 +178,7 @@ def verify_otp_token(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        print(serializer_class.validated_data)
         otp = serializer_class.validated_data.get('otp')
         if not verify_otp(request, otp):
             return Response({

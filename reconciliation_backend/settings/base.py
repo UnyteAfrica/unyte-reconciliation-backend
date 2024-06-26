@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from django.conf import settings
+from google.oauth2 import service_account
 
 settings.configure()
 
@@ -140,20 +141,20 @@ DATABASES = {
     }
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': os.getenv("DB_NAME"),
-#         'USER': os.getenv("DB_USER"),
-#         'PASSWORD': os.getenv("DB_PASSWORD"),
-#         'HOST': os.getenv("DB_HOST"),
-#         'PORT': os.getenv("DB_PORT"),
-#         'TEST': {
-#             'NAME': 'testdb',
-#
-#         }
+# STORAGES = {
+#     "default": {
+#         "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
 #     },
+#     "staticfiles": "storages.backends.gcloud.GoogleCloudStorage"
 # }
+#
+# GS_BUCKET_NAME = 'reconciliations-dashboard'
+# STATIC_URL = 'https://storage.googleapis.com/<your_bucket_name>/'
+#
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+#     'path/to/the/downloaded/json/key/credentials.json'
+# )
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -181,7 +182,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 AUTH_USER_MODEL = 'user.CustomUser'
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_USE_TLS = False
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
