@@ -7,6 +7,8 @@ COPY requirements.txt /reconciliation-backend/
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc 
 
+RUN apt-get install -y postgresql postgresql-contrib
+
 RUN pip install -r requirements.txt 
 
 COPY . /reconciliation-backend/
