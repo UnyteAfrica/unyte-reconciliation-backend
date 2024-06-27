@@ -1,5 +1,7 @@
 import re
 
+from rest_framework.exceptions import ValidationError
+
 from insurer.models import Insurer
 from .models import Agent
 from rest_framework import serializers
@@ -48,13 +50,21 @@ class CreateAgentSerializer(serializers.ModelSerializer):
             "password"
         ]
 
-    def validate_agent_gampID(self, validated_data):
-        agent_gampID = validated_data
+    def validate(self, attrs):
+        agent_gampID = attrs.get('agent_gampID')
+        first_name = attrs.get('first_name')
+        bank_account = attrs.get('bank_account')
+
         if agent_gampID == '':
-            return
-        pattern = r'^[a-zA-Z0-9._%+-]+[+][0-9]{10}@getgamp\.com$'
-        if not re.match(pattern, agent_gampID):
-            return "Invalid gampID"
+            return attrs
+
+        pattern = f'{first_name}+{bank_account}@getgamp.com'
+
+        print(pattern, agent_gampID)
+
+        if agent_gampID != pattern:
+            raise ValidationError("Invalid GampID")
+        return attrs
 
     def create(self, validated_data):
         affiliated_company = validated_data.get('affiliated_company')
@@ -70,3 +80,51 @@ class CreateAgentSerializer(serializers.ModelSerializer):
         agent = Agent.objects.create_user(**validated_data)
         agent.save()
         return agent
+
+
+class LoginAgentSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    class Meta:
+        model = Agent
+        fields = [
+            'email',
+            'password'
+        ]
+
+
+class AgentOTPSerializer(serializers.Serializer):
+    otp = serializers.CharField(required=False, max_length=6)
+
+
+class AgentSendNewOTPSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField()
+
+    class Meta:
+        model = Agent
+        fields = [
+            'email'
+        ]
+
+
+class AgentForgotPasswordEmailSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField()
+
+    class Meta:
+        model = Agent
+        fields = [
+            'email'
+        ]
+
+
+class AgentForgotPasswordResetSerializer(serializers.Serializer):
+    new_password = serializers.CharField(max_length=16)
+    confirm_password = serializers.CharField(max_length=16)
+
+    def check_passwords_equal(self) -> ValidationError:
+        new_password = self.validated_data.get('new_password')
+        confirm_password = self.validated_data.get('confirm_password')
+
+        if new_password != confirm_password:
+            return ValidationError("Password Mismatch")

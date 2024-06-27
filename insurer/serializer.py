@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
 from .models import Insurer
 
 
@@ -95,9 +97,9 @@ class ForgotPasswordResetSerializer(serializers.Serializer):
     new_password = serializers.CharField(max_length=16)
     confirm_password = serializers.CharField(max_length=16)
 
-    def check_passwords_equal(self) -> str:
+    def check_passwords_equal(self) -> ValidationError:
         new_password = self.validated_data.get('new_password')
         confirm_password = self.validated_data.get('confirm_password')
 
         if new_password != confirm_password:
-            return "Passwords don't match"
+            return ValidationError("Password Mismatch")
