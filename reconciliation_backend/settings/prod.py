@@ -41,10 +41,6 @@ DATABASES = {
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASS'),
         'HOST': '/cloudsql/unyte-project:us-east1:dev-db',
-        'PORT': os.getenv('DB_PORT'),
-        'TEST': {
-            'NAME': 'testdb',
-        }
     }
 
 }
