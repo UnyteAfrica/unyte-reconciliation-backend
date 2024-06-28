@@ -22,7 +22,7 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=16,
                                      allow_null=False,
                                      allow_blank=False)
-    gampID = serializers.CharField(allow_blank=True,
+    insurer_gampID = serializers.CharField(allow_blank=True,
                                    allow_null=True)
 
     class Meta:
@@ -33,18 +33,22 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
             'business_registration_number',
             'email',
             'password',
-            'gampID'
+            'insurer_gampID'
         ]
 
     def validate(self, attrs):
-        email = attrs.get('email', '')
-        password = attrs.get('password', '')
-        business_name = attrs.get('business_name', '')
-        admin_name = attrs.get('admin_name', '')
-        business_registration_number = attrs.get('business_registration_number', '')
-        gampID = attrs.get('gampID', '')
+        insurer_gampID = attrs.get('insurer_gampID')
+        admin_name = attrs.get('admin_name')
+        tax_id = attrs.get('tax_id')
 
-        return super().validate(attrs)
+        if insurer_gampID == '':
+            return attrs
+
+        pattern = f'{admin_name}+{tax_id}@getgamp.com'
+
+        if insurer_gampID != pattern:
+            raise ValidationError("Invalid GampID")
+        return attrs
 
     def create(self, validated_data):
         print(validated_data)
