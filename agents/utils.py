@@ -8,40 +8,43 @@ import os
 load_dotenv(find_dotenv())
 
 
-def send_otp(request, insurer_email: str) -> None:
+def send_otp(request, agent_email: str) -> None:
     totp = pyotp.TOTP(pyotp.random_base32(), interval=60)
     otp = totp.now()
-    request.session['insurer_otp_secret_key'] = totp.secret
+    print('otp as at requesting a new one is: ', otp)
+    request.session['agent_otp_secret_key'] = totp.secret
     valid_date = datetime.now() + timedelta(minutes=1)
-    request.session['insurer_otp_valid_date'] = str(valid_date)
+    request.session['agent_otp_valid_date'] = str(valid_date)
 
     if os.getenv('ENV') != 'dev':
         send_mail(
             subject='Verification email',
             message=f'{otp}',
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[insurer_email],
+            recipient_list=[agent_email],
         )
-        return None
+
     # Send emails to registered insurer email and settings.TO_EMAIL defined email for testing.
     send_mail(
         subject='Verification email',
         message=f'{otp}',
         from_email=settings.EMAIL_HOST_USER,
-        recipient_list=[settings.TO_EMAIL, insurer_email],
+        recipient_list=[settings.TO_EMAIL, agent_email],
     )
-    return None
 
 
 def verify_otp(request, otp: str) -> bool:
-    otp_secret_key = request.session.get('insurer_otp_secret_key')
-    otp_valid_until = request.session.get('insurer_otp_valid_date')
+    otp_secret_key = request.session.get('agent_otp_secret_key')
+    otp_valid_until = request.session.get('agent_otp_valid_date')
+
+    print(otp_secret_key, otp_valid_until)
 
     if otp_secret_key and otp_valid_until is None:
         print("Invalid OTP secret")
 
     valid_until = datetime.now()
     totp = pyotp.TOTP(otp_secret_key, interval=60)
+    print('otp as at verifications is: ', totp.now())
 
     if valid_until > datetime.now():
         print("OTP has expired")

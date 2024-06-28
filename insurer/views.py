@@ -171,7 +171,6 @@ def verify_otp_token(request) -> Response:
     :param request:
     :return: Response
     """
-
     serializer_class = OTPSerializer(data=request.data)
 
     if not serializer_class.is_valid():

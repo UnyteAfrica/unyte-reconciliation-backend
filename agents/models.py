@@ -26,7 +26,8 @@ class Agent(CustomUser):
                                on_delete=models.CASCADE,
                                blank=True,
                                null=True)
-    agent_gampID = models.CharField(null=True,
+    agent_gampID = models.CharField(unique=True,
+                                    null=True,
                                     blank=True,
                                     help_text='GAMP ID for users associated with GAMP')
 
