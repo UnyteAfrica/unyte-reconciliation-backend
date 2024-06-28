@@ -182,7 +182,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 AUTH_USER_MODEL = 'user.CustomUser'
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = False
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')

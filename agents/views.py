@@ -33,7 +33,12 @@ def create_agent(request) -> Response:
     try:
         first_name = serializer_class.validated_data.get('first_name')
         last_name = serializer_class.validated_data.get('last_name')
+        agent_email = serializer_class.validated_data.get('email')
 
+        """
+            Send email to insurer including otp.
+        """
+        send_otp(request, agent_email)
         serializer_class.save()
         message = {
             'message': f'Account successfully created for {first_name} {last_name}'
@@ -106,14 +111,14 @@ def request_new_otp(request):
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    insurer_email = serializer_class.validated_data.get('email')
+    agent_email = serializer_class.validated_data.get('email')
 
-    if not Agent.objects.filter(email=insurer_email).exists():
+    if not Agent.objects.filter(email=agent_email).exists():
         return Response({
-            "message": f"Email: {insurer_email} does not exists"
+            "message": f"Email: {agent_email} does not exists"
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    send_otp(request, insurer_email=insurer_email)
+    send_otp(request, agent_email=agent_email)
 
     return Response({
         "message": "New OTP sent out!"

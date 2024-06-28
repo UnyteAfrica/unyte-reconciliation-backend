@@ -39,12 +39,12 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         insurer_gampID = attrs.get('insurer_gampID')
         admin_name = attrs.get('admin_name')
-        tax_id = attrs.get('tax_id')
+        business_reg_num = attrs.get('business_registration_number')
 
         if insurer_gampID == '':
             return attrs
 
-        pattern = f'{admin_name}+{tax_id}@getgamp.com'
+        pattern = f'{admin_name}+{business_reg_num}@getgamp.com'
 
         if insurer_gampID != pattern:
             raise ValidationError("Invalid GampID")
