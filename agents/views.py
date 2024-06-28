@@ -1,12 +1,15 @@
-from django.contrib.auth import authenticate, login
-from dotenv import load_dotenv, find_dotenv
+from django.conf import settings
+from django.contrib.auth import authenticate
+from datetime import datetime
+
+from django.core.mail import send_mail
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from .utils import send_otp, verify_otp
+from .utils import generate_otp, verify_otp
 from .models import Agent
 from rest_framework import status
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
@@ -118,11 +121,24 @@ def request_new_otp(request):
             "message": f"Email: {agent_email} does not exists"
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    send_otp(request, agent_email=agent_email)
+    agent = Agent.objects.get(email=agent_email)
 
-    return Response({
-        "message": "New OTP sent out!"
-    }, status=status.HTTP_200_OK)
+    otp = generate_otp()
+    agent.otp = otp
+    agent.otp_created_at = datetime.now().time()
+
+    agent.save()
+
+    send_mail(
+        subject='Verification email',
+        message=f'{otp}',
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[settings.TO_EMAIL, agent_email],
+    )
+    message = {
+        'error': 'New OTP has been sent out!'
+    }
+    return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(
@@ -149,16 +165,31 @@ def verify_otp_token(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        print(serializer_class.validated_data)
         otp = serializer_class.validated_data.get('otp')
-        if not verify_otp(request, otp):
-            return Response({
-                "message": "Invalid OTP, request for new OTP!"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        agent_email = serializer_class.validated_data.get('email')
 
-        return Response({
-            "message": "OTP Verified"
-        }, status=status.HTTP_200_OK)
+        agent = Agent.objects.get(email=agent_email)
+
+        insurer_otp = agent.otp
+
+        if insurer_otp != otp:
+            message = {
+                "error": "Incorrect OTP"
+            }
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
+
+        otp_created_time = agent.otp_created_at
+        verify = verify_otp(otp_created_time)
+
+        if not verify:
+            message = {
+                'error': 'OTP has expired'
+            }
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
+        message = {
+            'error': 'OTP Verified'
+        }
+        return Response(message, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)

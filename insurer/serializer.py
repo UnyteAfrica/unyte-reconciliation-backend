@@ -1,5 +1,8 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
+from .utils import generate_otp
 from rest_framework.exceptions import ValidationError
+from datetime import datetime
 
 from .models import Insurer
 
@@ -52,7 +55,7 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         print(validated_data)
-        user = Insurer.objects.create_user(**validated_data)
+        user = Insurer.objects.create_user(**validated_data, otp=generate_otp(), otp_created_at=datetime.now().time())
         user.save()
         return user
 
@@ -70,7 +73,14 @@ class LoginInsurerSerializer(serializers.ModelSerializer):
 
 
 class OTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
     otp = serializers.CharField(required=False, max_length=6)
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        if not Insurer.objects.filter(email=email).exists():
+            raise ObjectDoesNotExist
+        return attrs
 
 
 class VerifyInsurerSerializer(serializers.Serializer):

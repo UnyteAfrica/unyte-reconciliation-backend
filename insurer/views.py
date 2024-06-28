@@ -1,17 +1,19 @@
+from datetime import datetime
 from django.contrib.auth import authenticate, login
+from django.core.mail import send_mail
 from dotenv import load_dotenv, find_dotenv
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
-    ForgotPasswordResetSerializer, VerifyInsurerSerializer, SendNewOTPSerializer
+    ForgotPasswordResetSerializer, SendNewOTPSerializer
 from rest_framework.response import Response
 from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
-from insurer.utils import send_otp, verify_otp
 import logging
-
+from django.conf import settings
+from .utils import generate_otp, verify_otp
 
 logging.basicConfig(filename='test.log', format='%(filename)s: %(message)s',
                     level=logging.DEBUG)
@@ -63,8 +65,16 @@ def create_insurer(request) -> Response:
         """
         Send email to insurer including otp.
         """
-        send_otp(request, insurer_email)
         serializer_class.save()
+        insurer = Insurer.objects.get(email=insurer_email)
+        otp = insurer.otp
+
+        send_mail(
+            subject='Verification email',
+            message=f'{otp}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.TO_EMAIL, insurer_email],
+        )
 
         message = {
             "message": f"Account successfully created for user: {business_name}"
@@ -146,7 +156,20 @@ def request_new_otp(request):
             "message": f"Email: {insurer_email} does not exists"
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    send_otp(request, insurer_email=insurer_email)
+    insurer = Insurer.objects.get(email=insurer_email)
+
+    otp = generate_otp()
+    insurer.otp = otp
+    insurer.otp_created_at = datetime.now().time()
+
+    insurer.save()
+
+    send_mail(
+        subject='Verification email',
+        message=f'{otp}',
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[settings.TO_EMAIL, insurer_email],
+    )
 
     return Response({
         "message": "New OTP sent out!"
@@ -177,12 +200,27 @@ def verify_otp_token(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        print(serializer_class.validated_data)
+        insurer_email = serializer_class.validated_data.get('email')
         otp = serializer_class.validated_data.get('otp')
-        if not verify_otp(request, otp):
-            return Response({
-                "message": "Invalid OTP, request for new OTP!"
-            }, status=status.HTTP_400_BAD_REQUEST)
+
+        insurer = Insurer.objects.get(email=insurer_email)
+
+        insurer_otp = insurer.otp
+
+        if insurer_otp != otp:
+            message = {
+                "error": "Incorrect OTP"
+            }
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
+
+        otp_created_time = insurer.otp_created_at
+        verify = verify_otp(otp_created_time)
+
+        if not verify:
+            message = {
+                'error': 'OTP has expired'
+            }
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             "message": "OTP Verified"

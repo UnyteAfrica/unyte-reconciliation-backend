@@ -1,60 +1,28 @@
 import pyotp
-from datetime import datetime, timedelta
-from django.core.mail import send_mail
-from django.conf import settings
 from dotenv import load_dotenv, find_dotenv
-import os
+from datetime import datetime
 
 load_dotenv(find_dotenv())
 
 
-def send_otp(request, agent_email: str) -> None:
+def generate_otp() -> str:
     totp = pyotp.TOTP(pyotp.random_base32(), interval=60)
     otp = totp.now()
-    print('otp as at requesting a new one is: ', otp)
-    request.session['agent_otp_secret_key'] = totp.secret
-    valid_date = datetime.now() + timedelta(minutes=1)
-    request.session['agent_otp_valid_date'] = str(valid_date)
 
-    if os.getenv('ENV') != 'dev':
-        send_mail(
-            subject='Verification email',
-            message=f'{otp}',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[agent_email],
-        )
-
-    # Send emails to registered insurer email and settings.TO_EMAIL defined email for testing.
-    send_mail(
-        subject='Verification email',
-        message=f'{otp}',
-        from_email=settings.EMAIL_HOST_USER,
-        recipient_list=[settings.TO_EMAIL, agent_email],
-    )
+    return otp
 
 
-def verify_otp(request, otp: str) -> bool:
-    otp_secret_key = request.session.get('agent_otp_secret_key')
-    otp_valid_until = request.session.get('agent_otp_valid_date')
+def verify_otp(otp_created_at) -> bool:
+    current_time = datetime.now().time()
+    today = datetime.now().today()
 
-    print(otp_secret_key, otp_valid_until)
+    otp_created_time_datetime = datetime.combine(today, otp_created_at)
+    current_datetime = datetime.combine(today, current_time)
 
-    if otp_secret_key and otp_valid_until is None:
-        print("Invalid OTP secret")
+    time_delta = current_datetime - otp_created_time_datetime
+    print(time_delta.total_seconds())
 
-    valid_until = datetime.now()
-    totp = pyotp.TOTP(otp_secret_key, interval=60)
-    print('otp as at verifications is: ', totp.now())
-
-    if valid_until > datetime.now():
-        print("OTP has expired")
+    if time_delta.total_seconds() >= 120:
         return False
-
-    if not totp.verify(otp):
-        print("Invalid OTP value")
-        return False
-
-    del otp_secret_key
-    del otp_valid_until
 
     return True
