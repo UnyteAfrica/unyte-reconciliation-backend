@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.contrib.auth import authenticate, login
 from django.core.mail import send_mail
 from dotenv import load_dotenv, find_dotenv
@@ -12,8 +13,7 @@ from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
 import logging
 from django.conf import settings
-from datetime import datetime, timedelta
-
+from .utils import generate_otp, verify_otp
 
 logging.basicConfig(filename='test.log', format='%(filename)s: %(message)s',
                     level=logging.DEBUG)
@@ -156,6 +156,21 @@ def request_new_otp(request):
             "message": f"Email: {insurer_email} does not exists"
         }, status=status.HTTP_400_BAD_REQUEST)
 
+    insurer = Insurer.objects.get(email=insurer_email)
+
+    otp = generate_otp()
+    insurer.otp = otp
+    insurer.otp_created_at = datetime.now().time()
+
+    insurer.save()
+
+    send_mail(
+        subject='Verification email',
+        message=f'{otp}',
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[settings.TO_EMAIL, insurer_email],
+    )
+
     return Response({
         "message": "New OTP sent out!"
     }, status=status.HTTP_200_OK)
@@ -190,13 +205,22 @@ def verify_otp_token(request) -> Response:
 
         insurer = Insurer.objects.get(email=insurer_email)
 
-        if insurer.otp_created_at - datetime.now():
-            pass
+        insurer_otp = insurer.otp
 
-        if insurer.otp == otp:
-            return Response({
-                "message": "Invalid OTP, request for new OTP!"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        if insurer_otp != otp:
+            message = {
+                "error": "Incorrect OTP"
+            }
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
+
+        otp_created_time = insurer.otp_created_at
+        verify = verify_otp(otp_created_time)
+
+        if not verify:
+            message = {
+                'error': 'OTP has expired'
+            }
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             "message": "OTP Verified"

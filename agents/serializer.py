@@ -5,6 +5,8 @@ from rest_framework.exceptions import ValidationError
 from insurer.models import Insurer
 from .models import Agent
 from rest_framework import serializers
+from datetime import datetime
+from .utils import generate_otp
 
 
 class CreateAgentSerializer(serializers.ModelSerializer):
@@ -77,7 +79,7 @@ class CreateAgentSerializer(serializers.ModelSerializer):
         insurer = Insurer.objects.get(business_name=affiliated_company)
         validated_data['affiliated_company'] = insurer
 
-        agent = Agent.objects.create_user(**validated_data)
+        agent = Agent.objects.create_user(**validated_data, otp=generate_otp(), otp_created_at=datetime.now().time())
         agent.save()
         return agent
 
@@ -95,6 +97,7 @@ class LoginAgentSerializer(serializers.ModelSerializer):
 
 
 class AgentOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
     otp = serializers.CharField(required=False, max_length=6)
 
 

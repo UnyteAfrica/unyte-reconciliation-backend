@@ -55,9 +55,7 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         print(validated_data)
-        user = Insurer.objects.create_user(**validated_data)
-        user.otp = generate_otp()
-        user.otp_created_at = datetime.now().time()
+        user = Insurer.objects.create_user(**validated_data, otp=generate_otp(), otp_created_at=datetime.now().time())
         user.save()
         return user
 

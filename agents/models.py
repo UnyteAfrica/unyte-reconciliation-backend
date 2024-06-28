@@ -3,6 +3,12 @@ from user.models import CustomUser
 
 
 class Agent(CustomUser):
+    otp = models.CharField(unique=True,
+                           max_length=6,
+                           blank=True,
+                           null=True)
+    otp_created_at = models.TimeField(blank=True,
+                                      null=True)
     home_address = models.CharField(unique=True,
                                     max_length=255,
                                     null=False,
