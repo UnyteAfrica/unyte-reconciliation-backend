@@ -41,7 +41,13 @@ def create_agent(request) -> Response:
         """
             Send email to insurer including otp.
         """
-        send_otp(request, agent_email)
+        otp = generate_otp()
+        send_mail(
+            subject='Verification email',
+            message=f'{otp}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.TO_EMAIL, agent_email],
+        )
         serializer_class.save()
         message = {
             'message': f'Account successfully created for {first_name} {last_name}'
