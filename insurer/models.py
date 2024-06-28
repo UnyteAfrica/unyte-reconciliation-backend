@@ -4,6 +4,12 @@ from user.models import CustomUser
 
 
 class Insurer(CustomUser):
+    otp = models.CharField(unique=True,
+                           max_length=6,
+                           blank=True,
+                           null=True)
+    otp_created_at = models.TimeField(blank=True,
+                                      null=True)
     business_name = models.CharField(unique=True,
                                      max_length=50,
                                      null=False,
