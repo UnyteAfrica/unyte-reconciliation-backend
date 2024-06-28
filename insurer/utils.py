@@ -11,9 +11,9 @@ load_dotenv(find_dotenv())
 def send_otp(request, insurer_email: str) -> None:
     totp = pyotp.TOTP(pyotp.random_base32(), interval=60)
     otp = totp.now()
-    request.session['otp_secret_key'] = totp.secret
+    request.session['insurer_otp_secret_key'] = totp.secret
     valid_date = datetime.now() + timedelta(minutes=1)
-    request.session['otp_valid_date'] = str(valid_date)
+    request.session['insurer_otp_valid_date'] = str(valid_date)
 
     if os.getenv('ENV') != 'dev':
         send_mail(
@@ -22,7 +22,7 @@ def send_otp(request, insurer_email: str) -> None:
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[insurer_email],
         )
-
+        return None
     # Send emails to registered insurer email and settings.TO_EMAIL defined email for testing.
     send_mail(
         subject='Verification email',
@@ -30,11 +30,12 @@ def send_otp(request, insurer_email: str) -> None:
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[settings.TO_EMAIL, insurer_email],
     )
+    return None
 
 
 def verify_otp(request, otp: str) -> bool:
-    otp_secret_key = request.session.get('otp_secret_key')
-    otp_valid_until = request.session.get('otp_valid_date')
+    otp_secret_key = request.session.get('insurer_otp_secret_key')
+    otp_valid_until = request.session.get('insurer_otp_valid_date')
 
     if otp_secret_key and otp_valid_until is None:
         print("Invalid OTP secret")
