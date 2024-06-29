@@ -38,17 +38,20 @@ def create_agent(request) -> Response:
         last_name = serializer_class.validated_data.get('last_name')
         agent_email = serializer_class.validated_data.get('email')
 
+        serializer_class.save()
+
         """
             Send email to insurer including otp.
         """
-        otp = generate_otp()
+        agent = Agent.objects.get(email=agent_email)
+        otp = agent.otp
         send_mail(
             subject='Verification email',
             message=f'{otp}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
         )
-        serializer_class.save()
+
         message = {
             'message': f'Account successfully created for {first_name} {last_name}'
         }
@@ -257,14 +260,14 @@ def reset_password(request) -> Response:
     new_password = serializer_class.validated_data.get('new_password')
 
     try:
-        insurer = Agent.objects.get(username=user)
-        if insurer.check_password(raw_password=new_password):
+        agent = Agent.objects.get(email=user)
+        if agent.check_password(raw_password=new_password):
             return Response({
-                "message": "New password cannot be the same with old password"
+                "error": "New password cannot be the same with old password"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        insurer.set_password(new_password)
-        insurer.save()
+        agent.set_password(new_password)
+        agent.save()
 
         return Response({
             "message": "Password successfully updated"

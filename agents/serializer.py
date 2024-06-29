@@ -125,9 +125,11 @@ class AgentForgotPasswordResetSerializer(serializers.Serializer):
     new_password = serializers.CharField(max_length=16)
     confirm_password = serializers.CharField(max_length=16)
 
-    def check_passwords_equal(self) -> ValidationError:
-        new_password = self.validated_data.get('new_password')
-        confirm_password = self.validated_data.get('confirm_password')
+    def validate(self, attrs):
+        new_password = attrs.get('new_password')
+        confirm_password = attrs.get('confirm_password')
 
         if new_password != confirm_password:
-            return ValidationError("Password Mismatch")
+            raise ValidationError("Password Mismatch")
+
+        return attrs
