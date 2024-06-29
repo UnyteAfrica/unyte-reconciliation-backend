@@ -286,7 +286,7 @@ def reset_password(request) -> Response:
     new_password = serializer_class.validated_data.get('new_password')
 
     try:
-        insurer = Insurer.objects.get(username=user)
+        insurer = Insurer.objects.get(email=user)
         if insurer.check_password(raw_password=new_password):
             return Response({
                 "message": "New password cannot be the same with old password"
