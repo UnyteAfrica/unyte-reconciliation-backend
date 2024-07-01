@@ -55,12 +55,16 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://0.0.0.0:8080",
-    "https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app"
+    'http://localhost:3004',
+    "https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app",
+    "https://unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app"
 ]
 
 CORS_ORIGIN_WHITELIST = [
     'localhost',
-    "https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app"
+    "https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app",
+    "https://unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app",
+    'http://localhost:3004'
 ]
 
 CORS_ALLOW_METHODS = (
