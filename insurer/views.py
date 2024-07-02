@@ -284,7 +284,6 @@ def forgot_password_email(request) -> Response:
 @api_view(['POST'])
 def reset_password(request) -> Response:
     serializer_class = ForgotPasswordResetSerializer(data=request.data)
-    user = request.user
 
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)

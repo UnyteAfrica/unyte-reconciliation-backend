@@ -1,6 +1,7 @@
 import pyotp
 from dotenv import load_dotenv, find_dotenv
 from datetime import datetime
+import os
 
 load_dotenv(find_dotenv())
 
@@ -26,3 +27,9 @@ def verify_otp(otp_created_at) -> bool:
         return False
 
     return True
+
+
+def gen_absolute_url(current_site, relative_link, token):
+    if os.getenv('ENV') != 'dev':
+        return f'https://{current_site}{relative_link}?token={str(token)}'
+    return f'http://{current_site}{relative_link}?token={str(token)}'
