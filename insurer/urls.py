@@ -8,5 +8,6 @@ urlpatterns = [
     path('verify-otp', views.verify_otp_token, name='verify_otp'),
     path('password-reset', views.reset_password, name='reset_password'),
     path('confirm-email', views.forgot_password_email, name='confirm_email'),
-    path('new-otp', views.request_new_otp, name='request_new_otp')
+    path('new-otp', views.request_new_otp, name='request_new_otp'),
+    path('password-reset/<id_base64>/<token>', views.password_token_check, name='password-reset-confirm')
 ]

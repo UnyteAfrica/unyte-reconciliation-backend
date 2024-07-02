@@ -1,6 +1,11 @@
 from datetime import datetime
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
+from django.urls import reverse
+from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from dotenv import load_dotenv, find_dotenv
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
@@ -13,16 +18,7 @@ from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
 import logging
 from django.conf import settings
-from .utils import generate_otp, verify_otp
-
-logging.basicConfig(filename='test.log', format='%(filename)s: %(message)s',
-                    level=logging.DEBUG)
-
-logging.debug('This is a debug message')
-logging.info('This is an info message')
-logging.warning('This is a warning message')
-logging.error('This is an error message')
-logging.critical('This is a critical message')
+from .utils import generate_otp, verify_otp, gen_absolute_url
 
 load_dotenv(find_dotenv())
 
@@ -251,16 +247,27 @@ def forgot_password_email(request) -> Response:
 
     try:
         insurer = Insurer.objects.get(email=insurer_email)
-        auth_token = RefreshToken.for_user(insurer)
+        id_base64 = urlsafe_base64_encode(smart_bytes(insurer.id))
+        token = PasswordResetTokenGenerator().make_token(insurer)
+        current_site = get_current_site(request).domain
+        relative_link = reverse('insurer:password-reset-confirm', kwargs={'id_base64': id_base64, 'token': token})
+        abs_url = gen_absolute_url(current_site, relative_link, token)
+
+        send_mail(
+            subject='Verification email',
+            message=f'{abs_url}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.TO_EMAIL, insurer_email],
+        )
+
         message = {
-            "access_token": str(auth_token.access_token),
-            "refresh_token": str(auth_token)
+            "message": "Reset password email sent to your email"
         }
         return Response(message, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({
-            f"The error '{e}' occurred"
+            "error": f"{e}"
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -275,7 +282,6 @@ def forgot_password_email(request) -> Response:
     tags=['Insurer']
 )
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def reset_password(request) -> Response:
     serializer_class = ForgotPasswordResetSerializer(data=request.data)
     user = request.user
@@ -283,23 +289,38 @@ def reset_password(request) -> Response:
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    new_password = serializer_class.validated_data.get('new_password')
+    return Response({
+        "message": "Password successfully updated"
+    }, status=status.HTTP_200_OK)
 
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='Reset Password',
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
+@api_view(['GET'])
+def password_token_check(request, id_base64, token):
     try:
-        insurer = Insurer.objects.get(email=user)
-        if insurer.check_password(raw_password=new_password):
-            return Response({
-                "message": "New password cannot be the same with old password"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        insurer_id = smart_str(urlsafe_base64_decode(id_base64))
+        insurer = Insurer.objects.get(id=insurer_id)
 
-        insurer.set_password(new_password)
-        insurer.save()
+        if not PasswordResetTokenGenerator().check_token(insurer, token):
+            return Response({
+                "error": "Token is invalid, request a new one"
+            }, status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            "message": "Password successfully updated"
+            "message": "Valid Token",
+            "id_base64": id_base64,
+            "token": token
         }, status=status.HTTP_200_OK)
 
-    except Exception as e:
+    except DjangoUnicodeDecodeError as e:
         return Response({
-            f"The error '{e}' occurred"
-        }, status=status.HTTP_400_BAD_REQUEST)
+            "error": f"{e.__str__()}"
+        }, status.HTTP_400_BAD_REQUEST)
