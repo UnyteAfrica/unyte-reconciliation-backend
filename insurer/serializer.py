@@ -1,7 +1,13 @@
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
 from rest_framework import serializers
 from .utils import generate_otp
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+
 from datetime import datetime
 
 from .models import Insurer
@@ -26,7 +32,7 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
                                      allow_null=False,
                                      allow_blank=False)
     insurer_gampID = serializers.CharField(allow_blank=True,
-                                   allow_null=True)
+                                           allow_null=True)
 
     class Meta:
         model = Insurer
@@ -106,16 +112,52 @@ class ForgotPasswordEmailSerializer(serializers.ModelSerializer):
             'email'
         ]
 
+    def validate(self, attrs):
+        insurer_email = attrs.get('email')
+        if not Insurer.objects.filter(email=insurer_email).exists():
+            message = {
+                "error": "This email does not exist"
+            }
+            raise ValidationError(message)
+        return attrs
+
 
 class ForgotPasswordResetSerializer(serializers.Serializer):
     new_password = serializers.CharField(max_length=16)
+    token = serializers.CharField(min_length=1)
+    id_base64 = serializers.CharField(min_length=1)
     confirm_password = serializers.CharField(max_length=16)
 
+    class Meta:
+        fields = [
+            'new_password',
+            'confirm_password',
+            'token',
+            'id_base64'
+        ]
+
     def validate(self, attrs):
-        new_password = attrs.get('new_password')
-        confirm_password = attrs.get('confirm_password')
+        try:
+            token = attrs.get('token')
+            id_base64 = attrs.get('id_base64')
+            new_password = attrs.get('new_password')
+            confirm_password = attrs.get('confirm_password')
 
-        if new_password != confirm_password:
-            raise ValidationError("Password Mismatch")
+            insurer_id = force_str(urlsafe_base64_decode(id_base64))
+            insurer = Insurer.objects.get(id=insurer_id)
 
+            if not PasswordResetTokenGenerator().check_token(insurer, token):
+                raise AuthenticationFailed('The reset link is invalid', 401)
+
+            if new_password != confirm_password:
+                raise ValidationError("Password Mismatch")
+
+            if insurer.check_password(raw_password=new_password):
+                raise ValidationError('Password must not be the same as the last')
+
+            insurer.set_password(new_password)
+            insurer.save()
+
+        except Exception as e:
+            raise e
         return attrs

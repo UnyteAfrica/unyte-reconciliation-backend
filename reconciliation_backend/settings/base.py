@@ -153,7 +153,7 @@ DATABASES = {
 # }
 #
 # GS_BUCKET_NAME = 'reconciliations-dashboard'
-# STATIC_URL = 'https://storage.googleapis.com/<your_bucket_name>/'
+# STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/'
 #
 # GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
 #     'path/to/the/downloaded/json/key/credentials.json'
