@@ -1,6 +1,9 @@
 import re
 
-from rest_framework.exceptions import ValidationError
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
 
 from insurer.models import Insurer
 from .models import Agent
@@ -115,21 +118,57 @@ class AgentForgotPasswordEmailSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
 
     class Meta:
-        model = Agent
+        model = Insurer
         fields = [
             'email'
         ]
 
+    def validate(self, attrs):
+        agent_email = attrs.get('email')
+        if not Agent.objects.filter(email=agent_email).exists():
+            message = {
+                "error": "This email does not exist"
+            }
+            raise ValidationError(message)
+        return attrs
+
 
 class AgentForgotPasswordResetSerializer(serializers.Serializer):
     new_password = serializers.CharField(max_length=16)
+    token = serializers.CharField(min_length=1)
+    id_base64 = serializers.CharField(min_length=1)
     confirm_password = serializers.CharField(max_length=16)
 
+    class Meta:
+        fields = [
+            'new_password',
+            'confirm_password',
+            'token',
+            'id_base64'
+        ]
+
     def validate(self, attrs):
-        new_password = attrs.get('new_password')
-        confirm_password = attrs.get('confirm_password')
+        try:
+            token = attrs.get('token')
+            id_base64 = attrs.get('id_base64')
+            new_password = attrs.get('new_password')
+            confirm_password = attrs.get('confirm_password')
 
-        if new_password != confirm_password:
-            raise ValidationError("Password Mismatch")
+            agent_id = force_str(urlsafe_base64_decode(id_base64))
+            agent = Agent.objects.get(id=agent_id)
 
+            if not PasswordResetTokenGenerator().check_token(agent, token):
+                raise AuthenticationFailed('The reset link is invalid', 401)
+
+            if new_password != confirm_password:
+                raise ValidationError("Password Mismatch")
+
+            if agent.check_password(raw_password=new_password):
+                raise ValidationError('Password must not be the same as the last')
+
+            agent.set_password(new_password)
+            agent.save()
+
+        except Exception as e:
+            raise e
         return attrs
