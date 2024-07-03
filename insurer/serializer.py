@@ -1,6 +1,4 @@
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import send_mail
 from rest_framework import serializers
 from .utils import generate_otp
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
@@ -10,7 +8,7 @@ from django.utils.http import urlsafe_base64_decode
 
 from datetime import datetime
 
-from .models import Insurer
+from .models import Insurer, InsurerProfile
 
 
 class CreateInsurerSerializer(serializers.ModelSerializer):
@@ -60,7 +58,6 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        print(validated_data)
         user = Insurer.objects.create_user(**validated_data, otp=generate_otp(), otp_created_at=datetime.now().time())
         user.save()
         return user
@@ -161,3 +158,22 @@ class ForgotPasswordResetSerializer(serializers.Serializer):
         except Exception as e:
             raise e
         return attrs
+
+
+class TestViewInsurerProfile(serializers.Serializer):
+    business_name = serializers.CharField()
+    email = serializers.EmailField()
+    profile_image = serializers.CharField()
+
+    class Meta:
+        fields = [
+            'business_name',
+            'profile_image',
+            'email'
+        ]
+
+
+class ViewInsurerProfile(serializers.ModelSerializer):
+    class Meta:
+        model = InsurerProfile
+        fields = '__all__'
