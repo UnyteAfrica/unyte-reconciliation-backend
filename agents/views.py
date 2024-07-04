@@ -5,6 +5,7 @@ from datetime import datetime
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError, smart_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -18,7 +19,8 @@ from .utils import generate_otp, verify_otp, gen_absolute_url
 from .models import Agent
 from rest_framework import status
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
-    AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer
+    AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
+    UpdateAgentDetails
 
 
 @swagger_auto_schema(
@@ -304,4 +306,60 @@ def password_token_check(request, id_base64, token):
     except DjangoUnicodeDecodeError as e:
         return Response({
             "error": f"{e.__str__()}"
+        }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Agent Details',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Agent']
+)
+@api_view(['GET'])
+def view_agent_details(request, pk):
+    agent = get_object_or_404(Agent, pk=pk)
+    serializer_class = ViewAgentDetailsSerializer(agent)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='PATCH',
+    operation_description='Update Agent Details',
+    request_body=UpdateAgentDetails,
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Agent']
+)
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_agent_details(request, pk):
+    valid_pk = int(pk)
+    if request.user.id != valid_pk:
+        return Response({
+            "error": "You are Unauthorized to complete this action"
+        }, status.HTTP_400_BAD_REQUEST)
+    serializer_class = UpdateAgentDetails(request.user, data=request.data, partial=True)
+
+    if not serializer_class.is_valid():
+        return Response({
+            "error": f"{serializer_class.errors}"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        serializer_class.save()
+        return Response({
+            "message": "Agent data successfully updated"
+        }, status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "error": f"{e}"
         }, status.HTTP_400_BAD_REQUEST)

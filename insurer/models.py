@@ -27,14 +27,19 @@ class Insurer(CustomUser):
     insurer_gampID = models.CharField(null=True,
                                       blank=True,
                                       help_text='GAMP ID for users associated with GAMP')
+    policies = models.ForeignKey("policies.Policies",
+                                 related_name="insurer_policy",
+                                 null=True,
+                                 blank=True,
+                                 on_delete=models.CASCADE)
 
     def __str__(self):
         return self.business_name
 
 
-class InsurerProfile(models.Model):
-    insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
-    profile_image = models.ImageField(default='default.png', upload_to=f'profile_pic')
-
-    def __str__(self):
-        return f'{self.insurer} Profile'
+# class InsurerProfile(models.Model):
+#     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
+#     profile_image = models.ImageField(default='default.png', upload_to=f'profile_pic')
+#
+#     def __str__(self):
+#         return f'{self.insurer} Profile'

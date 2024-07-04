@@ -8,7 +8,8 @@ from django.utils.http import urlsafe_base64_decode
 
 from datetime import datetime
 
-from .models import Insurer, InsurerProfile
+from .models import Insurer
+from agents.models import Agent
 
 
 class CreateInsurerSerializer(serializers.ModelSerializer):
@@ -160,20 +161,40 @@ class ForgotPasswordResetSerializer(serializers.Serializer):
         return attrs
 
 
-class TestViewInsurerProfile(serializers.Serializer):
-    business_name = serializers.CharField()
-    email = serializers.EmailField()
-    profile_image = serializers.CharField()
-
+class AgentSerializer(serializers.ModelSerializer):
     class Meta:
+        model = Agent
         fields = [
-            'business_name',
-            'profile_image',
+            'id',
+            'first_name',
+            'last_name',
             'email'
         ]
 
 
-class ViewInsurerProfile(serializers.ModelSerializer):
+class ViewInsurerDetails(serializers.ModelSerializer):
     class Meta:
-        model = InsurerProfile
-        fields = '__all__'
+        model = Insurer
+        fields = [
+            'id',
+            'business_name',
+            'email',
+        ]
+
+# class TestViewInsurerProfile(serializers.Serializer):
+#     business_name = serializers.CharField()
+#     email = serializers.EmailField()
+#     profile_image = serializers.CharField()
+#
+#     class Meta:
+#         fields = [
+#             'business_name',
+#             'profile_image',
+#             'email'
+#         ]
+#
+#
+# class ViewInsurerProfile(serializers.ModelSerializer):
+#     class Meta:
+#         model = InsurerProfile
+#         fields = '__all__'

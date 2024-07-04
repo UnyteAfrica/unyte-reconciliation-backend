@@ -9,7 +9,6 @@ class Policies(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
-    device = models.OneToOneField("devices.Devices", on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
