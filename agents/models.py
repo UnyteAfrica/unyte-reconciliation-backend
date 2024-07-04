@@ -31,7 +31,8 @@ class Agent(CustomUser):
     policy = models.ForeignKey("policies.Policies",
                                on_delete=models.CASCADE,
                                blank=True,
-                               null=True)
+                               null=True,
+                               related_name="agent_policy")
     agent_gampID = models.CharField(unique=True,
                                     null=True,
                                     blank=True,

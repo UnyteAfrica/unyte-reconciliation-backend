@@ -1,8 +1,10 @@
+import json
 from datetime import datetime
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -12,11 +14,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
-    ForgotPasswordResetSerializer, SendNewOTPSerializer
+    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer
 from rest_framework.response import Response
 from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
-import logging
 from django.conf import settings
 from .utils import generate_otp, verify_otp, gen_absolute_url
 
@@ -295,7 +296,7 @@ def reset_password(request) -> Response:
 
 @swagger_auto_schema(
     method='GET',
-    operation_description='Reset Password',
+    operation_description='Password Token Check',
     responses={
         200: 'OK',
         400: 'Bad Request'
@@ -323,3 +324,86 @@ def password_token_check(request, id_base64, token):
         return Response({
             "error": f"{e.__str__()}"
         }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Insurer Details',
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_insurer(request, pk):
+    insurer = get_object_or_404(Insurer, pk=pk)
+    serializer_class = ViewInsurerDetails(insurer)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View All Agents For Insurer',
+    responses={
+        200: 'OK',
+        403: 'Unauthorized',
+        404: 'Not Found',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_all_agents_for_insurer(request, pk):
+    valid_pk = int(pk)
+    if request.user.id != valid_pk:
+        return Response({
+            "error": "You are Unauthorized to complete this action"
+        }, status.HTTP_401_UNAUTHORIZED)
+    insurer = get_object_or_404(Insurer, pk=pk)
+    query_set = insurer.agent_set.all()
+    serializer_class = AgentSerializer(query_set, many=True)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+
+
+# TODO: Review the functionality with Seun.
+# @swagger_auto_schema(
+#     method='GET',
+#     operation_description='View Insurer Profile',
+#     responses={
+#         200: 'OK',
+#         400: 'Bad Request',
+#         404: 'Not Found'
+#     },
+#     tags=['Insurer']
+# )
+# @api_view(['GET'])
+# def view_insurer_profile(request, pk) -> Response:
+#     insurer = get_object_or_404(Insurer, pk=pk)
+#     insurer_profile = get_object_or_404(InsurerProfile, insurer=insurer)
+#
+#     insurer_email = insurer.email
+#     insurer_business_name = insurer.business_name
+#     insurer_profile_pic = insurer_profile.profile_image
+#
+#     data = {
+#         'email': insurer_email,
+#         'business_name': insurer_business_name,
+#         'profile_image': str(insurer_profile_pic)
+#     }
+#
+#     serializer_class = TestViewInsurerProfile(data=data)
+#
+#     if not serializer_class.is_valid():
+#         return Response({
+#             "error": serializer_class.errors
+#         }, status.HTTP_400_BAD_REQUEST)
+#
+#     return Response(serializer_class.data, status.HTTP_200_OK)
+#

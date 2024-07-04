@@ -1,5 +1,5 @@
 from django.db import models
-# from django.conf import settings
+from django.conf import settings
 from user.models import CustomUser
 
 
@@ -25,12 +25,21 @@ class Insurer(CustomUser):
                                                     blank=False,
                                                     help_text='Business registration number of Tax ID of insurer')
     insurer_gampID = models.CharField(null=True,
-                                  blank=True,
-                                  help_text='GAMP ID for users associated with GAMP')
+                                      blank=True,
+                                      help_text='GAMP ID for users associated with GAMP')
+    policies = models.ForeignKey("policies.Policies",
+                                 related_name="insurer_policy",
+                                 null=True,
+                                 blank=True,
+                                 on_delete=models.CASCADE)
 
     def __str__(self):
         return self.business_name
 
+
 # class InsurerProfile(models.Model):
-#     insurer = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     profile_image = models.ImageField()
+#     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
+#     profile_image = models.ImageField(default='default.png', upload_to=f'profile_pic')
+#
+#     def __str__(self):
+#         return f'{self.insurer} Profile'

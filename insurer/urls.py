@@ -9,5 +9,7 @@ urlpatterns = [
     path('password-reset', views.reset_password, name='reset_password'),
     path('confirm-email', views.forgot_password_email, name='confirm_email'),
     path('new-otp', views.request_new_otp, name='request_new_otp'),
-    path('password-reset/<id_base64>/<token>', views.password_token_check, name='password-reset-confirm')
+    path('password-reset/<id_base64>/<token>', views.password_token_check, name='password-reset-confirm'),
+    path('<pk>', views.view_insurer, name='view-insurer'),
+    path('<pk>/all-agents', views.list_all_agents_for_insurer, name='all-insurer-agents')
 ]

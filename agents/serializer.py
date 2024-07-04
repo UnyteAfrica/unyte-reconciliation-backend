@@ -172,3 +172,47 @@ class AgentForgotPasswordResetSerializer(serializers.Serializer):
         except Exception as e:
             raise e
         return attrs
+
+
+class ViewAgentDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Agent
+        fields = [
+            'id',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'email',
+        ]
+
+
+class UpdateAgentDetails(serializers.ModelSerializer):
+    first_name = serializers.CharField(max_length=30,
+                                       min_length=1)
+    last_name = serializers.CharField(max_length=30,
+                                      min_length=1)
+    middle_name = serializers.CharField(max_length=30,
+                                        min_length=1)
+
+    class Meta:
+        model = Agent
+        fields = [
+            'first_name',
+            'last_name',
+            'middle_name'
+        ]
+
+    def update(self, instance, validated_data):
+        print(validated_data)
+        print(instance.first_name)
+        try:
+            instance.first_name = validated_data.get('first_name', instance.first_name)
+            instance.last_name = validated_data.get('last_name', instance.last_name)
+            instance.middle_name = validated_data.get('middle_name', instance.middle_name)
+
+            instance.save()
+
+            return instance
+
+        except Exception as e:
+            raise e
