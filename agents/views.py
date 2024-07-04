@@ -320,6 +320,7 @@ def password_token_check(request, id_base64, token):
     tags=['Agent']
 )
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def view_agent_details(request, pk):
     agent = get_object_or_404(Agent, pk=pk)
     serializer_class = ViewAgentDetailsSerializer(agent)
