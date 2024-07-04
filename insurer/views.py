@@ -262,7 +262,7 @@ def forgot_password_email(request) -> Response:
         )
 
         message = {
-            "message": "Reset password email sent to your email"
+            "message": "Confirmation email sent"
         }
         return Response(message, status=status.HTTP_200_OK)
 
