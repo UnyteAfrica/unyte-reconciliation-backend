@@ -345,7 +345,7 @@ def update_agent_details(request, pk):
     if request.user.id != valid_pk:
         return Response({
             "error": "You are Unauthorized to complete this action"
-        }, status.HTTP_400_BAD_REQUEST)
+        }, status.HTTP_401_UNAUTHORIZED)
     serializer_class = UpdateAgentDetails(request.user, data=request.data, partial=True)
 
     if not serializer_class.is_valid():
