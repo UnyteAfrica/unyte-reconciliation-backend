@@ -11,3 +11,4 @@ main.py
 staticfiles/
 debug.log
 test.log
+media/
