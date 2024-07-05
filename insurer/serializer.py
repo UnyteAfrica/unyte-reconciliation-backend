@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from .utils import generate_otp, CustomValidationError
@@ -10,6 +11,8 @@ from datetime import datetime
 
 from .models import Insurer
 from agents.models import Agent
+
+custom_user = get_user_model()
 
 
 class CreateInsurerSerializer(serializers.ModelSerializer):
@@ -63,6 +66,9 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
             raise CustomValidationError({"error": "GampID already exists"})
 
         if Insurer.objects.filter(email=email).exists():
+            raise CustomValidationError({"error": "Email already exists"})
+
+        if custom_user.objects.filter(email=email).exists():
             raise CustomValidationError({"error": "Email already exists"})
 
         if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
