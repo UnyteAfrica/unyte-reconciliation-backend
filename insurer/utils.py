@@ -4,6 +4,8 @@ import pyotp
 from dotenv import load_dotenv, find_dotenv
 from datetime import datetime
 
+from rest_framework.exceptions import APIException
+
 load_dotenv(find_dotenv())
 
 
@@ -13,6 +15,16 @@ def generate_otp() -> str:
 
     return otp
 
+
+class CustomValidationError(APIException):
+    status_code = 400
+    default_detail = 'Invalid input.'
+    default_code = 'invalid'
+
+    def __init__(self, detail=None, code=None):
+        if detail is None:
+            detail = {'error': self.default_detail}
+        self.detail = detail
 
 def verify_otp(otp_created_at) -> bool:
     current_time = datetime.now().time()

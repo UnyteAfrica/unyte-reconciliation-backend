@@ -1,6 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
-from .utils import generate_otp
+from .utils import generate_otp, CustomValidationError
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_str
@@ -48,6 +48,8 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         insurer_gampID = attrs.get('insurer_gampID')
         admin_name = attrs.get('admin_name')
         business_reg_num = attrs.get('business_registration_number')
+        business_name = attrs.get('business_name')
+        email = attrs.get('email')
 
         if insurer_gampID == '':
             return attrs
@@ -55,7 +57,20 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         pattern = f'{admin_name}+{business_reg_num}@getgamp.com'
 
         if insurer_gampID != pattern:
-            raise ValidationError("Invalid GampID")
+            raise CustomValidationError({"error": "Invalid GampID"})
+
+        if Insurer.objects.filter(insurer_gampID=insurer_gampID).exists():
+            raise CustomValidationError({"error": "GampID already exists"})
+
+        if Insurer.objects.filter(email=email).exists():
+            raise CustomValidationError({"error": "Email already exists"})
+
+        if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
+            raise CustomValidationError({"error": "Business Registration number already exists"})
+
+        if Insurer.objects.filter(business_name=business_name).exists():
+            raise CustomValidationError({"error": "Business Name  already exists"})
+
         return attrs
 
     def create(self, validated_data):

@@ -3,7 +3,20 @@ from dotenv import load_dotenv, find_dotenv
 from datetime import datetime
 import os
 
+from rest_framework.exceptions import APIException
+
 load_dotenv(find_dotenv())
+
+
+class CustomValidationError(APIException):
+    status_code = 400
+    default_detail = 'Invalid input.'
+    default_code = 'invalid'
+
+    def __init__(self, detail=None, code=None):
+        if detail is None:
+            detail = {'error': self.default_detail}
+        self.detail = detail
 
 
 def generate_otp() -> str:
