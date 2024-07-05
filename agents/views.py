@@ -154,7 +154,7 @@ def request_new_otp(request):
     message = {
         'message': 'New OTP has been sent out!'
     }
-    return Response(message, status=status.HTTP_400_BAD_REQUEST)
+    return Response(message, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
