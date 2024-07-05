@@ -152,7 +152,7 @@ def request_new_otp(request):
         recipient_list=[settings.TO_EMAIL, agent_email],
     )
     message = {
-        'error': 'New OTP has been sent out!'
+        'message': 'New OTP has been sent out!'
     }
     return Response(message, status=status.HTTP_400_BAD_REQUEST)
 

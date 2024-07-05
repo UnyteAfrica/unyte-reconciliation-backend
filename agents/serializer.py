@@ -12,7 +12,6 @@ from .models import Agent
 from rest_framework import serializers
 from datetime import datetime
 from .utils import generate_otp, CustomValidationError
-from django.conf import settings
 
 custom_user = get_user_model()
 
@@ -83,7 +82,7 @@ class CreateAgentSerializer(serializers.ModelSerializer):
             raise CustomValidationError({"error": "Email already exists"})
 
         if custom_user.objects.filter(email=email).exists():
-            raise CustomValidationError({"error": "Email already exists"})
+            raise CustomValidationError({"error": "Email already exists!"})
 
         if Agent.objects.filter(home_address=home_address).exists():
             raise CustomValidationError({"error": "Home address already exists"})
