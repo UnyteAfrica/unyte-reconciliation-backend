@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
@@ -9,7 +10,7 @@ from insurer.models import Insurer
 from .models import Agent
 from rest_framework import serializers
 from datetime import datetime
-from .utils import generate_otp
+from .utils import generate_otp, CustomValidationError
 
 
 class CreateAgentSerializer(serializers.ModelSerializer):
@@ -59,16 +60,33 @@ class CreateAgentSerializer(serializers.ModelSerializer):
         agent_gampID = attrs.get('agent_gampID')
         first_name = attrs.get('first_name')
         bank_account = attrs.get('bank_account')
+        email = attrs.get('email')
+        home_address = attrs.get('home_address')
+        bvn = attrs.get('bvn')
 
         if agent_gampID == '':
             return attrs
 
         pattern = f'{first_name}+{bank_account}@getgamp.com'
 
-        print(pattern, agent_gampID)
-
         if agent_gampID != pattern:
-            raise ValidationError("Invalid GampID")
+            raise CustomValidationError({"error": "Invalid GampID"})
+
+        if Agent.objects.filter(agent_gampID=agent_gampID).exists():
+            raise CustomValidationError({"error": "GampID already exists"})
+
+        if Agent.objects.filter(email=email).exists():
+            raise CustomValidationError({"error": "Email already exists"})
+
+        if Agent.objects.filter(home_address=home_address).exists():
+            raise CustomValidationError({"error": "Home address already exists"})
+
+        if Agent.objects.filter(bvn=bvn).exists():
+            raise CustomValidationError({"error": "bvn already exists"})
+
+        if Agent.objects.filter(bank_account=bank_account).exists():
+            raise CustomValidationError({"error": "bank_account already exists"})
+
         return attrs
 
     def create(self, validated_data):
@@ -77,7 +95,7 @@ class CreateAgentSerializer(serializers.ModelSerializer):
         insurer = Insurer.objects.filter(business_name=affiliated_company).exists()
 
         if not insurer:
-            return "Affiliated company does not exist"
+            raise ObjectDoesNotExist("Affiliated company does not exist")
 
         insurer = Insurer.objects.get(business_name=affiliated_company)
         validated_data['affiliated_company'] = insurer
