@@ -296,7 +296,7 @@ def reset_password(request) -> Response:
 
 @swagger_auto_schema(
     method='GET',
-    operation_description='Password Token Check',
+    operation_description='Id and Token Verification',
     responses={
         200: 'OK',
         400: 'Bad Request'
