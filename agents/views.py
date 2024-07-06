@@ -256,30 +256,8 @@ def forgot_password_email(request) -> Response:
 
 
 @swagger_auto_schema(
-    method='POST',
-    operation_description='Reset Password',
-    request_body=AgentForgotPasswordResetSerializer,
-    responses={
-        200: 'OK',
-        400: 'Bad Request'
-    },
-    tags=['Agent']
-)
-@api_view(['POST'])
-def reset_password(request) -> Response:
-    serializer_class = AgentForgotPasswordResetSerializer(data=request.data)
-
-    if not serializer_class.is_valid():
-        return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    return Response({
-        "message": "Password successfully updated"
-    }, status=status.HTTP_200_OK)
-
-
-@swagger_auto_schema(
     method='GET',
-    operation_description='Reset Password',
+    operation_description='Id and Token Verification',
     responses={
         200: 'OK',
         400: 'Bad Request'
@@ -307,6 +285,28 @@ def password_token_check(request, id_base64, token):
         return Response({
             "error": f"{e.__str__()}"
         }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Reset Password',
+    request_body=AgentForgotPasswordResetSerializer,
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Agent']
+)
+@api_view(['POST'])
+def reset_password(request) -> Response:
+    serializer_class = AgentForgotPasswordResetSerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({
+        "message": "Password successfully updated"
+    }, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
