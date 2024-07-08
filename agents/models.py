@@ -1,5 +1,6 @@
 from django.db import models
 from user.models import CustomUser
+from policies.models import Policies
 
 
 class Agent(CustomUser):
@@ -40,3 +41,11 @@ class Agent(CustomUser):
 
     def __str__(self):
         return self.first_name.upper()
+
+    def get_policies(self):
+        policies = Policies.objects.filter(agentpolicy__agent=self)
+        return policies
+
+    def get_sold_policies(self):
+        sold_policies = Policies.objects.filter(agentpolicy__agent=self, agentpolicy__is_sold=True)
+        return sold_policies

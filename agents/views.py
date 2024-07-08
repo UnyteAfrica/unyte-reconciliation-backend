@@ -15,12 +15,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
+from policies.models import Policies, AgentPolicy
 from .utils import generate_otp, verify_otp, gen_absolute_url
 from .models import Agent
 from rest_framework import status
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
-    UpdateAgentDetails
+    UpdateAgentDetails, AgentClaimSellPolicySerializer, AgentViewAllPolicies
 
 
 @swagger_auto_schema(
@@ -342,8 +343,7 @@ def view_agent_details(request, pk):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_agent_details(request, pk):
-    valid_pk = int(pk)
-    if request.user.id != valid_pk:
+    if request.user.id != pk:
         return Response({
             "error": "You are Unauthorized to complete this action"
         }, status.HTTP_401_UNAUTHORIZED)
@@ -364,3 +364,150 @@ def update_agent_details(request, pk):
         return Response({
             "error": f"{e}"
         }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Agent Claim Policy',
+    request_body=AgentClaimSellPolicySerializer,
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Agent']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def agent_sell_policy(request, pk):
+    if request.user.id != pk:
+        return Response({
+            "error": "You are not authorized to perform this action"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    serializer_class = AgentClaimSellPolicySerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response({
+            serializer_class.errors
+        }, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        policy_name = serializer_class.validated_data.get('policy_name')
+        agent = Agent.objects.get(id=pk)
+        policy = Policies.objects.get(name=policy_name)
+        claim_policy = AgentPolicy.objects.get(agent=agent, policy=policy)
+
+        if claim_policy.is_sold is True:
+            return Response({
+                "message": "You have already sold this policy"
+            }, status.HTTP_200_OK)
+
+        claim_policy.is_sold = True
+        claim_policy.save()
+
+        return Response({
+            "message": "You have successfully sold this policy"
+        }, status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "error": f"The error '{e}' occurred"
+        }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Agent Claim Policy',
+    request_body=AgentClaimSellPolicySerializer,
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Agent']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def agent_claim_policy(request, pk):
+    if request.user.id != pk:
+        return Response({
+            "error": "You are not authorized to perform this action"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    serializer_class = AgentClaimSellPolicySerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response({
+            serializer_class.errors
+        }, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        policy_name = serializer_class.validated_data.get('policy_name')
+        agent = Agent.objects.get(id=pk)
+        policy = Policies.objects.get(name=policy_name)
+
+        if AgentPolicy.objects.filter(agent=agent, policy=policy).exists():
+            return Response({
+                "error": "You have claimed this policy already"
+            }, status.HTTP_400_BAD_REQUEST)
+
+        claim_policy = AgentPolicy.objects.create(agent=agent, policy=policy)
+
+        claim_policy.save()
+        return Response({
+            "message": "You have claimed a new policy"
+        }, status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "error": f"The error '{e}' occurred"
+        }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='Agent Claim Policy',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Agent']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_all_policies(request, pk):
+    if request.user.id != pk:
+        return Response({
+            "error": "You are not authorized to perform this action"
+        }, status.HTTP_400_BAD_REQUEST)
+    agent = get_object_or_404(Agent, id=pk)
+    queryset = agent.get_policies()
+    serializer_class = AgentViewAllPolicies(queryset, many=True)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='Sold Policies',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Agent']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_all_sold_policies(request, pk):
+    if request.user.id != pk:
+        return Response({
+            "error": "You are not authorized to perform this action"
+        }, status.HTTP_400_BAD_REQUEST)
+    agent = get_object_or_404(Agent, id=pk)
+    queryset = agent.get_sold_policies()
+    serializer_class = AgentViewAllPolicies(queryset, many=True)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)

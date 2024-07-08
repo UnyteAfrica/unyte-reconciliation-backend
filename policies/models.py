@@ -4,7 +4,6 @@ from django.db import models
 class Policies(models.Model):
     name = models.CharField(null=False, max_length=200)
     amount = models.CharField(null=False, max_length=200)
-    sold = models.BooleanField(null=False, default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     valid_from = models.DateTimeField()
@@ -16,3 +15,17 @@ class Policies(models.Model):
     class Meta:
         verbose_name = 'policy'
         verbose_name_plural = 'policies'
+
+
+class AgentPolicy(models.Model):
+    agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE)
+    policy = models.ForeignKey(Policies, on_delete=models.CASCADE)
+    is_sold = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ['agent', 'policy']
+        verbose_name = 'agent policy'
+        verbose_name_plural = 'agent policies'
+
+    def __str__(self):
+        return f'{self.agent} - {self.policy}'
