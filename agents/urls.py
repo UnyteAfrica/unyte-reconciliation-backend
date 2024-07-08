@@ -10,6 +10,10 @@ urlpatterns = [
     path('new-otp', views.request_new_otp, name='request_new_otp'),
     path('password-reset/<id_base64>/<token>', views.password_token_check, name='password-reset-confirm'),
     path('<pk>', views.view_agent_details, name='agent-details'),
-    path('<pk>/update', views.update_agent_details, name='update-details')
+    path('<int:pk>/update', views.update_agent_details, name='update-details'),
+    path('<int:pk>/claim-policy', views.agent_claim_policy, name='claim-policy'),
+    path('<int:pk>/sell-policy', views.agent_sell_policy, name='claim-policy'),
+    path('<int:pk>/view-all-policies', views.view_all_policies, name='view-all-policies'),
+    path('<int:pk>/view-sold-policies', views.view_all_sold_policies, name='view-sold-policies'),
 ]
 

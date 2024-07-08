@@ -1,5 +1,3 @@
-import re
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ObjectDoesNotExist
@@ -12,6 +10,7 @@ from .models import Agent
 from rest_framework import serializers
 from datetime import datetime
 from .utils import generate_otp, CustomValidationError
+from policies.models import AgentPolicy, Policies
 
 custom_user = get_user_model()
 
@@ -240,3 +239,34 @@ class UpdateAgentDetails(serializers.ModelSerializer):
 
         except Exception as e:
             raise e
+
+
+class AgentClaimSellPolicySerializer(serializers.ModelSerializer):
+    policy_name = serializers.CharField(max_length=100,
+                                        min_length=1,
+                                        allow_blank=False)
+
+    class Meta:
+        model = Agent
+        fields = [
+            'policy_name'
+        ]
+
+    def validate(self, attrs):
+        policy_name = attrs.get('policy_name')
+        if not Policies.objects.filter(name=policy_name).exists():
+            raise CustomValidationError({
+                "error": f"Policy: {policy_name} does not exist"
+            })
+
+        return attrs
+
+
+class AgentViewAllPolicies(serializers.ModelSerializer):
+    class Meta:
+        model = Policies
+        fields = [
+            'id',
+            'name',
+            'amount'
+        ]
