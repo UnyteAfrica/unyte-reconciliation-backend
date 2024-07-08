@@ -29,10 +29,12 @@ class CreateAgentSerializer(serializers.ModelSerializer):
                                          allow_null=False,
                                          allow_blank=False)
     email = serializers.EmailField()
-    bank_account = serializers.CharField(max_length=10,
+    bank_account = serializers.CharField(min_length=10,
+                                         max_length=10,
                                          allow_blank=False,
                                          allow_null=False)
-    bvn = serializers.CharField(max_length=11,
+    bvn = serializers.CharField(min_length=11,
+                                max_length=11,
                                 allow_null=False,
                                 allow_blank=False)
     affiliated_company = serializers.CharField(allow_blank=False,
