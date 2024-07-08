@@ -203,7 +203,7 @@ def verify_otp_token(request) -> Response:
             }
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         message = {
-            'error': 'OTP Verified'
+            'message': 'OTP Verified'
         }
         return Response(message, status=status.HTTP_200_OK)
 
