@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+
+from policies.models import Policies
 from user.models import CustomUser
 
 
@@ -36,6 +38,13 @@ class Insurer(CustomUser):
     def __str__(self):
         return self.business_name
 
+    def get_policies(self):
+        policies = Policies.objects.filter(insurerpolicy__insurer=self)
+        return policies
+
+    def get_sold_policies(self):
+        sold_policies = Policies.objects.filter(insurerpolicy__insurer=self, insurerpolicy__is_sold=True)
+        return sold_policies
 
 # class InsurerProfile(models.Model):
 #     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)

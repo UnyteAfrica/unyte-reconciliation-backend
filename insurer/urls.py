@@ -11,5 +11,9 @@ urlpatterns = [
     path('new-otp', views.request_new_otp, name='request_new_otp'),
     path('password-reset/<id_base64>/<token>', views.password_token_check, name='password-reset-confirm'),
     path('<pk>', views.view_insurer, name='view-insurer'),
-    path('<pk>/all-agents', views.list_all_agents_for_insurer, name='all-insurer-agents')
+    path('<pk>/all-agents', views.list_all_agents_for_insurer, name='all-insurer-agents'),
+    path('<int:pk>/claim-policy', views.insurer_claim_policy, name='claim-policy'),
+    path('<int:pk>/sell-policy', views.insurer_sell_policy, name='claim-policy'),
+    path('<int:pk>/view-all-policies', views.view_all_policies, name='view-all-policies'),
+    path('<int:pk>/view-sold-policies', views.view_all_sold_policies, name='view-sold-policies'),
 ]

@@ -400,8 +400,8 @@ def agent_sell_policy(request, pk):
 
         if claim_policy.is_sold is True:
             return Response({
-                "message": "You have already sold this policy"
-            }, status.HTTP_200_OK)
+                "error": "You have already sold this policy"
+            }, status.HTTP_400_BAD_REQUEST)
 
         claim_policy.is_sold = True
         claim_policy.save()

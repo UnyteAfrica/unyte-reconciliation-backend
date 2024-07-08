@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
+
+from policies.models import Policies
 from .utils import generate_otp, CustomValidationError
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -202,6 +204,36 @@ class ViewInsurerDetails(serializers.ModelSerializer):
             'email',
         ]
 
+
+class InsurerClaimSellPolicySerializer(serializers.ModelSerializer):
+    policy_name = serializers.CharField(max_length=100,
+                                        min_length=1,
+                                        allow_blank=False)
+
+    class Meta:
+        model = Insurer
+        fields = [
+            'policy_name'
+        ]
+
+    def validate(self, attrs):
+        policy_name = attrs.get('policy_name')
+        if not Policies.objects.filter(name=policy_name).exists():
+            raise CustomValidationError({
+                "error": f"Policy: {policy_name} does not exist"
+            })
+
+        return attrs
+
+
+class InsurerViewAllPolicies(serializers.ModelSerializer):
+    class Meta:
+        model = Policies
+        fields = [
+            'id',
+            'name',
+            'amount',
+        ]
 # class TestViewInsurerProfile(serializers.Serializer):
 #     business_name = serializers.CharField()
 #     email = serializers.EmailField()
