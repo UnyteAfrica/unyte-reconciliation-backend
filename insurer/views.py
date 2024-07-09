@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -22,7 +23,7 @@ from rest_framework.response import Response
 from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
-from .utils import generate_otp, verify_otp, gen_absolute_url
+from .utils import generate_otp, verify_otp, gen_absolute_url, gen_sign_up_url_for_agent
 
 load_dotenv(find_dotenv())
 
@@ -77,6 +78,7 @@ def create_insurer(request) -> Response:
         )
 
         message = {
+            'id': insurer.id,
             "message": f"Account successfully created for user: {business_name}"
         }
         return Response(message, status=status.HTTP_201_CREATED)
@@ -123,6 +125,7 @@ def login_insurer(request) -> Response:
 
         message = {
             "login_status": True,
+            'id': insurer.id,
             "access_token": str(auth_token.access_token),
             "refresh_token": str(auth_token)
         }
@@ -519,6 +522,41 @@ def view_all_sold_policies(request, pk):
 
     return Response(serializer_class.data, status.HTTP_200_OK)
 
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='Generate SignUp Link for Insurer',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def generate_sign_up_link_for_agent(request, pk):
+    insurer_id = request.user.id
+    if insurer_id != pk:
+        return Response({
+            "error": "You are not authorised to perform this action"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    insurer = get_object_or_404(Insurer, pk=insurer_id)
+
+    unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
+
+    current_site = os.getenv('FRONTEND_URL')
+    relative_link = reverse('agents:register_agent')
+    relative_link = relative_link.replace('/api/', '/')
+
+    # abs_url = gen_absolute_url(frontend_url, relative_link, token)
+    link = gen_sign_up_url_for_agent(current_site, relative_link, unyte_unique_insurer_id)
+    print("generated link ", link)
+
+    return Response({
+        "message": f"Link generated: {link}"
+    })
 
 # TODO: Review the functionality with Seun.
 # @swagger_auto_schema(

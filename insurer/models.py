@@ -34,6 +34,10 @@ class Insurer(CustomUser):
                                  null=True,
                                  blank=True,
                                  on_delete=models.CASCADE)
+    unyte_unique_insurer_id = models.CharField(max_length=70,
+                                               unique=True,
+                                               null=False,
+                                               blank=False)
 
     def __str__(self):
         return self.business_name

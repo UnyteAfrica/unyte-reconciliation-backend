@@ -3,7 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from policies.models import Policies
-from .utils import generate_otp, CustomValidationError
+from .utils import generate_otp, CustomValidationError, generate_unyte_unique_insurer_id
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_str
@@ -82,7 +82,10 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        user = Insurer.objects.create_user(**validated_data, otp=generate_otp(), otp_created_at=datetime.now().time())
+        business_name = validated_data.get('business_name')
+        business_reg_num = validated_data.get('business_registration_number')
+        unyte_unique_insurer_id = generate_unyte_unique_insurer_id(business_name, business_reg_num)
+        user = Insurer.objects.create_user(**validated_data, unyte_unique_insurer_id=unyte_unique_insurer_id, otp=generate_otp(), otp_created_at=datetime.now().time())
         user.save()
         return user
 

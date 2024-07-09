@@ -34,7 +34,6 @@ def verify_otp(otp_created_at) -> bool:
     current_datetime = datetime.combine(today, current_time)
 
     time_delta = current_datetime - otp_created_time_datetime
-    print(time_delta.total_seconds())
 
     if time_delta.total_seconds() >= 120:
         return False
@@ -46,3 +45,10 @@ def gen_absolute_url(current_site, relative_link, token):
     if os.getenv('ENV') != 'dev':
         return f'https://{current_site}{relative_link}?token={str(token)}'
     return f'http://{current_site}{relative_link}?token={str(token)}'
+
+
+def generate_unyte_unique_agent_id(first_name: str, bank_account: str) -> str:
+    first_char = len(bank_account) - 4
+    last_char = len(bank_account)
+    unyte_unique_agent_id = f'{"".join(first_name.split())}+{bank_account[first_char:last_char]}+unyte.com'
+    return unyte_unique_agent_id
