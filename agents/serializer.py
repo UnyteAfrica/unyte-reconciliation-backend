@@ -37,8 +37,6 @@ class CreateAgentSerializer(serializers.ModelSerializer):
                                 max_length=11,
                                 allow_null=False,
                                 allow_blank=False)
-    affiliated_company = serializers.CharField(allow_blank=False,
-                                               allow_null=False)
     agent_gampID = serializers.CharField(allow_null=True,
                                          allow_blank=True)
     password = serializers.CharField(max_length=16,
@@ -55,7 +53,6 @@ class CreateAgentSerializer(serializers.ModelSerializer):
             "email",
             "bank_account",
             "bvn",
-            "affiliated_company",
             "agent_gampID",
             "password"
         ]
@@ -67,17 +64,6 @@ class CreateAgentSerializer(serializers.ModelSerializer):
         email = attrs.get('email')
         home_address = attrs.get('home_address')
         bvn = attrs.get('bvn')
-
-        if agent_gampID == '':
-            return attrs
-
-        pattern = f'{first_name}+{bank_account}@getgamp.com'
-
-        if agent_gampID != pattern:
-            raise CustomValidationError({"error": "Invalid GampID"})
-
-        if Agent.objects.filter(agent_gampID=agent_gampID).exists():
-            raise CustomValidationError({"error": "GampID already exists"})
 
         if Agent.objects.filter(email=email).exists():
             raise CustomValidationError({"error": "Email already exists"})
@@ -94,22 +80,24 @@ class CreateAgentSerializer(serializers.ModelSerializer):
         if Agent.objects.filter(bank_account=bank_account).exists():
             raise CustomValidationError({"error": "bank_account already exists"})
 
+        if agent_gampID == '':
+            return attrs
+
+        pattern = f'{first_name}+{bank_account}@getgamp.com'
+
+        if agent_gampID != pattern:
+            raise CustomValidationError({"error": "Invalid GampID"})
+
+        if Agent.objects.filter(agent_gampID=agent_gampID).exists():
+            raise CustomValidationError({"error": "GampID already exists"})
+
         return attrs
 
-    def create(self, validated_data):
-        affiliated_company = validated_data.get('affiliated_company')
-
-        insurer = Insurer.objects.filter(business_name=affiliated_company).exists()
-
-        if not insurer:
-            raise ObjectDoesNotExist("Affiliated company does not exist")
-
-        insurer = Insurer.objects.get(business_name=affiliated_company)
-        validated_data['affiliated_company'] = insurer
-
-        agent = Agent.objects.create_user(**validated_data, otp=generate_otp(), otp_created_at=datetime.now().time())
-        agent.save()
-        return agent
+    # def create(self, validated_data):
+    #     print(validated_data.quert)
+    #     agent = Agent.objects.create_user(**validated_data, otp=generate_otp(), otp_created_at=datetime.now().time())
+    #     agent.save()
+    #     return agent
 
 
 class LoginAgentSerializer(serializers.ModelSerializer):

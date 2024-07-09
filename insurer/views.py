@@ -22,7 +22,7 @@ from rest_framework.response import Response
 from .models import Insurer
 from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
-from .utils import generate_otp, verify_otp, gen_absolute_url
+from .utils import generate_otp, verify_otp, gen_absolute_url, gen_sign_up_url_for_agent
 
 load_dotenv(find_dotenv())
 
@@ -521,6 +521,33 @@ def view_all_sold_policies(request, pk):
 
     return Response(serializer_class.data, status.HTTP_200_OK)
 
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='Generate SignUp Link for Insurer',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
+@api_view(['GET'])
+def generate_sign_up_link_for_agent(request, pk):
+    insurer_id = pk
+    current_site = get_current_site(request).domain
+    print("curr site ", current_site)
+
+    relative_link = reverse('agents:register_agent')
+    print("relative link ", relative_link)
+
+    # abs_url = gen_absolute_url(current_site, relative_link, token)
+    link = gen_sign_up_url_for_agent(current_site, relative_link, insurer_id)
+    print("generated link ", link)
+
+    return Response({
+        "message": f"Link generated: {link}"
+    })
 
 # TODO: Review the functionality with Seun.
 # @swagger_auto_schema(

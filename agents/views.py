@@ -9,12 +9,14 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError, smart_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
+from insurer.models import Insurer
 from policies.models import Policies, AgentPolicy
 from .utils import generate_otp, verify_otp, gen_absolute_url
 from .models import Agent
@@ -26,6 +28,9 @@ from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNe
 
 @swagger_auto_schema(
     method='POST',
+    manual_parameters=[
+        openapi.Parameter('invite', openapi.IN_QUERY, description="Insurer id", type=openapi.TYPE_STRING),
+    ],
     request_body=CreateAgentSerializer,
     operation_description='Create New Agent',
     responses={
@@ -42,11 +47,19 @@ def create_agent(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        first_name = serializer_class.validated_data.get('first_name')
-        last_name = serializer_class.validated_data.get('last_name')
         agent_email = serializer_class.validated_data.get('email')
 
-        serializer_class.save()
+        insurer = Insurer.objects.get(id=request.query_params.get('invite'))
+
+        agent_data = serializer_class.validated_data
+        agent_data['affiliated_company'] = insurer
+        first_name = agent_data.get("first_name")
+        last_name = agent_data.get("last_name")
+
+        agent = Agent.objects.create_user(**agent_data,
+                                          otp=generate_otp(),
+                                          otp_created_at=datetime.now().time())
+        agent.save()
 
         """
             Send email to insurer including otp.

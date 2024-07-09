@@ -46,3 +46,9 @@ def gen_absolute_url(current_site, relative_link, token):
     if os.getenv('ENV') != 'dev':
         return f'https://{current_site}{relative_link}?token={str(token)}'
     return f'http://{current_site}{relative_link}?token={str(token)}'
+
+
+def gen_sign_up_url_for_agent(current_site, relative_link, insurer_id):
+    if os.getenv('ENV') != 'dev':
+        return f'https://{current_site}{relative_link}?invite={str(insurer_id)}'
+    return f'http://{current_site}{relative_link}?invite={str(insurer_id)}'
