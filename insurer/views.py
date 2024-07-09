@@ -77,6 +77,7 @@ def create_insurer(request) -> Response:
         )
 
         message = {
+            'id': insurer.id,
             "message": f"Account successfully created for user: {business_name}"
         }
         return Response(message, status=status.HTTP_201_CREATED)
@@ -123,6 +124,7 @@ def login_insurer(request) -> Response:
 
         message = {
             "login_status": True,
+            'id': insurer.id,
             "access_token": str(auth_token.access_token),
             "refresh_token": str(auth_token)
         }

@@ -61,6 +61,7 @@ def create_agent(request) -> Response:
         )
 
         message = {
+            'id': agent.id,
             'message': f'Account successfully created for {first_name} {last_name}'
         }
         return Response(message, status=status.HTTP_201_CREATED)
