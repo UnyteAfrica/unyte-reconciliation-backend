@@ -26,6 +26,7 @@ class CustomValidationError(APIException):
             detail = {'error': self.default_detail}
         self.detail = detail
 
+
 def verify_otp(otp_created_at) -> bool:
     current_time = datetime.now().time()
     today = datetime.now().today()
@@ -34,7 +35,6 @@ def verify_otp(otp_created_at) -> bool:
     current_datetime = datetime.combine(today, current_time)
 
     time_delta = current_datetime - otp_created_time_datetime
-    print(time_delta.total_seconds())
 
     if time_delta.total_seconds() >= 120:
         return False
@@ -48,7 +48,14 @@ def gen_absolute_url(current_site, relative_link, token):
     return f'http://{current_site}{relative_link}?token={str(token)}'
 
 
-def gen_sign_up_url_for_agent(current_site, relative_link, insurer_id):
+def gen_sign_up_url_for_agent(frontend_url, relative_link, unyte_unique_insurer_id):
     if os.getenv('ENV') != 'dev':
-        return f'https://{current_site}{relative_link}?invite={str(insurer_id)}'
-    return f'http://{current_site}{relative_link}?invite={str(insurer_id)}'
+        return f'https://{frontend_url}{relative_link}?invite={str(unyte_unique_insurer_id)}'
+    return f'http://{frontend_url}{relative_link}?invite={str(unyte_unique_insurer_id)}'
+
+
+def generate_unyte_unique_insurer_id(business_name: str, business_reg_num: str) -> str:
+    first_char = len(business_reg_num) - 4
+    last_char = len(business_reg_num)
+    unyte_unique_insurer_id = f'{"".join(business_name.split())}+{business_reg_num[first_char:last_char]}+unyte.com'
+    return unyte_unique_insurer_id

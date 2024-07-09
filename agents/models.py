@@ -34,6 +34,10 @@ class Agent(CustomUser):
                                blank=True,
                                null=True,
                                related_name="agent_policy")
+    unyte_unique_agent_id = models.CharField(max_length=70,
+                                             unique=True,
+                                             null=False,
+                                             blank=False)
     agent_gampID = models.CharField(unique=True,
                                     null=True,
                                     blank=True,

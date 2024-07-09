@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -533,16 +534,24 @@ def view_all_sold_policies(request, pk):
     tags=['Insurer']
 )
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def generate_sign_up_link_for_agent(request, pk):
-    insurer_id = pk
-    current_site = get_current_site(request).domain
-    print("curr site ", current_site)
+    insurer_id = request.user.id
+    if insurer_id != pk:
+        return Response({
+            "error": "You are not authorised to perform this action"
+        }, status.HTTP_400_BAD_REQUEST)
 
+    insurer = get_object_or_404(Insurer, pk=insurer_id)
+
+    unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
+
+    current_site = os.getenv('FRONTEND_URL')
     relative_link = reverse('agents:register_agent')
-    print("relative link ", relative_link)
+    relative_link = relative_link.replace('/api/', '/')
 
-    # abs_url = gen_absolute_url(current_site, relative_link, token)
-    link = gen_sign_up_url_for_agent(current_site, relative_link, insurer_id)
+    # abs_url = gen_absolute_url(frontend_url, relative_link, token)
+    link = gen_sign_up_url_for_agent(current_site, relative_link, unyte_unique_insurer_id)
     print("generated link ", link)
 
     return Response({
