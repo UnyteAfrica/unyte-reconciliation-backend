@@ -169,7 +169,6 @@ if credentials_file_path.startswith('gs://'):
     # Define the temporary local file path
     local_temp_file_path = '/tmp/service_account.json'
 
-    # Initialize a GCS client
     storage_client = storage.Client()
 
     # Download the service account file from GCS
@@ -185,6 +184,7 @@ if credentials_file_path.startswith('gs://'):
 else:
     # Use the credentials file directly if it's a local path
     GS_CREDENTIALS = service_account.Credentials.from_service_account_file(credentials_file_path)
+
 # GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
 #     os.path.join(BASE_DIR, 'unyte-project-b1cf8568d4c2.json')
 # )
