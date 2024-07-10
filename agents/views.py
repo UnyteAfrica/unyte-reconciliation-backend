@@ -350,8 +350,9 @@ def reset_password(request) -> Response:
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_agent_details(request, pk):
-    agent = get_object_or_404(Agent, pk=pk)
+def view_agent_details(request):
+    agent_id = request.user.id
+    agent = get_object_or_404(Agent, pk=agent_id)
     serializer_class = ViewAgentDetailsSerializer(agent)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
@@ -370,11 +371,7 @@ def view_agent_details(request, pk):
 )
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
-def update_agent_details(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are Unauthorized to complete this action"
-        }, status.HTTP_401_UNAUTHORIZED)
+def update_agent_details(request):
     serializer_class = UpdateAgentDetails(request.user, data=request.data, partial=True)
 
     if not serializer_class.is_valid():
@@ -407,12 +404,8 @@ def update_agent_details(request, pk):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def agent_sell_policy(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-
+def agent_sell_policy(request):
+    agent_id = request.user.id
     serializer_class = AgentClaimSellPolicySerializer(data=request.data)
 
     if not serializer_class.is_valid():
@@ -422,7 +415,7 @@ def agent_sell_policy(request, pk):
 
     try:
         policy_name = serializer_class.validated_data.get('policy_name')
-        agent = Agent.objects.get(id=pk)
+        agent = Agent.objects.get(id=agent_id)
         policy = Policies.objects.get(name=policy_name)
         claim_policy = AgentPolicy.objects.get(agent=agent, policy=policy)
 
@@ -457,12 +450,8 @@ def agent_sell_policy(request, pk):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def agent_claim_policy(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-
+def agent_claim_policy(request):
+    agent_id = request.user.id
     serializer_class = AgentClaimSellPolicySerializer(data=request.data)
 
     if not serializer_class.is_valid():
@@ -472,7 +461,7 @@ def agent_claim_policy(request, pk):
 
     try:
         policy_name = serializer_class.validated_data.get('policy_name')
-        agent = Agent.objects.get(id=pk)
+        agent = Agent.objects.get(id=agent_id)
         policy = Policies.objects.get(name=policy_name)
 
         if AgentPolicy.objects.filter(agent=agent, policy=policy).exists():
@@ -505,12 +494,9 @@ def agent_claim_policy(request, pk):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_all_policies(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-    agent = get_object_or_404(Agent, id=pk)
+def view_all_policies(request):
+    agent_id = request.user.id
+    agent = get_object_or_404(Agent, id=agent_id)
     queryset = agent.get_policies()
     serializer_class = AgentViewAllPolicies(queryset, many=True)
 
@@ -529,12 +515,9 @@ def view_all_policies(request, pk):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_all_sold_policies(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-    agent = get_object_or_404(Agent, id=pk)
+def view_all_sold_policies(request):
+    agent_id = request.user.id
+    agent = get_object_or_404(Agent, id=agent_id)
     queryset = agent.get_sold_policies()
     serializer_class = AgentViewAllPolicies(queryset, many=True)
 

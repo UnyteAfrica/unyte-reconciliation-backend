@@ -341,8 +341,9 @@ def password_token_check(request, id_base64, token):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_insurer(request, pk):
-    insurer = get_object_or_404(Insurer, pk=pk)
+def view_insurer(request):
+    insurer_id = request.user.id
+    insurer = get_object_or_404(Insurer, pk=insurer_id)
     serializer_class = ViewInsurerDetails(insurer)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
@@ -361,13 +362,10 @@ def view_insurer(request, pk):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_all_agents_for_insurer(request, pk):
-    valid_pk = int(pk)
-    if request.user.id != valid_pk:
-        return Response({
-            "error": "You are Unauthorized to complete this action"
-        }, status.HTTP_401_UNAUTHORIZED)
-    insurer = get_object_or_404(Insurer, pk=pk)
+def list_all_agents_for_insurer(request):
+    insurer_id = request.user.id
+
+    insurer = get_object_or_404(Insurer, pk=insurer_id)
     query_set = insurer.agent_set.all()
     serializer_class = AgentSerializer(query_set, many=True)
 
@@ -387,12 +385,8 @@ def list_all_agents_for_insurer(request, pk):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def insurer_sell_policy(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-
+def insurer_sell_policy(request):
+    insurer_id = request.user.id
     serializer_class = InsurerClaimSellPolicySerializer(data=request.data)
 
     if not serializer_class.is_valid():
@@ -402,7 +396,7 @@ def insurer_sell_policy(request, pk):
 
     try:
         policy_name = serializer_class.validated_data.get('policy_name')
-        insurer = Insurer.objects.get(id=pk)
+        insurer = Insurer.objects.get(id=insurer_id)
         policy = Policies.objects.get(name=policy_name)
         claim_policy = InsurerPolicy.objects.get(insurer=insurer, policy=policy)
 
@@ -437,12 +431,8 @@ def insurer_sell_policy(request, pk):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def insurer_claim_policy(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-
+def insurer_claim_policy(request):
+    insurer_id = request.user.id
     serializer_class = InsurerClaimSellPolicySerializer(data=request.data)
 
     if not serializer_class.is_valid():
@@ -452,7 +442,7 @@ def insurer_claim_policy(request, pk):
 
     try:
         policy_name = serializer_class.validated_data.get('policy_name')
-        insurer = Insurer.objects.get(id=pk)
+        insurer = Insurer.objects.get(id=insurer_id)
         policy = Policies.objects.get(name=policy_name)
 
         if Insurer.objects.filter(insurer=insurer, policy=policy).exists():
@@ -485,12 +475,10 @@ def insurer_claim_policy(request, pk):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_all_policies(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-    insurer = get_object_or_404(Insurer, id=pk)
+def view_all_policies(request):
+    insurer_id = request.user.id
+    insurer = get_object_or_404(Insurer, id=insurer_id)
+
     queryset = insurer.get_policies()
     serializer_class = InsurerViewAllPolicies(queryset, many=True)
 
@@ -509,12 +497,10 @@ def view_all_policies(request, pk):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_all_sold_policies(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-    insurer = get_object_or_404(Insurer, id=pk)
+def view_all_sold_policies(request):
+    insurer_id = request.user.id
+
+    insurer = get_object_or_404(Insurer, id=insurer_id)
     queryset = insurer.get_sold_policies()
     serializer_class = InsurerViewAllPolicies(queryset, many=True)
 
@@ -533,24 +519,15 @@ def view_all_sold_policies(request, pk):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def generate_sign_up_link_for_agent(request, pk):
+def generate_sign_up_link_for_agent(request):
     insurer_id = request.user.id
-    if insurer_id != pk:
-        return Response({
-            "error": "You are not authorised to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-
     insurer = get_object_or_404(Insurer, pk=insurer_id)
 
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
 
-    current_site = os.getenv('FRONTEND_URL')
     relative_link = reverse('agents:register_agent')
     relative_link = relative_link.replace('/api/', '/')
-
-    # abs_url = gen_absolute_url(frontend_url, relative_link, token)
     link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
-    print("generated link ", link)
 
     return Response({
         "message": f"Link generated: {link}"
@@ -569,8 +546,11 @@ def generate_sign_up_link_for_agent(request, pk):
     tags=['Insurer']
 )
 @api_view(['GET'])
-def view_insurer_profile(request, pk) -> Response:
-    insurer = get_object_or_404(Insurer, pk=pk)
+@permission_classes([IsAuthenticated])
+def view_insurer_profile(request) -> Response:
+    insurer_id = request.user.id
+
+    insurer = get_object_or_404(Insurer, pk=insurer_id)
     insurer_profile = get_object_or_404(InsurerProfile, insurer=insurer)
 
     insurer_email = insurer.email
