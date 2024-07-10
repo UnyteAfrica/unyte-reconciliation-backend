@@ -7,7 +7,7 @@ import os
 load_dotenv(find_dotenv())
 
 DEBUG = False
-ALLOWED_HOSTS = ['unyte-reconciliation-backend-main-ynoamqpukq-uc.a.run.app']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app']
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -31,7 +31,7 @@ SWAGGER_SETTINGS = {
         'delete',
         'patch'
     ],
-    'DEFAULT_API_URL': 'https://unyte-reconciliation-backend-main-ynoamqpukq-uc.a.run.app',
+    'DEFAULT_API_URL': 'https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app',
 }
 
 DATABASES = {

@@ -169,7 +169,7 @@ if credentials_file_path.startswith('gs://'):
     # Define the temporary local file path
     local_temp_file_path = '/tmp/service_account.json'
 
-    storage_client = storage.Client()
+    storage_client = storage.Client(project='unyte-project')
 
     # Download the service account file from GCS
     bucket = storage_client.bucket(bucket_name)
