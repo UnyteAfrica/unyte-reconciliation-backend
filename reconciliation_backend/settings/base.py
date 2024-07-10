@@ -153,7 +153,7 @@ GS_BUCKET_NAME = 'reconciliations-dashboard'
 STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/static/'
 
 GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-    os.path.join(BASE_DIR, 'unyte-project-b1cf8568d4c2.json')
+    os.getenv('GOOGLE_SERVICE_JSON')
 )
 
 
