@@ -1,1 +1,15 @@
 .idea/
+.env
+./__pycache__
+**/migrations/__pycache__/
+**/__pycache__/
+static/
+.coverage
+coverage.xml
+db.sqlite3
+main.py
+staticfiles/
+debug.log
+test.log
+media/
+unyte-project-b1cf8568d4c2.json
