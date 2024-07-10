@@ -1,9 +1,13 @@
 # base.py
 
 import os
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+
 from django.conf import settings
+
+
+from google.cloud import storage
 from google.oauth2 import service_account
 
 settings.configure()
@@ -25,6 +29,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
     'user',
     'insurer',
@@ -105,8 +110,8 @@ SWAGGER_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=100),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
 REST_FRAMEWORK = {
@@ -145,18 +150,43 @@ DATABASES = {
     }
 }
 
-# STORAGES = {
-#     "default": {
-#         "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
-#     },
-#     "staticfiles": "storages.backends.gcloud.GoogleCloudStorage"
-# }
-#
-# GS_BUCKET_NAME = 'reconciliations-dashboard'
-# STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/'
-#
+DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+
+GS_BUCKET_NAME = 'reconciliations-dashboard'
+STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/static/'
+
+# Read the environment variable for the credentials file path
+credentials_file_path = os.getenv('GS_CREDENTIALS_PATH')
+
+if not credentials_file_path:
+    credentials_file_path = os.environ.setdefault('GS_CREDENTIALS_PATH', 'gs://reconciliations-dashboard/new-.json-sa.json')
+
+# Download the service account file from GCS if it's a GCS URL
+if credentials_file_path.startswith('gs://'):
+    bucket_name, blob_name = credentials_file_path.replace('gs://', '').split('/', 1)
+
+    # Define the temporary local file path
+    local_temp_file_path = '/tmp/service_account.json'
+
+    storage_client = storage.Client(project='unyte-project')
+
+    # Download the service account file from GCS
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    blob.download_to_filename(local_temp_file_path)
+
+    # Use the downloaded service account file to create credentials
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(local_temp_file_path)
+
+    # Optionally, you can delete the temporary file after creating the credentials
+    os.remove(local_temp_file_path)
+else:
+    # Use the credentials file directly if it's a local path
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(credentials_file_path)
+
 # GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-#     'path/to/the/downloaded/json/key/credentials.json'
+#     os.path.join(BASE_DIR, 'unyte-project-b1cf8568d4c2.json')
 # )
 
 
@@ -181,10 +211,9 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-# MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
-STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 AUTH_USER_MODEL = 'user.CustomUser'
 

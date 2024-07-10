@@ -8,6 +8,9 @@ from rest_framework.exceptions import APIException
 load_dotenv(find_dotenv())
 
 
+FRONTED_URL = os.getenv('FRONTEND_URL', 'unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app')
+
+
 class CustomValidationError(APIException):
     status_code = 400
     default_detail = 'Invalid input.'
@@ -41,10 +44,10 @@ def verify_otp(otp_created_at) -> bool:
     return True
 
 
-def gen_absolute_url(current_site, relative_link, token):
+def gen_absolute_url(id_base64, token):
     if os.getenv('ENV') != 'dev':
-        return f'https://{current_site}{relative_link}?token={str(token)}'
-    return f'http://{current_site}{relative_link}?token={str(token)}'
+        return f'https://{FRONTED_URL}/{id_base64}/{token}'
+    return f'http://{FRONTED_URL}/{id_base64}/{token}'
 
 
 def generate_unyte_unique_agent_id(first_name: str, bank_account: str) -> str:

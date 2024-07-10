@@ -4,6 +4,7 @@ from datetime import datetime
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -12,18 +13,19 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from insurer.models import Insurer
 from policies.models import Policies, AgentPolicy
 from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_unique_agent_id
-from .models import Agent
+from .models import Agent, AgentProfile
 from rest_framework import status
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
-    UpdateAgentDetails, AgentClaimSellPolicySerializer, AgentViewAllPolicies
+    UpdateAgentDetails, AgentClaimSellPolicySerializer, AgentViewAllPolicies, ViewAgentProfile, LogoutAgentSerializer
 
 
 @swagger_auto_schema(
@@ -140,6 +142,31 @@ def login_agent(request) -> Response:
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Login Agent',
+    request_body=LogoutAgentSerializer,
+    responses={
+        '200': "OK",
+        '400': 'Bad Request'
+    },
+    tags=['Agent']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_agent(request):
+    serializer_class = LogoutAgentSerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    serializer_class.save()
+
+    return Response({
+        "message": "Agent successfully logged out"
+    }, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -262,9 +289,7 @@ def forgot_password_email(request) -> Response:
         agent = Agent.objects.get(email=agent_email)
         id_base64 = urlsafe_base64_encode(smart_bytes(agent.id))
         token = PasswordResetTokenGenerator().make_token(agent)
-        current_site = get_current_site(request).domain
-        relative_link = reverse('agents:password-reset-confirm', kwargs={'id_base64': id_base64, 'token': token})
-        abs_url = gen_absolute_url(current_site, relative_link, token)
+        abs_url = gen_absolute_url(id_base64, token)
 
         send_mail(
             subject='Verification email',
@@ -350,8 +375,9 @@ def reset_password(request) -> Response:
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_agent_details(request, pk):
-    agent = get_object_or_404(Agent, pk=pk)
+def view_agent_details(request):
+    agent_id = request.user.id
+    agent = get_object_or_404(Agent, pk=agent_id)
     serializer_class = ViewAgentDetailsSerializer(agent)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
@@ -370,11 +396,7 @@ def view_agent_details(request, pk):
 )
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
-def update_agent_details(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are Unauthorized to complete this action"
-        }, status.HTTP_401_UNAUTHORIZED)
+def update_agent_details(request):
     serializer_class = UpdateAgentDetails(request.user, data=request.data, partial=True)
 
     if not serializer_class.is_valid():
@@ -407,12 +429,8 @@ def update_agent_details(request, pk):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def agent_sell_policy(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-
+def agent_sell_policy(request):
+    agent_id = request.user.id
     serializer_class = AgentClaimSellPolicySerializer(data=request.data)
 
     if not serializer_class.is_valid():
@@ -422,7 +440,7 @@ def agent_sell_policy(request, pk):
 
     try:
         policy_name = serializer_class.validated_data.get('policy_name')
-        agent = Agent.objects.get(id=pk)
+        agent = Agent.objects.get(id=agent_id)
         policy = Policies.objects.get(name=policy_name)
         claim_policy = AgentPolicy.objects.get(agent=agent, policy=policy)
 
@@ -457,12 +475,8 @@ def agent_sell_policy(request, pk):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def agent_claim_policy(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-
+def agent_claim_policy(request):
+    agent_id = request.user.id
     serializer_class = AgentClaimSellPolicySerializer(data=request.data)
 
     if not serializer_class.is_valid():
@@ -472,7 +486,7 @@ def agent_claim_policy(request, pk):
 
     try:
         policy_name = serializer_class.validated_data.get('policy_name')
-        agent = Agent.objects.get(id=pk)
+        agent = Agent.objects.get(id=agent_id)
         policy = Policies.objects.get(name=policy_name)
 
         if AgentPolicy.objects.filter(agent=agent, policy=policy).exists():
@@ -505,12 +519,9 @@ def agent_claim_policy(request, pk):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_all_policies(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-    agent = get_object_or_404(Agent, id=pk)
+def view_all_policies(request):
+    agent_id = request.user.id
+    agent = get_object_or_404(Agent, id=agent_id)
     queryset = agent.get_policies()
     serializer_class = AgentViewAllPolicies(queryset, many=True)
 
@@ -529,13 +540,52 @@ def view_all_policies(request, pk):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def view_all_sold_policies(request, pk):
-    if request.user.id != pk:
-        return Response({
-            "error": "You are not authorized to perform this action"
-        }, status.HTTP_400_BAD_REQUEST)
-    agent = get_object_or_404(Agent, id=pk)
+def view_all_sold_policies(request):
+    agent_id = request.user.id
+    agent = get_object_or_404(Agent, id=agent_id)
     queryset = agent.get_sold_policies()
     serializer_class = AgentViewAllPolicies(queryset, many=True)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Agent Profile',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Agent']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_agent_profile(request) -> Response:
+    agent_id = request.user.id
+
+    agent = get_object_or_404(Agent, pk=agent_id)
+    agent_profile = get_object_or_404(AgentProfile, agent=agent)
+
+    agent_email = agent.email
+    agent_first_name = agent.first_name
+    agent_last_name = agent.last_name
+    agent_middle_name = agent.middle_name
+    agent_profile_pic = agent_profile.profile_image.url
+
+    data = {
+        'email': agent_email,
+        'first_name': agent_first_name,
+        'last_name': agent_last_name,
+        'middle_name': agent_middle_name,
+        'profile_image': str(agent_profile_pic)
+    }
+
+    serializer_class = ViewAgentProfile(data=data)
+
+    if not serializer_class.is_valid():
+        return Response({
+            "error": serializer_class.errors
+        }, status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer_class.data, status.HTTP_200_OK)

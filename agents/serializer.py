@@ -4,6 +4,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from insurer.models import Insurer
 from .models import Agent
@@ -110,6 +112,25 @@ class LoginAgentSerializer(serializers.ModelSerializer):
             'email',
             'password'
         ]
+
+
+class LogoutAgentSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    class Meta:
+        fields = [
+            'refresh'
+        ]
+
+    def save(self):
+        refresh_token = self.validated_data.get('refresh')
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except (ObjectDoesNotExist, TokenError) as err:
+            return CustomValidationError({
+                "error": str(err)
+            })
 
 
 class AgentOTPSerializer(serializers.Serializer):
@@ -259,4 +280,21 @@ class AgentViewAllPolicies(serializers.ModelSerializer):
             'id',
             'name',
             'amount'
+        ]
+
+
+class ViewAgentProfile(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    middle_name = serializers.CharField()
+    profile_image = serializers.CharField()
+
+    class Meta:
+        fields = [
+            'email',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'profile_image',
         ]

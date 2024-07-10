@@ -10,9 +10,11 @@ load_dotenv(find_dotenv())
 def main():
     """Run administrative tasks."""
     env = os.getenv('ENV')
-    if env != 'dev':
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'reconciliation_backend.settings.prod')
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'reconciliation_backend.settings.dev')
+    if env == 'dev':
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'reconciliation_backend.settings.dev')
+    if env == 'staging':
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'reconciliation_backend.settings.staging')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'reconciliation_backend.settings.prod')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
