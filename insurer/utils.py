@@ -47,8 +47,8 @@ def verify_otp(otp_created_at) -> bool:
 
 def gen_absolute_url(id_base64, token):
     if os.getenv('ENV') != 'dev':
-        return f'https://{FRONTED_URL}/{id_base64}/{token}'
-    return f'http://{FRONTED_URL}/{id_base64}/{token}'
+        return f'https://{FRONTED_URL}/company/reset-password/{id_base64}/{token}'
+    return f'http://{FRONTED_URL}/company/reset-password/{id_base64}/{token}'
 
 
 def gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id):
