@@ -4,6 +4,7 @@ from datetime import datetime
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -12,7 +13,8 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -23,7 +25,7 @@ from .models import Agent, AgentProfile
 from rest_framework import status
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
-    UpdateAgentDetails, AgentClaimSellPolicySerializer, AgentViewAllPolicies, ViewAgentProfile
+    UpdateAgentDetails, AgentClaimSellPolicySerializer, AgentViewAllPolicies, ViewAgentProfile, LogoutAgentSerializer
 
 
 @swagger_auto_schema(
@@ -140,6 +142,31 @@ def login_agent(request) -> Response:
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Login Agent',
+    request_body=LogoutAgentSerializer,
+    responses={
+        '200': "OK",
+        '400': 'Bad Request'
+    },
+    tags=['Agent']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_agent(request):
+    serializer_class = LogoutAgentSerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    serializer_class.save()
+
+    return Response({
+        "message": "Agent successfully logged out"
+    }, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
