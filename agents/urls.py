@@ -15,5 +15,6 @@ urlpatterns = [
     path('sell-policy', views.agent_sell_policy, name='claim-policy'),
     path('view-all-policies', views.view_all_policies, name='view-all-policies'),
     path('view-sold-policies', views.view_all_sold_policies, name='view-sold-policies'),
+    path('agent-profile', views.view_agent_profile, name='agent-profile')
 ]
 

@@ -1,4 +1,6 @@
 from django.db import models
+from django_resized import ResizedImageField
+
 from user.models import CustomUser
 from policies.models import Policies
 
@@ -53,3 +55,11 @@ class Agent(CustomUser):
     def get_sold_policies(self):
         sold_policies = Policies.objects.filter(agentpolicy__agent=self, agentpolicy__is_sold=True)
         return sold_policies
+
+
+class AgentProfile(models.Model):
+    agent = models.OneToOneField(Agent, on_delete=models.CASCADE)
+    profile_image = ResizedImageField(size=[400, 400], default='profile_pic/default.png', upload_to='profile_pic')
+
+    def __str__(self):
+        return f'{self.agent} Profile'

@@ -19,11 +19,11 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from insurer.models import Insurer
 from policies.models import Policies, AgentPolicy
 from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_unique_agent_id
-from .models import Agent
+from .models import Agent, AgentProfile
 from rest_framework import status
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
-    UpdateAgentDetails, AgentClaimSellPolicySerializer, AgentViewAllPolicies
+    UpdateAgentDetails, AgentClaimSellPolicySerializer, AgentViewAllPolicies, ViewAgentProfile
 
 
 @swagger_auto_schema(
@@ -262,9 +262,7 @@ def forgot_password_email(request) -> Response:
         agent = Agent.objects.get(email=agent_email)
         id_base64 = urlsafe_base64_encode(smart_bytes(agent.id))
         token = PasswordResetTokenGenerator().make_token(agent)
-        current_site = get_current_site(request).domain
-        relative_link = reverse('agents:password-reset-confirm', kwargs={'id_base64': id_base64, 'token': token})
-        abs_url = gen_absolute_url(current_site, relative_link, token)
+        abs_url = gen_absolute_url(id_base64, token)
 
         send_mail(
             subject='Verification email',
@@ -520,5 +518,47 @@ def view_all_sold_policies(request):
     agent = get_object_or_404(Agent, id=agent_id)
     queryset = agent.get_sold_policies()
     serializer_class = AgentViewAllPolicies(queryset, many=True)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Agent Profile',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Agent']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_agent_profile(request) -> Response:
+    agent_id = request.user.id
+
+    agent = get_object_or_404(Agent, pk=agent_id)
+    agent_profile = get_object_or_404(AgentProfile, agent=agent)
+
+    agent_email = agent.email
+    agent_first_name = agent.first_name
+    agent_last_name = agent.last_name
+    agent_middle_name = agent.middle_name
+    agent_profile_pic = agent_profile.profile_image.url
+
+    data = {
+        'email': agent_email,
+        'first_name': agent_first_name,
+        'last_name': agent_last_name,
+        'middle_name': agent_middle_name,
+        'profile_image': str(agent_profile_pic)
+    }
+
+    serializer_class = ViewAgentProfile(data=data)
+
+    if not serializer_class.is_valid():
+        return Response({
+            "error": serializer_class.errors
+        }, status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer_class.data, status.HTTP_200_OK)

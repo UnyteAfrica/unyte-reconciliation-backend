@@ -572,4 +572,3 @@ def view_insurer_profile(request) -> Response:
         }, status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
-#

@@ -260,3 +260,20 @@ class AgentViewAllPolicies(serializers.ModelSerializer):
             'name',
             'amount'
         ]
+
+
+class ViewAgentProfile(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    middle_name = serializers.CharField()
+    profile_image = serializers.CharField()
+
+    class Meta:
+        fields = [
+            'email',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'profile_image',
+        ]
