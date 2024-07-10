@@ -157,10 +157,10 @@ GS_BUCKET_NAME = 'reconciliations-dashboard'
 STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/static/'
 
 # Read the environment variable for the credentials file path
-credentials_file_path = os.getenv('GS_CREDENTIALS_PATH')
+credentials_file_path = os.getenv('GS_CREDENTIALS_PATH', 'gs://reconciliations-dashboard/new-.json-sa.json')
 
-if not credentials_file_path:
-    raise ValueError("The environment variable 'GS_CREDENTIALS_PATH' is not set.")
+# if not credentials_file_path:
+#     raise ValueError("The environment variable 'GS_CREDENTIALS_PATH' is not set.")
 
 # Download the service account file from GCS if it's a GCS URL
 if credentials_file_path.startswith('gs://'):
