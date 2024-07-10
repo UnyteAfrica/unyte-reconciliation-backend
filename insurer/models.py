@@ -53,7 +53,7 @@ class Insurer(CustomUser):
 
 class InsurerProfile(models.Model):
     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
-    profile_image = ResizedImageField(size=[400, 400], default='default.png', upload_to='profile_pic')
+    profile_image = ResizedImageField(size=[400, 400], default='profile_pic/default.png', upload_to='profile_pic')
 
     def __str__(self):
         return f'{self.insurer} Profile'
