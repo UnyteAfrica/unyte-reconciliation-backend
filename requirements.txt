@@ -5,10 +5,7 @@ charset-normalizer==3.3.2
 coverage==7.5.3
 Django==5.0.6
 django-cors-headers==4.3.1
-<<<<<<< HEAD
 django-resized==1.0.2
-=======
->>>>>>> 155b9f02f543557c5d3f161ce4f7e6b4227352b4
 django-storages==1.14.3
 djangorestframework==3.15.1
 djangorestframework-simplejwt==5.3.1
