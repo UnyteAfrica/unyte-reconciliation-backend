@@ -1,9 +1,13 @@
 # base.py
 
 import os
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+
 from django.conf import settings
+
+
+from google.cloud import storage
 from google.oauth2 import service_account
 
 settings.configure()
@@ -152,9 +156,38 @@ STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 GS_BUCKET_NAME = 'reconciliations-dashboard'
 STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/static/'
 
-GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-    os.getenv('GOOGLE_SERVICE_JSON')
-)
+# Read the environment variable for the credentials file path
+credentials_file_path = os.getenv('GS_CREDENTIALS_PATH')
+
+if not credentials_file_path:
+    raise ValueError("The environment variable 'GS_CREDENTIALS_PATH' is not set.")
+
+# Download the service account file from GCS if it's a GCS URL
+if credentials_file_path.startswith('gs://'):
+    bucket_name, blob_name = credentials_file_path.replace('gs://', '').split('/', 1)
+
+    # Define the temporary local file path
+    local_temp_file_path = '/tmp/service_account.json'
+
+    # Initialize a GCS client
+    storage_client = storage.Client()
+
+    # Download the service account file from GCS
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    blob.download_to_filename(local_temp_file_path)
+
+    # Use the downloaded service account file to create credentials
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(local_temp_file_path)
+
+    # Optionally, you can delete the temporary file after creating the credentials
+    os.remove(local_temp_file_path)
+else:
+    # Use the credentials file directly if it's a local path
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(credentials_file_path)
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+#     os.path.join(BASE_DIR, 'unyte-project-b1cf8568d4c2.json')
+# )
 
 
 AUTH_PASSWORD_VALIDATORS = [
