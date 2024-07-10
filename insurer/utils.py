@@ -51,7 +51,7 @@ def gen_absolute_url(id_base64, token):
     return f'http://{FRONTED_URL}/{id_base64}/{token}'
 
 
-def gen_sign_up_url_for_agent(frontend_url, relative_link, unyte_unique_insurer_id):
+def gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id):
     if os.getenv('ENV') != 'dev':
         return f'https://{FRONTED_URL}{relative_link}?invite={str(unyte_unique_insurer_id)}'
     return f'http://{FRONTED_URL}{relative_link}?invite={str(unyte_unique_insurer_id)}'

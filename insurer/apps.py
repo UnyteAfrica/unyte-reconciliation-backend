@@ -5,5 +5,5 @@ class InsurerConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'insurer'
 
-    # def ready(self):
-    #     import insurer.signals
+    def ready(self):
+        import insurer.signals

@@ -549,12 +549,13 @@ def generate_sign_up_link_for_agent(request, pk):
     relative_link = relative_link.replace('/api/', '/')
 
     # abs_url = gen_absolute_url(frontend_url, relative_link, token)
-    link = gen_sign_up_url_for_agent(current_site, relative_link, unyte_unique_insurer_id)
+    link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
     print("generated link ", link)
 
     return Response({
         "message": f"Link generated: {link}"
     })
+
 
 # TODO: Review the functionality with Seun.
 @swagger_auto_schema(
