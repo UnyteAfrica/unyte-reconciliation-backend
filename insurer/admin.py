@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Insurer
+from .models import Insurer, InsurerProfile
 
 admin.site.register(Insurer)
-# admin.site.register(InsurerProfile)
+admin.site.register(InsurerProfile)
 

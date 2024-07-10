@@ -11,7 +11,7 @@ from django.utils.http import urlsafe_base64_decode
 
 from datetime import datetime
 
-from .models import Insurer
+from .models import Insurer, InsurerProfile
 from agents.models import Agent
 
 custom_user = get_user_model()
@@ -57,27 +57,40 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         email = attrs.get('email')
 
         if insurer_gampID == '':
+            if Insurer.objects.filter(email=email).exists():
+                raise CustomValidationError({"error": "Email already exists"})
+
+            if custom_user.objects.filter(email=email).exists():
+                raise CustomValidationError({"error": "Email already exists"})
+
+            if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
+                raise CustomValidationError({"error": "Business Registration number already exists"})
+
+            if Insurer.objects.filter(business_name=business_name).exists():
+                raise CustomValidationError({"error": "Business Name  already exists"})
+
             return attrs
+
+        else:
+            if Insurer.objects.filter(insurer_gampID=insurer_gampID).exists():
+                raise CustomValidationError({"error": "GampID already exists"})
+
+            if Insurer.objects.filter(email=email).exists():
+                raise CustomValidationError({"error": "Email already exists"})
+
+            if custom_user.objects.filter(email=email).exists():
+                raise CustomValidationError({"error": "Email already exists"})
+
+            if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
+                raise CustomValidationError({"error": "Business Registration number already exists"})
+
+            if Insurer.objects.filter(business_name=business_name).exists():
+                raise CustomValidationError({"error": "Business Name  already exists"})
 
         pattern = f'{admin_name}+{business_reg_num}@getgamp.com'
 
         if insurer_gampID != pattern:
             raise CustomValidationError({"error": "Invalid GampID"})
-
-        if Insurer.objects.filter(insurer_gampID=insurer_gampID).exists():
-            raise CustomValidationError({"error": "GampID already exists"})
-
-        if Insurer.objects.filter(email=email).exists():
-            raise CustomValidationError({"error": "Email already exists"})
-
-        if custom_user.objects.filter(email=email).exists():
-            raise CustomValidationError({"error": "Email already exists"})
-
-        if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
-            raise CustomValidationError({"error": "Business Registration number already exists"})
-
-        if Insurer.objects.filter(business_name=business_name).exists():
-            raise CustomValidationError({"error": "Business Name  already exists"})
 
         return attrs
 
@@ -85,7 +98,8 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         business_name = validated_data.get('business_name')
         business_reg_num = validated_data.get('business_registration_number')
         unyte_unique_insurer_id = generate_unyte_unique_insurer_id(business_name, business_reg_num)
-        user = Insurer.objects.create_user(**validated_data, unyte_unique_insurer_id=unyte_unique_insurer_id, otp=generate_otp(), otp_created_at=datetime.now().time())
+        user = Insurer.objects.create_user(**validated_data, unyte_unique_insurer_id=unyte_unique_insurer_id,
+                                           otp=generate_otp(), otp_created_at=datetime.now().time())
         user.save()
         return user
 
@@ -237,19 +251,21 @@ class InsurerViewAllPolicies(serializers.ModelSerializer):
             'name',
             'amount',
         ]
-# class TestViewInsurerProfile(serializers.Serializer):
-#     business_name = serializers.CharField()
-#     email = serializers.EmailField()
-#     profile_image = serializers.CharField()
-#
-#     class Meta:
-#         fields = [
-#             'business_name',
-#             'profile_image',
-#             'email'
-#         ]
-#
-#
+
+
+class TestViewInsurerProfile(serializers.Serializer):
+    business_name = serializers.CharField()
+    email = serializers.EmailField()
+    profile_image = serializers.CharField()
+
+    class Meta:
+        fields = [
+            'business_name',
+            'profile_image',
+            'email'
+        ]
+
+
 # class ViewInsurerProfile(serializers.ModelSerializer):
 #     class Meta:
 #         model = InsurerProfile

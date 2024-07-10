@@ -9,6 +9,9 @@ from rest_framework.exceptions import APIException
 load_dotenv(find_dotenv())
 
 
+FRONTED_URL = os.getenv('FRONTEND_URL', 'unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app')
+
+
 def generate_otp() -> str:
     totp = pyotp.TOTP(pyotp.random_base32(), interval=60)
     otp = totp.now()
@@ -42,16 +45,16 @@ def verify_otp(otp_created_at) -> bool:
     return True
 
 
-def gen_absolute_url(current_site, relative_link, token):
+def gen_absolute_url(id_base64, token):
     if os.getenv('ENV') != 'dev':
-        return f'https://{current_site}{relative_link}?token={str(token)}'
-    return f'http://{current_site}{relative_link}?token={str(token)}'
+        return f'https://{FRONTED_URL}/{id_base64}/{token}'
+    return f'http://{FRONTED_URL}/{id_base64}/{token}'
 
 
 def gen_sign_up_url_for_agent(frontend_url, relative_link, unyte_unique_insurer_id):
     if os.getenv('ENV') != 'dev':
-        return f'https://{frontend_url}{relative_link}?invite={str(unyte_unique_insurer_id)}'
-    return f'http://{frontend_url}{relative_link}?invite={str(unyte_unique_insurer_id)}'
+        return f'https://{FRONTED_URL}{relative_link}?invite={str(unyte_unique_insurer_id)}'
+    return f'http://{FRONTED_URL}{relative_link}?invite={str(unyte_unique_insurer_id)}'
 
 
 def generate_unyte_unique_insurer_id(business_name: str, business_reg_num: str) -> str:

@@ -18,9 +18,9 @@ from rest_framework import status
 from policies.models import InsurerPolicy, Policies
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
     ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, \
-    InsurerClaimSellPolicySerializer, InsurerViewAllPolicies
+    InsurerClaimSellPolicySerializer, InsurerViewAllPolicies, TestViewInsurerProfile
 from rest_framework.response import Response
-from .models import Insurer
+from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
 from .utils import generate_otp, verify_otp, gen_absolute_url, gen_sign_up_url_for_agent
@@ -256,9 +256,7 @@ def forgot_password_email(request) -> Response:
         insurer = Insurer.objects.get(email=insurer_email)
         id_base64 = urlsafe_base64_encode(smart_bytes(insurer.id))
         token = PasswordResetTokenGenerator().make_token(insurer)
-        current_site = get_current_site(request).domain
-        relative_link = reverse('insurer:password-reset-confirm', kwargs={'id_base64': id_base64, 'token': token})
-        abs_url = gen_absolute_url(current_site, relative_link, token)
+        abs_url = gen_absolute_url(id_base64, token)
 
         send_mail(
             subject='Verification email',
@@ -559,37 +557,38 @@ def generate_sign_up_link_for_agent(request, pk):
     })
 
 # TODO: Review the functionality with Seun.
-# @swagger_auto_schema(
-#     method='GET',
-#     operation_description='View Insurer Profile',
-#     responses={
-#         200: 'OK',
-#         400: 'Bad Request',
-#         404: 'Not Found'
-#     },
-#     tags=['Insurer']
-# )
-# @api_view(['GET'])
-# def view_insurer_profile(request, pk) -> Response:
-#     insurer = get_object_or_404(Insurer, pk=pk)
-#     insurer_profile = get_object_or_404(InsurerProfile, insurer=insurer)
-#
-#     insurer_email = insurer.email
-#     insurer_business_name = insurer.business_name
-#     insurer_profile_pic = insurer_profile.profile_image
-#
-#     data = {
-#         'email': insurer_email,
-#         'business_name': insurer_business_name,
-#         'profile_image': str(insurer_profile_pic)
-#     }
-#
-#     serializer_class = TestViewInsurerProfile(data=data)
-#
-#     if not serializer_class.is_valid():
-#         return Response({
-#             "error": serializer_class.errors
-#         }, status.HTTP_400_BAD_REQUEST)
-#
-#     return Response(serializer_class.data, status.HTTP_200_OK)
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Insurer Profile',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
+@api_view(['GET'])
+def view_insurer_profile(request, pk) -> Response:
+    insurer = get_object_or_404(Insurer, pk=pk)
+    insurer_profile = get_object_or_404(InsurerProfile, insurer=insurer)
+
+    insurer_email = insurer.email
+    insurer_business_name = insurer.business_name
+    insurer_profile_pic = insurer_profile.profile_image.url
+    print(insurer_profile_pic)
+
+    data = {
+        'email': insurer_email,
+        'business_name': insurer_business_name,
+        'profile_image': str(insurer_profile_pic)
+    }
+
+    serializer_class = TestViewInsurerProfile(data=data)
+
+    if not serializer_class.is_valid():
+        return Response({
+            "error": serializer_class.errors
+        }, status.HTTP_400_BAD_REQUEST)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
 #

@@ -145,19 +145,15 @@ DATABASES = {
     }
 }
 
-# STORAGES = {
-#     "default": {
-#         "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
-#     },
-#     "staticfiles": "storages.backends.gcloud.GoogleCloudStorage"
-# }
-#
-# GS_BUCKET_NAME = 'reconciliations-dashboard'
-# STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/'
-#
-# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-#     'path/to/the/downloaded/json/key/credentials.json'
-# )
+DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+
+GS_BUCKET_NAME = 'reconciliations-dashboard'
+STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/static/'
+
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    os.path.join(BASE_DIR, 'unyte-project-b1cf8568d4c2.json')
+)
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -181,10 +177,9 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-# MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
-STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 AUTH_USER_MODEL = 'user.CustomUser'
 

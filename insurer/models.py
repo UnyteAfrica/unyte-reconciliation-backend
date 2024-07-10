@@ -1,6 +1,6 @@
+from PIL import Image
 from django.db import models
-from django.conf import settings
-
+from django_resized import ResizedImageField
 from policies.models import Policies
 from user.models import CustomUser
 
@@ -50,9 +50,10 @@ class Insurer(CustomUser):
         sold_policies = Policies.objects.filter(insurerpolicy__insurer=self, insurerpolicy__is_sold=True)
         return sold_policies
 
-# class InsurerProfile(models.Model):
-#     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
-#     profile_image = models.ImageField(default='default.png', upload_to=f'profile_pic')
-#
-#     def __str__(self):
-#         return f'{self.insurer} Profile'
+
+class InsurerProfile(models.Model):
+    insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
+    profile_image = ResizedImageField(size=[400, 400], default='default.png', upload_to='profile_pic')
+
+    def __str__(self):
+        return f'{self.insurer} Profile'

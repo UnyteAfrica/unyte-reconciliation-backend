@@ -16,5 +16,6 @@ urlpatterns = [
     path('<int:pk>/sell-policy', views.insurer_sell_policy, name='claim-policy'),
     path('<int:pk>/view-all-policies', views.view_all_policies, name='view-all-policies'),
     path('<int:pk>/view-sold-policies', views.view_all_sold_policies, name='view-sold-policies'),
-    path('<int:pk>/gen-agent-sign-up', views.generate_sign_up_link_for_agent, name='generate-signup-link-for-agent')
+    path('<int:pk>/gen-agent-sign-up', views.generate_sign_up_link_for_agent, name='generate-signup-link-for-agent'),
+    path('<int:pk>/insurer-profile', views.view_insurer_profile, name='insurer-profile')
 ]
