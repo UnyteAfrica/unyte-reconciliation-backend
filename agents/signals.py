@@ -11,5 +11,5 @@ def create_profile(instance, created, **kwargs):
 
 
 @receiver(post_save, sender=Agent)
-def create_profile(instance, **kwargs):
+def save_profile(instance, **kwargs):
     instance.agentprofile.save()
