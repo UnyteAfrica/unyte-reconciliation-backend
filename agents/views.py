@@ -1,31 +1,29 @@
-from django.conf import settings
-from django.contrib.auth import authenticate
 from datetime import datetime
 
+from django.conf import settings
+from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError, smart_bytes
+from django.utils.html import strip_tags
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.response import Response
-from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from insurer.models import Insurer
 from policies.models import Policies, AgentPolicy
-from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_unique_agent_id
 from .models import Agent, AgentProfile
-from rest_framework import status
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
     UpdateAgentDetails, AgentClaimSellPolicySerializer, AgentViewAllPolicies, ViewAgentProfile, LogoutAgentSerializer
+from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_unique_agent_id
 
 
 @swagger_auto_schema(
@@ -81,13 +79,6 @@ def create_agent(request) -> Response:
             Send email to insurer including otp.
         """
         agent = Agent.objects.get(email=agent_email)
-        otp = agent.otp
-        send_mail(
-            subject='Verification email',
-            message=f'{otp}',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[settings.TO_EMAIL, agent_email],
-        )
 
         message = {
             'id': agent.id,
@@ -130,6 +121,15 @@ def login_agent(request) -> Response:
             }
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         agent = Agent.objects.get(email=agent_email)
+
+        otp = agent.otp
+        send_mail(
+            subject='Verification email',
+            message=f'{otp}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.TO_EMAIL, agent_email],
+        )
+
         auth_token = RefreshToken.for_user(agent)
 
         message = {
@@ -283,25 +283,49 @@ def forgot_password_email(request) -> Response:
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    agent = get_object_or_404(Agent, email=serializer_class.validated_data.get('email'))
+
     agent_email = serializer_class.validated_data.get('email')
 
     try:
         agent = Agent.objects.get(email=agent_email)
         id_base64 = urlsafe_base64_encode(smart_bytes(agent.id))
         token = PasswordResetTokenGenerator().make_token(agent)
-        abs_url = gen_absolute_url(id_base64, token)
+        absolute_url = gen_absolute_url(id_base64, token)
+
+        context = {
+            "url": absolute_url,
+            "id": id_base64,
+            "token": token,
+            "agent_name": f'{agent.first_name} {agent.last_name}',
+            "current_year": datetime.now().year
+        }
+
+        html_message = render_to_string('forgot-password.html', context=context)
+        plain_message = strip_tags(html_message)
 
         send_mail(
             subject='Verification email',
-            message=f'{abs_url}',
+            message="Hello",
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
+            html_message=html_message
         )
 
-        message = {
+        # message = EmailMultiAlternatives(
+        #     subject='Verification email',
+        #     body="plain_message",
+        #     from_email=settings.EMAIL_HOST_USER,
+        #     to=[settings.TO_EMAIL, agent_email],
+        # )
+        #
+        # message.attach_alternative(html_message, "text/html")
+        # message.send()
+
+        response = {
             "message": "Confirmation email sent"
         }
-        return Response(message, status=status.HTTP_200_OK)
+        return Response(response, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({

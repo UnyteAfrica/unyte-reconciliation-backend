@@ -68,14 +68,6 @@ def create_insurer(request) -> Response:
         """
         serializer_class.save()
         insurer = Insurer.objects.get(email=insurer_email)
-        otp = insurer.otp
-
-        send_mail(
-            subject='Verification email',
-            message=f'{otp}',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[settings.TO_EMAIL, insurer_email],
-        )
 
         message = {
             'id': insurer.id,
@@ -120,6 +112,15 @@ def login_insurer(request) -> Response:
             }, status=status.HTTP_400_BAD_REQUEST)
 
         insurer = Insurer.objects.get(email=email)
+        otp = insurer.otp
+
+        send_mail(
+            subject='Verification email',
+            message=f'{otp}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.TO_EMAIL, email],
+        )
+
         auth_token = RefreshToken.for_user(insurer)
 
         message = {

@@ -40,8 +40,7 @@ class Agent(CustomUser):
                                              unique=True,
                                              null=False,
                                              blank=False)
-    agent_gampID = models.CharField(unique=True,
-                                    null=True,
+    agent_gampID = models.CharField(null=True,
                                     blank=True,
                                     help_text='GAMP ID for users associated with GAMP')
 
