@@ -32,8 +32,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                                   blank=True,
                                   null=True,
                                   help_text='User firstname')
-    middle_name = models.CharField(max_length=40,
-                                   blank=True,
+    middle_name = models.CharField(blank=True,
                                    null=True,
                                    help_text='User middle name')
     last_name = models.CharField(max_length=40,
