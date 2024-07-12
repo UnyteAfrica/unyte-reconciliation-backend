@@ -120,7 +120,6 @@ def login_insurer(request) -> Response:
             }, status=status.HTTP_400_BAD_REQUEST)
 
         insurer = Insurer.objects.get(email=email)
-        print(login(request, insurer))
         auth_token = RefreshToken.for_user(insurer)
 
         message = {
@@ -445,7 +444,7 @@ def insurer_claim_policy(request):
         insurer = Insurer.objects.get(id=insurer_id)
         policy = Policies.objects.get(name=policy_name)
 
-        if Insurer.objects.filter(insurer=insurer, policy=policy).exists():
+        if Insurer.objects.filter(email=insurer).exists():
             return Response({
                 "error": "You have claimed this policy already"
             }, status.HTTP_400_BAD_REQUEST)
@@ -556,7 +555,6 @@ def view_insurer_profile(request) -> Response:
     insurer_email = insurer.email
     insurer_business_name = insurer.business_name
     insurer_profile_pic = insurer_profile.profile_image.url
-    print(insurer_profile_pic)
 
     data = {
         'email': insurer_email,
