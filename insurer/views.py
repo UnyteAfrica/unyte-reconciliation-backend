@@ -508,7 +508,7 @@ def view_all_sold_policies(request):
 
 
 @swagger_auto_schema(
-    method='GET',
+    method='POST',
     operation_description='Generate SignUp Link for Insurer',
     responses={
         200: 'OK',
@@ -517,7 +517,7 @@ def view_all_sold_policies(request):
     },
     tags=['Insurer']
 )
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def generate_sign_up_link_for_agent(request):
     insurer_id = request.user.id
