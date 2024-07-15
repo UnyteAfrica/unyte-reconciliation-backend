@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from dotenv import load_dotenv, find_dotenv
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken, UntypedToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -163,26 +164,34 @@ def login_insurer(request) -> Response:
 
 
 # TODO: Ask Seun for the workflow
-# @swagger_auto_schema(
-#     method='POST',
-#     request_body=ValidateRefreshToken,
-#     operation_description='Login Insurer',
-#     responses={
-#         200: 'OK',
-#         400: 'Bad Request'
-#     },
-#     tags=['Insurer']
-# )
-# @api_view(['POST'])
-# def validate_refresh_token(request):
-#     serializer_class = ValidateRefreshToken(request.data)
-#
-#     if not serializer_class.is_valid():
-#         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
-#
-#     try:
-#         refresh_token = serializer_class.validated_data.get('refresh_token')
-#         UntypedToken(refresh_token)
+@swagger_auto_schema(
+    method='POST',
+    request_body=ValidateRefreshToken,
+    operation_description='Login Insurer',
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
+@api_view(['POST'])
+def validate_refresh_token(request):
+    serializer_class = ValidateRefreshToken(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        refresh_token = serializer_class.validated_data.get('refresh_token')
+        UntypedToken(refresh_token)
+        return Response({
+            "message": "Token still valid"
+        }, status.HTTP_200_OK)
+    except (InvalidToken, TokenError) as e:
+        return Response({
+            f"{e}"
+        }, status.HTTP_400_BAD_REQUEST)
+
 
 
 @swagger_auto_schema(

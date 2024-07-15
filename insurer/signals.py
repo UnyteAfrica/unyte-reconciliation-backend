@@ -1,7 +1,39 @@
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from .models import Insurer
 from .models import InsurerProfile
+
+custom_user = get_user_model()
+
+
+# @receiver(pre_save, sender=Insurer)
+# def send_verification_email(instance, **kwargs):
+#     is_verified = instance.is_verified
+#     print(is_verified, instance.business_name)
+#     if is_verified is True:
+#         business_name = instance.business_name
+#         email = instance.email
+#         current_year = datetime.now().year
+#         print(business_name)
+#         context = {
+#             "business_name": business_name,
+#             "current_year": current_year
+#         }
+#         html_message = render_to_string("verification.html", context)
+#         plain_message = strip_tags(html_message)
+#
+#         send_mail(
+#             subject='Verification email',
+#             message=plain_message,
+#             from_email=settings.EMAIL_HOST_USER,
+#             recipient_list=[settings.TO_EMAIL, email],
+#             html_message=html_message
+#         )
+#
+#         instance.is_verified = False
+# instance.save()
 
 
 @receiver(post_save, sender=Insurer)
