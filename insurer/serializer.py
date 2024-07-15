@@ -116,6 +116,10 @@ class LoginInsurerSerializer(serializers.ModelSerializer):
         ]
 
 
+class ValidateRefreshToken(serializers.Serializer):
+    refresh_token = serializers.CharField()
+
+
 class OTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(required=False, max_length=6)
@@ -212,6 +216,27 @@ class AgentSerializer(serializers.ModelSerializer):
         ]
 
 
+class AgentsSignUpListSerializer(serializers.Serializer):
+    names = serializers.ListField(child=serializers.CharField(max_length=100))
+    emails = serializers.ListField(child=serializers.EmailField())
+
+    def validate(self, data):
+        if len(data['names']) != len(data['emails']):
+            CustomValidationError({"error": "The number of 'names' must match the number of 'emails'."})
+        return data
+
+
+class CustomAgentSerializer(serializers.Serializer):
+    agents_list = AgentsSignUpListSerializer(required=False)
+
+    def validate(self, attrs):
+        agents_list = attrs.get('agents_list')
+
+        if len(agents_list['names']) != len(agents_list['emails']):
+            raise CustomValidationError({"error": "The number of 'names' must match the number of 'emails'."})
+        return attrs
+
+
 class ViewInsurerDetails(serializers.ModelSerializer):
     class Meta:
         model = Insurer
@@ -264,7 +289,6 @@ class TestViewInsurerProfile(serializers.Serializer):
             'profile_image',
             'email'
         ]
-
 
 # class ViewInsurerProfile(serializers.ModelSerializer):
 #     class Meta:
