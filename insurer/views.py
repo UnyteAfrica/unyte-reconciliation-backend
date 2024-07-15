@@ -167,7 +167,7 @@ def login_insurer(request) -> Response:
 @swagger_auto_schema(
     method='POST',
     request_body=ValidateRefreshToken,
-    operation_description='Login Insurer',
+    operation_description='Validate Refresh Token',
     responses={
         200: 'OK',
         400: 'Bad Request'
@@ -181,9 +181,11 @@ def validate_refresh_token(request):
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
+    print(serializer_class.validated_data.get('refresh_token'))
     try:
         refresh_token = serializer_class.validated_data.get('refresh_token')
-        UntypedToken(refresh_token)
+        # token = RefreshToken.get(key=refresh_token)
+        print(refresh_token)
         return Response({
             "message": "Token still valid"
         }, status.HTTP_200_OK)

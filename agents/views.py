@@ -84,7 +84,7 @@ def create_agent(request) -> Response:
             "current_year": current_year,
             "name": f"{first_name} {last_name}"
         }
-        html_message = render_to_string('welcome.html', context=context)
+        html_message = render_to_string('agents/welcome.html', context=context)
         plain_html_message = strip_tags(html_message)
 
         send_mail(
@@ -149,7 +149,7 @@ def login_agent(request) -> Response:
             "otp": otp
         }
 
-        html_message = render_to_string("otp.html", context)
+        html_message = render_to_string("agents/otp.html", context)
         plain_message = strip_tags(html_message)
 
         send_mail(
@@ -268,7 +268,7 @@ def request_new_otp(request):
         "otp": otp
     }
 
-    html_message = render_to_string("otp.html", context)
+    html_message = render_to_string("agents/otp.html", context)
     plain_message = strip_tags(html_message)
 
     send_mail(
@@ -363,21 +363,22 @@ def forgot_password_email(request) -> Response:
         id_base64 = urlsafe_base64_encode(smart_bytes(agent.id))
         token = PasswordResetTokenGenerator().make_token(agent)
         absolute_url = gen_absolute_url(id_base64, token)
+        name = f"{agent.first_name} + {agent.last_name}"
 
         context = {
+            "agent_name": name,
             "url": absolute_url,
             "id": id_base64,
             "token": token,
-            "agent_name": f'{agent.first_name} {agent.last_name}',
             "current_year": datetime.now().year
         }
 
-        html_message = render_to_string('forgot-password.html', context=context)
+        html_message = render_to_string('agents/forgot-password.html', context=context)
         plain_message = strip_tags(html_message)
 
         send_mail(
             subject='Verification email',
-            message="Hello",
+            message=plain_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
             html_message=html_message
