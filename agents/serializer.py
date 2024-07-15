@@ -116,6 +116,10 @@ class CreateAgentSerializer(serializers.ModelSerializer):
             return attrs
 
 
+class AgentValidateRefreshToken(serializers.Serializer):
+    refresh_token = serializers.CharField()
+
+
 class LoginAgentSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     password = serializers.CharField()

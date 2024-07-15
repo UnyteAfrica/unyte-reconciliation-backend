@@ -1,7 +1,6 @@
 from django.urls import path
 from . import views
 
-
 urlpatterns = [
     path('sign-up', views.create_insurer, name='register_insurer'),
     path('sign-in', views.login_insurer, name='login_insurer'),
@@ -17,7 +16,6 @@ urlpatterns = [
     path('view-all-policies', views.view_all_policies, name='view-all-policies'),
     path('view-sold-policies', views.view_all_sold_policies, name='view-sold-policies'),
     path('generate-agent-sign-up', views.generate_sign_up_link_for_agent, name='generate-signup-link-for-agent'),
-    path('insurer-profile', views.view_insurer_profile, name='insurer-profile')
+    path('insurer-profile', views.view_insurer_profile, name='insurer-profile'),
+    path('reset-token', views.validate_refresh_token, name='reset-access-token')
 ]
-
-
