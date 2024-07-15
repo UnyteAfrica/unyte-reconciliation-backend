@@ -75,10 +75,23 @@ def create_agent(request) -> Response:
                                           otp_created_at=datetime.now().time())
         agent.save()
 
-        """
-            Send email to insurer including otp.
-        """
         agent = Agent.objects.get(email=agent_email)
+        current_year = datetime.now().year
+
+        context = {
+            "current_year": current_year,
+            "name": f"{first_name} {last_name}"
+        }
+        html_message = render_to_string('welcome.html', context=context)
+        plain_html_message = strip_tags(html_message)
+
+        send_mail(
+            subject='Verification email',
+            message=plain_html_message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.TO_EMAIL, agent_email],
+            html_message=html_message
+        )
 
         message = {
             'id': agent.id,
@@ -123,11 +136,26 @@ def login_agent(request) -> Response:
         agent = Agent.objects.get(email=agent_email)
 
         otp = agent.otp
+        name = f"{agent.first_name} {agent.last_name}"
+        current_year = datetime.now().year
+
+        agent.save()
+
+        context = {
+            "name": name,
+            "current_year": current_year,
+            "otp": otp
+        }
+
+        html_message = render_to_string("otp.html", context)
+        plain_message = strip_tags(html_message)
+
         send_mail(
             subject='Verification email',
-            message=f'{otp}',
+            message=plain_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
+            html_message=html_message
         )
 
         auth_token = RefreshToken.for_user(agent)
@@ -198,14 +226,26 @@ def request_new_otp(request):
     otp = generate_otp()
     agent.otp = otp
     agent.otp_created_at = datetime.now().time()
+    name = f"{agent.first_name} {agent.last_name}"
+    current_year = datetime.now().year
 
     agent.save()
 
+    context = {
+        "name": name,
+        "current_year": current_year,
+        "otp": otp
+    }
+
+    html_message = render_to_string("otp.html", context)
+    plain_message = strip_tags(html_message)
+
     send_mail(
         subject='Verification email',
-        message=f'{otp}',
+        message=plain_message,
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[settings.TO_EMAIL, agent_email],
+        html_message=html_message
     )
     message = {
         'message': 'New OTP has been sent out!'

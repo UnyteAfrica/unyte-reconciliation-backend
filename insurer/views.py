@@ -1,16 +1,14 @@
-import json
-import os
 from datetime import datetime
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from dotenv import load_dotenv, find_dotenv
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, UntypedToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
@@ -18,7 +16,8 @@ from rest_framework import status
 from policies.models import InsurerPolicy, Policies
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
     ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, \
-    InsurerClaimSellPolicySerializer, InsurerViewAllPolicies, TestViewInsurerProfile
+    InsurerClaimSellPolicySerializer, InsurerViewAllPolicies, TestViewInsurerProfile, CustomAgentSerializer, \
+    ValidateRefreshToken
 from rest_framework.response import Response
 from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
@@ -69,6 +68,23 @@ def create_insurer(request) -> Response:
         serializer_class.save()
         insurer = Insurer.objects.get(email=insurer_email)
 
+        current_year = datetime.now().year
+        company_name = insurer.business_name
+        context = {
+            "current_year": current_year,
+            "company_name": company_name,
+        }
+
+        html_message = render_to_string('welcome.html', context)
+
+        send_mail(
+            subject='Verification email',
+            message=f'Welcome',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.TO_EMAIL, insurer_email],
+            html_message=html_message
+        )
+
         message = {
             'id': insurer.id,
             "message": f"Account successfully created for user: {business_name}"
@@ -114,11 +130,22 @@ def login_insurer(request) -> Response:
         insurer = Insurer.objects.get(email=email)
         otp = insurer.otp
 
+        current_year = datetime.now().year
+        company_name = insurer.business_name
+        context = {
+            "current_year": current_year,
+            "company_name": company_name,
+            "otp": otp
+        }
+
+        html_message = render_to_string('otp.html', context)
+
         send_mail(
             subject='Verification email',
             message=f'{otp}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, email],
+            html_message=html_message
         )
 
         auth_token = RefreshToken.for_user(insurer)
@@ -133,6 +160,29 @@ def login_insurer(request) -> Response:
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# TODO: Ask Seun for the workflow
+# @swagger_auto_schema(
+#     method='POST',
+#     request_body=ValidateRefreshToken,
+#     operation_description='Login Insurer',
+#     responses={
+#         200: 'OK',
+#         400: 'Bad Request'
+#     },
+#     tags=['Insurer']
+# )
+# @api_view(['POST'])
+# def validate_refresh_token(request):
+#     serializer_class = ValidateRefreshToken(request.data)
+#
+#     if not serializer_class.is_valid():
+#         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+#
+#     try:
+#         refresh_token = serializer_class.validated_data.get('refresh_token')
+#         UntypedToken(refresh_token)
 
 
 @swagger_auto_schema(
@@ -167,11 +217,22 @@ def request_new_otp(request):
 
     insurer.save()
 
+    current_year = datetime.now().year
+    company_name = insurer.business_name
+    context = {
+        "current_year": current_year,
+        "company_name": company_name,
+        "otp": otp
+    }
+
+    html_message = render_to_string('otp.html', context)
+
     send_mail(
         subject='Verification email',
         message=f'{otp}',
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[settings.TO_EMAIL, insurer_email],
+        html_message=html_message
     )
 
     return Response({
@@ -257,12 +318,24 @@ def forgot_password_email(request) -> Response:
         id_base64 = urlsafe_base64_encode(smart_bytes(insurer.id))
         token = PasswordResetTokenGenerator().make_token(insurer)
         abs_url = gen_absolute_url(id_base64, token)
+        current_year = datetime.now().year
+        company_name = insurer.business_name
+
+        context = {
+            'id': id_base64,
+            'token': token,
+            'current_year': current_year,
+            'company_name': company_name
+        }
+
+        html_message = render_to_string('forgot-password.html', context=context)
 
         send_mail(
             subject='Verification email',
             message=f'{abs_url}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, insurer_email],
+            html_message=html_message
         )
 
         message = {
@@ -510,6 +583,7 @@ def view_all_sold_policies(request):
 @swagger_auto_schema(
     method='POST',
     operation_description='Generate SignUp Link for Insurer',
+    request_body=CustomAgentSerializer,
     responses={
         200: 'OK',
         400: 'Bad Request',
@@ -520,14 +594,66 @@ def view_all_sold_policies(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def generate_sign_up_link_for_agent(request):
+    serializer_class = CustomAgentSerializer(data=request.data)
     insurer_id = request.user.id
     insurer = get_object_or_404(Insurer, pk=insurer_id)
 
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
 
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    agent_list = serializer_class.validated_data.get('agents_list')
+    email_recipients = [settings.TO_EMAIL]
+
     relative_link = reverse('agents:register_agent')
     relative_link = relative_link.replace('/api/', '/')
     link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
+    names = agent_list['names']
+    emails = agent_list['emails']
+
+    current_year = datetime.now().year
+    company_name = insurer.business_name
+
+    if len(names) and len(emails) == 1:
+        context = {
+            "current_year": current_year,
+            "company_name": company_name,
+            "unyte_unique_insurer_id": unyte_unique_insurer_id,
+            "name": names[0]
+        }
+        html_message = render_to_string('invitation.html', context)
+        email_recipients.append(emails[0])
+        """
+        Sends email to the email of agents
+        """
+        send_mail(
+            subject='Verification email',
+            message=f'{link}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=email_recipients,
+            html_message=html_message
+        )
+
+    """
+    Sends email to the list of agents emails with their corresponding names 
+    """
+    for name, email in zip(names, emails):
+        context = {
+            "current_year": current_year,
+            "company_name": company_name,
+            "unyte_unique_insurer_id": unyte_unique_insurer_id,
+            "name": name
+        }
+        html_message = render_to_string('invitation.html', context)
+        email_list = [email]
+        send_mail(
+            subject='Verification email',
+            message=f'{link}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=email_list,
+            html_message=html_message
+        )
 
     return Response({
         "message": f"Link generated: {link}"
