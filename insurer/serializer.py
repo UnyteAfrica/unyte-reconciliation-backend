@@ -217,24 +217,12 @@ class AgentSerializer(serializers.ModelSerializer):
 
 
 class AgentsSignUpListSerializer(serializers.Serializer):
-    names = serializers.ListField(child=serializers.CharField(max_length=100))
-    emails = serializers.ListField(child=serializers.EmailField())
-
-    def validate(self, data):
-        if len(data['names']) != len(data['emails']):
-            CustomValidationError({"error": "The number of 'names' must match the number of 'emails'."})
-        return data
+    names = serializers.CharField()
+    emails = serializers.EmailField()
 
 
 class CustomAgentSerializer(serializers.Serializer):
-    agents_list = AgentsSignUpListSerializer(required=False)
-
-    def validate(self, attrs):
-        agents_list = attrs.get('agents_list')
-
-        if len(agents_list['names']) != len(agents_list['emails']):
-            raise CustomValidationError({"error": "The number of 'names' must match the number of 'emails'."})
-        return attrs
+    agents_list = AgentsSignUpListSerializer(many=True)
 
 
 class ViewInsurerDetails(serializers.ModelSerializer):
