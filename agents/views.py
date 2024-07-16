@@ -359,7 +359,6 @@ def forgot_password_email(request) -> Response:
     agent_email = serializer_class.validated_data.get('email')
 
     try:
-        agent = Agent.objects.get(email=agent_email)
         id_base64 = urlsafe_base64_encode(smart_bytes(agent.id))
         token = PasswordResetTokenGenerator().make_token(agent)
         absolute_url = gen_absolute_url(id_base64, token)

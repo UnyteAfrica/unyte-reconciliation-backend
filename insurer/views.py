@@ -195,7 +195,6 @@ def validate_refresh_token(request):
         }, status.HTTP_400_BAD_REQUEST)
 
 
-
 @swagger_auto_schema(
     method='POST',
     request_body=SendNewOTPSerializer,
@@ -620,21 +619,22 @@ def generate_sign_up_link_for_agent(request):
     relative_link = reverse('agents:register_agent')
     relative_link = relative_link.replace('/api/', '/')
     link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
-    names = agent_list['names']
-    emails = agent_list['emails']
 
     current_year = datetime.now().year
     company_name = insurer.business_name
 
-    if len(names) and len(emails) == 1:
+    for agent in agent_list:
+        name = agent['names']
+        email = agent['emails']
+
         context = {
             "current_year": current_year,
             "company_name": company_name,
             "unyte_unique_insurer_id": unyte_unique_insurer_id,
-            "name": names[0]
+            "name": name
         }
         html_message = render_to_string('invitation.html', context)
-        email_recipients.append(emails[0])
+        email_recipients.append(email)
         """
         Sends email to the email of agents
         """
@@ -643,26 +643,6 @@ def generate_sign_up_link_for_agent(request):
             message=f'{link}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=email_recipients,
-            html_message=html_message
-        )
-
-    """
-    Sends email to the list of agents emails with their corresponding names 
-    """
-    for name, email in zip(names, emails):
-        context = {
-            "current_year": current_year,
-            "company_name": company_name,
-            "unyte_unique_insurer_id": unyte_unique_insurer_id,
-            "name": name
-        }
-        html_message = render_to_string('invitation.html', context)
-        email_list = [email]
-        send_mail(
-            subject='Verification email',
-            message=f'{link}',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=email_list,
             html_message=html_message
         )
 
