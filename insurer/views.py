@@ -614,7 +614,7 @@ def generate_sign_up_link_for_agent(request):
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
     agent_list = serializer_class.validated_data.get('agents_list')
-    email_recipients = [settings.TO_EMAIL]
+    email_recipients = []
 
     relative_link = reverse('agents:register_agent')
     relative_link = relative_link.replace('/api/', '/')
@@ -645,6 +645,7 @@ def generate_sign_up_link_for_agent(request):
             recipient_list=email_recipients,
             html_message=html_message
         )
+        email_recipients.pop(0)
 
     return Response({
         "message": f"Link generated: {link}"
