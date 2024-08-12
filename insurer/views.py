@@ -74,6 +74,7 @@ def create_insurer(request) -> Response:
         context = {
             "current_year": current_year,
             "company_name": company_name,
+
         }
 
         html_message = render_to_string('welcome.html', context)
@@ -125,7 +126,7 @@ def login_insurer(request) -> Response:
         user = authenticate(email=email, password=password)
         if user is None:
             return Response({
-                "message": "Failed to authenticate user"
+                "message": "Failed to authenticate insurer"
             }, status=status.HTTP_400_BAD_REQUEST)
 
         insurer = Insurer.objects.get(email=email)
