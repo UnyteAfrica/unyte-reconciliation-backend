@@ -88,7 +88,7 @@ def create_agent(request) -> Response:
         plain_html_message = strip_tags(html_message)
 
         send_mail(
-            subject='Verification email',
+            subject='Welcome email',
             message=plain_html_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
@@ -154,7 +154,7 @@ def login_agent(request) -> Response:
         plain_message = strip_tags(html_message)
 
         send_mail(
-            subject='Verification email',
+            subject='Login OTP',
             message=plain_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
@@ -273,7 +273,7 @@ def request_new_otp(request):
     plain_message = strip_tags(html_message)
 
     send_mail(
-        subject='Verification email',
+        subject='Request New OTP',
         message=plain_message,
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[settings.TO_EMAIL, agent_email],
@@ -377,7 +377,7 @@ def forgot_password_email(request) -> Response:
         plain_message = strip_tags(html_message)
 
         send_mail(
-            subject='Verification email',
+            subject='Forgot Password',
             message=plain_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],

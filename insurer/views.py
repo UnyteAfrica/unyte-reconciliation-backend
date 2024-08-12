@@ -80,7 +80,7 @@ def create_insurer(request) -> Response:
         html_message = render_to_string('welcome.html', context)
 
         send_mail(
-            subject='Verification email',
+            subject='Welcome email',
             message=f'Welcome',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, insurer_email],
@@ -143,7 +143,7 @@ def login_insurer(request) -> Response:
         html_message = render_to_string('otp.html', context)
 
         send_mail(
-            subject='Verification email',
+            subject='Login OTP',
             message=f'{otp}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, email],
@@ -239,7 +239,7 @@ def request_new_otp(request):
     html_message = render_to_string('otp.html', context)
 
     send_mail(
-        subject='Verification email',
+        subject='Request New OTP',
         message=f'{otp}',
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[settings.TO_EMAIL, insurer_email],
@@ -342,7 +342,7 @@ def forgot_password_email(request) -> Response:
         html_message = render_to_string('forgot-password.html', context=context)
 
         send_mail(
-            subject='Verification email',
+            subject='Forgot Password',
             message=f'{abs_url}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, insurer_email],
@@ -640,7 +640,7 @@ def generate_sign_up_link_for_agent(request):
         Sends email to the email of agents
         """
         send_mail(
-            subject='Verification email',
+            subject='Agent SignUp Link',
             message=f'{link}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=email_recipients,
