@@ -130,7 +130,11 @@ def login_insurer(request) -> Response:
             }, status=status.HTTP_400_BAD_REQUEST)
 
         insurer = Insurer.objects.get(email=email)
-        otp = insurer.otp
+
+        otp = generate_otp()
+        insurer.otp = otp
+
+        insurer.save()
 
         current_year = datetime.now().year
         company_name = insurer.business_name
