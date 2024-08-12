@@ -88,7 +88,7 @@ def create_agent(request) -> Response:
         plain_html_message = strip_tags(html_message)
 
         send_mail(
-            subject='Verification email',
+            subject='Welcome email',
             message=plain_html_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
@@ -137,7 +137,8 @@ def login_agent(request) -> Response:
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         agent = Agent.objects.get(email=agent_email)
 
-        otp = agent.otp
+        otp = generate_otp()
+        agent.otp = otp
         name = f"{agent.first_name} {agent.last_name}"
         current_year = datetime.now().year
 
@@ -153,7 +154,7 @@ def login_agent(request) -> Response:
         plain_message = strip_tags(html_message)
 
         send_mail(
-            subject='Verification email',
+            subject='Login OTP',
             message=plain_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
@@ -272,7 +273,7 @@ def request_new_otp(request):
     plain_message = strip_tags(html_message)
 
     send_mail(
-        subject='Verification email',
+        subject='Request New OTP',
         message=plain_message,
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[settings.TO_EMAIL, agent_email],
@@ -376,22 +377,12 @@ def forgot_password_email(request) -> Response:
         plain_message = strip_tags(html_message)
 
         send_mail(
-            subject='Verification email',
+            subject='Forgot Password',
             message=plain_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, agent_email],
             html_message=html_message
         )
-
-        # message = EmailMultiAlternatives(
-        #     subject='Verification email',
-        #     body="plain_message",
-        #     from_email=settings.EMAIL_HOST_USER,
-        #     to=[settings.TO_EMAIL, agent_email],
-        # )
-        #
-        # message.attach_alternative(html_message, "text/html")
-        # message.send()
 
         response = {
             "message": "Confirmation email sent"

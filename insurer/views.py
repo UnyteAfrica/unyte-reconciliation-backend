@@ -74,12 +74,13 @@ def create_insurer(request) -> Response:
         context = {
             "current_year": current_year,
             "company_name": company_name,
+
         }
 
         html_message = render_to_string('welcome.html', context)
 
         send_mail(
-            subject='Verification email',
+            subject='Welcome email',
             message=f'Welcome',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, insurer_email],
@@ -125,11 +126,15 @@ def login_insurer(request) -> Response:
         user = authenticate(email=email, password=password)
         if user is None:
             return Response({
-                "message": "Failed to authenticate user"
+                "message": "Failed to authenticate insurer"
             }, status=status.HTTP_400_BAD_REQUEST)
 
         insurer = Insurer.objects.get(email=email)
-        otp = insurer.otp
+
+        otp = generate_otp()
+        insurer.otp = otp
+
+        insurer.save()
 
         current_year = datetime.now().year
         company_name = insurer.business_name
@@ -142,7 +147,7 @@ def login_insurer(request) -> Response:
         html_message = render_to_string('otp.html', context)
 
         send_mail(
-            subject='Verification email',
+            subject='Login OTP',
             message=f'{otp}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, email],
@@ -238,7 +243,7 @@ def request_new_otp(request):
     html_message = render_to_string('otp.html', context)
 
     send_mail(
-        subject='Verification email',
+        subject='Request New OTP',
         message=f'{otp}',
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[settings.TO_EMAIL, insurer_email],
@@ -341,7 +346,7 @@ def forgot_password_email(request) -> Response:
         html_message = render_to_string('forgot-password.html', context=context)
 
         send_mail(
-            subject='Verification email',
+            subject='Forgot Password',
             message=f'{abs_url}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, insurer_email],
@@ -614,7 +619,7 @@ def generate_sign_up_link_for_agent(request):
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
     agent_list = serializer_class.validated_data.get('agents_list')
-    email_recipients = [settings.TO_EMAIL]
+    email_recipients = []
 
     relative_link = reverse('agents:register_agent')
     relative_link = relative_link.replace('/api/', '/')
@@ -639,12 +644,13 @@ def generate_sign_up_link_for_agent(request):
         Sends email to the email of agents
         """
         send_mail(
-            subject='Verification email',
+            subject='Agent SignUp Link',
             message=f'{link}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=email_recipients,
             html_message=html_message
         )
+        email_recipients.pop(0)
 
     return Response({
         "message": f"Link generated: {link}"

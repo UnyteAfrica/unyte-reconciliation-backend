@@ -28,7 +28,8 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
                                        help_text='Insurer account admin (handler) name',
                                        allow_blank=False,
                                        allow_null=False)
-    business_registration_number = serializers.CharField(max_length=50,
+    business_registration_number = serializers.CharField(max_length=8,
+                                                         min_length=8,
                                                          required=True,
                                                          help_text='Business registration number or Tax ID of insurer')
     email = serializers.EmailField()

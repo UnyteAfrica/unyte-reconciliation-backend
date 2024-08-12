@@ -1,39 +1,52 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 from .models import Insurer
 from .models import InsurerProfile
 
+from django.conf import settings
+
 custom_user = get_user_model()
 
 
-# @receiver(pre_save, sender=Insurer)
-# def send_verification_email(instance, **kwargs):
+# @receiver(post_save, sender=Insurer)
+# def send_verification_email(sender, instance, created, **kwargs,):
 #     is_verified = instance.is_verified
-#     print(is_verified, instance.business_name)
-#     if is_verified is True:
-#         business_name = instance.business_name
-#         email = instance.email
-#         current_year = datetime.now().year
-#         print(business_name)
-#         context = {
-#             "business_name": business_name,
-#             "current_year": current_year
-#         }
-#         html_message = render_to_string("verification.html", context)
-#         plain_message = strip_tags(html_message)
 #
-#         send_mail(
-#             subject='Verification email',
-#             message=plain_message,
-#             from_email=settings.EMAIL_HOST_USER,
-#             recipient_list=[settings.TO_EMAIL, email],
-#             html_message=html_message
-#         )
+#     if created:
+#         return
 #
-#         instance.is_verified = False
-# instance.save()
+#     if is_verified and kwargs.get('update_fields') is None:
+#         try:
+#             business_name = instance.business_name
+#             email = instance.email
+#             current_year = datetime.now().year
+#             print(business_name)
+#             context = {
+#                 "business_name": business_name,
+#                 "current_year": current_year
+#             }
+#             html_message = render_to_string("verification.html", context)
+#             plain_message = strip_tags(html_message)
+#
+#             send_mail(
+#                 subject='Verification email',
+#                 message=plain_message,
+#                 from_email=settings.EMAIL_HOST_USER,
+#                 recipient_list=[settings.TO_EMAIL, email],
+#                 html_message=html_message,
+#             )
+#
+#             print("successfully sent verification email")
+#
+#         except Exception as e:
+#             return e
 
 
 @receiver(post_save, sender=Insurer)
