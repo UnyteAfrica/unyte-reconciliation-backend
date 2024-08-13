@@ -17,5 +17,5 @@ urlpatterns = [
     path('view-sold-policies', views.view_all_sold_policies, name='view-sold-policies'),
     path('generate-agent-sign-up', views.generate_sign_up_link_for_agent, name='generate-signup-link-for-agent'),
     path('insurer-profile', views.view_insurer_profile, name='insurer-profile'),
-    path('reset-token', views.validate_refresh_token, name='reset-access-token')
+    path('refresh-access-token', views.refresh_access_token, name='reset-access-token'),
 ]

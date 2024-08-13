@@ -387,6 +387,35 @@ def reset_password(request) -> Response:
 
 
 @swagger_auto_schema(
+    method='POST',
+    operation_description='Refresh Access Token',
+    request_body=ValidateRefreshToken,
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Insurer']
+)
+@api_view(['POST'])
+def refresh_access_token(request):
+    serializer_class = ValidateRefreshToken(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        refresh_token = serializer_class.validated_data.get('refresh_token')
+        auth_token = RefreshToken(refresh_token)
+
+        message = {
+            "access": f"{auth_token.access_token}"
+        }
+        return Response(message, status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": f"The error '{e}' occurred"}, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
     method='GET',
     operation_description='Id and Token Verification',
     responses={
