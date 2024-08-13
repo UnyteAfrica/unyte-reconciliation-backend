@@ -15,9 +15,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.tokens import RefreshToken, UntypedToken
-
+from rest_framework_simplejwt.tokens import RefreshToken
 from insurer.models import Insurer
 from policies.models import Policies, AgentPolicy
 from .models import Agent, AgentProfile
@@ -173,35 +171,6 @@ def login_agent(request) -> Response:
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
-
-
-@swagger_auto_schema(
-    method='POST',
-    request_body=AgentValidateRefreshToken,
-    operation_description='Login Insurer',
-    responses={
-        200: 'OK',
-        400: 'Bad Request'
-    },
-    tags=['Agent']
-)
-@api_view(['POST'])
-def validate_refresh_token(request):
-    serializer_class = AgentValidateRefreshToken(data=request.data)
-
-    if not serializer_class.is_valid():
-        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
-
-    try:
-        refresh_token = serializer_class.validated_data.get('refresh_token')
-        UntypedToken(refresh_token)
-        return Response({
-            "message": "Token still valid"
-        }, status.HTTP_200_OK)
-    except (InvalidToken, TokenError) as e:
-        return Response({
-            f"{e}"
-        }, status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(
@@ -447,6 +416,36 @@ def reset_password(request) -> Response:
     return Response({
         "message": "Password successfully updated"
     }, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Refresh Access Token',
+    request_body=AgentValidateRefreshToken,
+    responses={
+        200: 'OK',
+        400: 'Bad Request'
+    },
+    tags=['Agent']
+)
+@api_view(['POST'])
+def refresh_access_token(request):
+    serializer_class = AgentValidateRefreshToken(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        refresh_token = serializer_class.validated_data.get('refresh_token')
+        auth_token = RefreshToken(refresh_token)
+
+        message = {
+            "access": f"{auth_token.access_token}"
+        }
+        return Response(message, status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": f"The error '{e}' occurred"}, status.HTTP_400_BAD_REQUEST)
+
 
 
 @swagger_auto_schema(
