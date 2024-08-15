@@ -29,11 +29,6 @@ class Insurer(CustomUser):
     insurer_gampID = models.CharField(null=True,
                                       blank=True,
                                       help_text='GAMP ID for users associated with GAMP')
-    policies = models.ForeignKey("policies.Policies",
-                                 related_name="insurer_policy",
-                                 null=True,
-                                 blank=True,
-                                 on_delete=models.CASCADE)
     unyte_unique_insurer_id = models.CharField(max_length=70,
                                                unique=True,
                                                null=False,

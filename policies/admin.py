@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Policies, AgentPolicy, InsurerPolicy
+from .models import Policies, AgentPolicy
 
 admin.site.register(Policies)
 admin.site.register(AgentPolicy)
-admin.site.register(InsurerPolicy)

@@ -9,16 +9,15 @@ from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_s
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from dotenv import load_dotenv, find_dotenv
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.tokens import RefreshToken, UntypedToken
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 
-from policies.models import InsurerPolicy, Policies
+from policies.models import Policies
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
-    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, \
-    InsurerClaimSellPolicySerializer, InsurerViewAllPolicies, TestViewInsurerProfile, CustomAgentSerializer, \
-    ValidateRefreshToken
+    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, InsurerViewAllPolicies, InsurerProfileSerializier, CustomAgentSerializer, \
+    ValidateRefreshToken, CreatePolicies
 from rest_framework.response import Response
 from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
@@ -488,96 +487,96 @@ def list_all_agents_for_insurer(request):
 
     return Response(serializer_class.data, status.HTTP_200_OK)
 
+#
+# @swagger_auto_schema(
+#     method='POST',
+#     operation_description='Agent Claim Policy',
+#     request_body=InsurerClaimSellPolicySerializer,
+#     responses={
+#         200: 'OK',
+#         400: 'Bad Request',
+#         404: 'Not Found'
+#     },
+#     tags=['Insurer']
+# )
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def insurer_sell_policy(request):
+#     insurer_id = request.user.id
+#     serializer_class = InsurerClaimSellPolicySerializer(data=request.data)
+#
+#     if not serializer_class.is_valid():
+#         return Response({
+#             serializer_class.errors
+#         }, status.HTTP_400_BAD_REQUEST)
+#
+#     try:
+#         policy_name = serializer_class.validated_data.get('policy_name')
+#         insurer = Insurer.objects.get(id=insurer_id)
+#         policy = Policies.objects.get(name=policy_name)
+#         claim_policy = InsurerPolicy.objects.get(insurer=insurer, policy=policy)
+#
+#         if claim_policy.is_sold is True:
+#             return Response({
+#                 "error": "You have already sold this policy"
+#             }, status.HTTP_400_BAD_REQUEST)
+#
+#         claim_policy.is_sold = True
+#         claim_policy.save()
+#
+#         return Response({
+#             "message": "You have successfully sold this policy"
+#         }, status.HTTP_200_OK)
+#
+#     except Exception as e:
+#         return Response({
+#             "error": f"The error '{e}' occurred"
+#         }, status.HTTP_400_BAD_REQUEST)
 
-@swagger_auto_schema(
-    method='POST',
-    operation_description='Agent Claim Policy',
-    request_body=InsurerClaimSellPolicySerializer,
-    responses={
-        200: 'OK',
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def insurer_sell_policy(request):
-    insurer_id = request.user.id
-    serializer_class = InsurerClaimSellPolicySerializer(data=request.data)
 
-    if not serializer_class.is_valid():
-        return Response({
-            serializer_class.errors
-        }, status.HTTP_400_BAD_REQUEST)
-
-    try:
-        policy_name = serializer_class.validated_data.get('policy_name')
-        insurer = Insurer.objects.get(id=insurer_id)
-        policy = Policies.objects.get(name=policy_name)
-        claim_policy = InsurerPolicy.objects.get(insurer=insurer, policy=policy)
-
-        if claim_policy.is_sold is True:
-            return Response({
-                "error": "You have already sold this policy"
-            }, status.HTTP_400_BAD_REQUEST)
-
-        claim_policy.is_sold = True
-        claim_policy.save()
-
-        return Response({
-            "message": "You have successfully sold this policy"
-        }, status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({
-            "error": f"The error '{e}' occurred"
-        }, status.HTTP_400_BAD_REQUEST)
-
-
-@swagger_auto_schema(
-    method='POST',
-    operation_description='Agent Claim Policy',
-    request_body=InsurerClaimSellPolicySerializer,
-    responses={
-        200: 'OK',
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def insurer_claim_policy(request):
-    insurer_id = request.user.id
-    serializer_class = InsurerClaimSellPolicySerializer(data=request.data)
-
-    if not serializer_class.is_valid():
-        return Response({
-            serializer_class.errors
-        }, status.HTTP_400_BAD_REQUEST)
-
-    try:
-        policy_name = serializer_class.validated_data.get('policy_name')
-        insurer = Insurer.objects.get(id=insurer_id)
-        policy = Policies.objects.get(name=policy_name)
-
-        if Insurer.objects.filter(email=insurer).exists():
-            return Response({
-                "error": "You have claimed this policy already"
-            }, status.HTTP_400_BAD_REQUEST)
-
-        claim_policy = InsurerPolicy.objects.create(insurer=insurer, policy=policy)
-
-        claim_policy.save()
-        return Response({
-            "message": "You have claimed a new policy"
-        }, status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({
-            "error": f"The error '{e}' occurred"
-        }, status.HTTP_400_BAD_REQUEST)
+# @swagger_auto_schema(
+#     method='POST',
+#     operation_description='Agent Claim Policy',
+#     request_body=InsurerClaimSellPolicySerializer,
+#     responses={
+#         200: 'OK',
+#         400: 'Bad Request',
+#         404: 'Not Found'
+#     },
+#     tags=['Insurer']
+# )
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def insurer_claim_policy(request):
+#     insurer_id = request.user.id
+#     serializer_class = InsurerClaimSellPolicySerializer(data=request.data)
+#
+#     if not serializer_class.is_valid():
+#         return Response({
+#             serializer_class.errors
+#         }, status.HTTP_400_BAD_REQUEST)
+#
+#     try:
+#         policy_name = serializer_class.validated_data.get('policy_name')
+#         insurer = Insurer.objects.get(id=insurer_id)
+#         policy = Policies.objects.get(name=policy_name)
+#
+#         if Insurer.objects.filter(email=insurer).exists():
+#             return Response({
+#                 "error": "You have claimed this policy already"
+#             }, status.HTTP_400_BAD_REQUEST)
+#
+#         claim_policy = InsurerPolicy.objects.create(insurer=insurer, policy=policy)
+#
+#         claim_policy.save()
+#         return Response({
+#             "message": "You have claimed a new policy"
+#         }, status.HTTP_200_OK)
+#
+#     except Exception as e:
+#         return Response({
+#             "error": f"The error '{e}' occurred"
+#         }, status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(
@@ -715,7 +714,7 @@ def view_insurer_profile(request) -> Response:
         'profile_image': str(insurer_profile_pic)
     }
 
-    serializer_class = TestViewInsurerProfile(data=data)
+    serializer_class = InsurerProfileSerializier(data=data)
 
     if not serializer_class.is_valid():
         return Response({
@@ -723,3 +722,33 @@ def view_insurer_profile(request) -> Response:
         }, status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Create Policy',
+    request_body=CreatePolicies,
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def create_policy(request) -> Response:
+    insurer_id = request.user.id
+    insurer = get_object_or_404(Insurer, pk=insurer_id)
+    serializer_class = CreatePolicies(data=request.data)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    try:
+        policy = Policies.objects.create(**serializer_class.validated_data, insurer=insurer)
+        policy.save()
+        return Response(serializer_class.data, status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "error": f"The error '{e}' occurred"
+        }, status.HTTP_400_BAD_REQUEST)
