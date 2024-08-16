@@ -270,15 +270,18 @@ class UpdateAgentDetails(serializers.ModelSerializer):
             raise e
 
 
-class AgentClaimSellPolicySerializer(serializers.ModelSerializer):
+class AgentClaimPolicySerializer(serializers.ModelSerializer):
     policy_name = serializers.CharField(max_length=100,
                                         min_length=1,
                                         allow_blank=False)
+    quantity_bought = serializers.IntegerField(allow_null=False,
+                                               default=0)
 
     class Meta:
         model = Agent
         fields = [
-            'policy_name'
+            'policy_name',
+            'quantity_bought'
         ]
 
     def validate(self, attrs):
@@ -291,13 +294,55 @@ class AgentClaimSellPolicySerializer(serializers.ModelSerializer):
         return attrs
 
 
-class AgentViewAllPolicies(serializers.ModelSerializer):
+class AgentSellPolicySerializer(serializers.ModelSerializer):
+    policy_name = serializers.CharField(max_length=100,
+                                        min_length=1,
+                                        allow_blank=False)
+    quantity_to_sell = serializers.IntegerField(allow_null=False,
+                                                default=0)
+
+    class Meta:
+        model = Agent
+        fields = [
+            'policy_name',
+            'quantity_to_sell'
+        ]
+
+
+class AgentPolicySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Policies
+        fields = [
+            'name',
+            'amount',
+            'valid_from',
+            'valid_to'
+        ]
+
+
+class AgentViewAllClaimedPolicies(serializers.ModelSerializer):
+    policy = AgentPolicySerializer()
+
+    class Meta:
+        model = AgentPolicy
+        fields = [
+            'id',
+            'policy',
+            'quantity_bought',
+            'quantity_sold'
+        ]
+
+
+class AgentViewAllAvailablePolicies(serializers.ModelSerializer):
     class Meta:
         model = Policies
         fields = [
             'id',
             'name',
-            'amount'
+            'amount',
+            'policy_type',
+            'valid_to',
+            'valid_from'
         ]
 
 

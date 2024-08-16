@@ -31,11 +31,6 @@ class Agent(CustomUser):
                                            on_delete=models.CASCADE,
                                            null=False,
                                            blank=True)
-    policy = models.ForeignKey("policies.Policies",
-                               on_delete=models.CASCADE,
-                               blank=True,
-                               null=True,
-                               related_name="agent_policy")
     unyte_unique_agent_id = models.CharField(max_length=70,
                                              unique=True,
                                              null=False,

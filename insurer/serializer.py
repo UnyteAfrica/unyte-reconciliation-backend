@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
-from policies.models import Policies
 from .utils import generate_otp, CustomValidationError, generate_unyte_unique_insurer_id
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -11,7 +10,8 @@ from django.utils.http import urlsafe_base64_decode
 
 from datetime import datetime
 
-from .models import Insurer, InsurerProfile
+from .models import Insurer
+from policies.models import Policies
 from agents.models import Agent
 
 custom_user = get_user_model()
@@ -257,6 +257,42 @@ class InsurerClaimSellPolicySerializer(serializers.ModelSerializer):
         return attrs
 
 
+class CreatePolicies(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=200,
+                                 allow_blank=False,
+                                 allow_null=False,
+                                 help_text="The name of the policy")
+    policy_type = serializers.CharField(max_length=200,
+                                        allow_blank=False,
+                                        allow_null=False,
+                                        help_text="The class a policy falls under. For now, we only support Device "
+                                                  "Policies")
+    amount = serializers.CharField(max_length=200,
+                                   allow_blank=False,
+                                   allow_null=False,
+                                   help_text="Amount policy should be sold at")
+    valid_from = serializers.DateTimeField(allow_null=False,
+                                           help_text="Date at which policy is valid from")
+    valid_to = serializers.DateTimeField(allow_null=False,
+                                         help_text="Policy Expiration date")
+
+    class Meta:
+        model = Policies
+        fields = [
+            "name",
+            "policy_type",
+            "amount",
+            "valid_from",
+            "valid_to"
+        ]
+
+    def validate(self, attrs):
+        valid_from, valid_to = attrs.get('valid_from'), attrs.get('valid_to')
+        if valid_to < valid_from:
+            raise ValidationError({"error": "valid_to must be greater than valid_from"}, 400)
+        return attrs
+
+
 class InsurerViewAllPolicies(serializers.ModelSerializer):
     class Meta:
         model = Policies
@@ -267,7 +303,7 @@ class InsurerViewAllPolicies(serializers.ModelSerializer):
         ]
 
 
-class TestViewInsurerProfile(serializers.Serializer):
+class InsurerProfileSerializier(serializers.Serializer):
     business_name = serializers.CharField()
     email = serializers.EmailField()
     profile_image = serializers.CharField()
@@ -278,8 +314,3 @@ class TestViewInsurerProfile(serializers.Serializer):
             'profile_image',
             'email'
         ]
-
-# class ViewInsurerProfile(serializers.ModelSerializer):
-#     class Meta:
-#         model = InsurerProfile
-#         fields = '__all__'
