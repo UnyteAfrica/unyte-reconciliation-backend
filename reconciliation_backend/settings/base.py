@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'agents',
     'policies',
     'devices',
+    'gamp_env'
 ]
 
 MIDDLEWARE = [
