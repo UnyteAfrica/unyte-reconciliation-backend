@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class GampConfig(AppConfig):
+class GampEnvConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'gamp'
+    name = 'gamp_env'
