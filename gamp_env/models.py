@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class GampArbitraryUser(models.Model):
     uuid = models.UUIDField(null=False)
     first_name = models.CharField(max_length=70,
@@ -19,7 +20,7 @@ class GampArbitraryUser(models.Model):
                               help_text="Email of gamp customer")
 
     def __str__(self):
-        return f"{self.uuid}"
+        return f"{self.first_name} {self.last_name}"
 
 
 class GampArbitraryDevice(models.Model):
@@ -71,8 +72,8 @@ class GampArbitraryClaim(models.Model):
         (BATTERY, "My phone's battery spoilt"),
     ]
 
-    uuid = models.UUIDField(null=False,
-                            help_text="Claims id")
+    claim_uuid = models.UUIDField(null=False,
+                                  help_text="Claims id")
     customer = models.ForeignKey(GampArbitraryUser,
                                  null=False,
                                  on_delete=models.CASCADE,
@@ -107,34 +108,58 @@ class GampArbitraryClaim(models.Model):
                               help_text="Status of the claim filled")
 
     def __str__(self):
-        return f"{self.uuid}"
+        return f"{self.claim_uuid}"
+
+
+class GampArbitraryProduct(models.Model):
+    product_uuid = models.UUIDField(null=False)
+    product_name = models.CharField(max_length=100,
+                                    null=False,
+                                    blank=False,
+                                    help_text="Type of the product")
+    premium = models.CharField(max_length=100,
+                               null=False,
+                               blank=False,
+                               help_text="Price of the product")
+    flat_fee = models.BooleanField(null=False,
+                                   default=True)
+
+    def __str__(self):
+        return self.product_name
 
 
 class GampArbitraryPolicy(models.Model):
-    uuid = models.UUIDField(null=False)
+    policy_uuid = models.UUIDField(null=False)
     policy_name = models.CharField(null=False,
                                    blank=False,
                                    max_length=200,
                                    help_text="Name of policy")
+    description = models.TextField(null=False,
+                                   blank=False,
+                                   max_length=250,
+                                   help_text="Description of a policy")
     policy_type = models.CharField(null=False,
                                    blank=False,
                                    max_length=20,
                                    default="",
                                    choices=[],
                                    help_text="Types of available policies")
-    description = models.TextField(null=False,
-                                   blank=False,
-                                   max_length=250,
-                                   help_text="Description of a policy")
-    price = models.CharField(null=False,
-                             blank=False,
-                             max_length=30,
-                             help_text="Price for the policy")
     insurer = models.CharField(null=False,
                                blank=False,
                                max_length=100,
                                help_text="Insurer that created the policy")
-    flat_fee = models.CharField(null=False,
-                                blank=False,
-                                choices=[],
-                                help_text="Flat fee for the policies created")
+
+    def __str__(self):
+        return self.policy_name
+
+
+class GampPolicyProducts(models.Model):
+    policy = models.ForeignKey(GampArbitraryPolicy,
+                               on_delete=models.CASCADE,
+                               help_text="Policy associated to a product")
+    product = models.ForeignKey(GampArbitraryProduct,
+                                on_delete=models.CASCADE,
+                                help_text="Product(s) associated to a policy")
+
+    def __str__(self):
+        return f"{self.policy.policy_name}, {self.product.product_name}"

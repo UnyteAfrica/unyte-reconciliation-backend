@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import GampArbitraryClaim, GampArbitraryUser, GampArbitraryDevice
+from .models import GampArbitraryClaim, GampArbitraryUser, GampArbitraryDevice, GampArbitraryPolicy, \
+    GampArbitraryProduct, GampPolicyProducts
 
 
 class GampDeviceSerializer(serializers.ModelSerializer):
@@ -34,6 +35,35 @@ class GampClaimSerializer(serializers.ModelSerializer):
             'technician_address',
         ]
 
-    def create(self, validated_data):
-        claim = GampArbitraryClaim.objects.create(**validated_data)
-        return claim
+
+class GampArbitraryPolicySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GampArbitraryPolicy
+        fields = [
+            'policy_uuid',
+            'policy_name',
+            'description',
+            'insurer'
+        ]
+
+
+class GampArbitratyProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GampArbitraryProduct
+        fields = [
+            "premium",
+            "product_name",
+            "flat_fee"
+        ]
+
+
+class ViewAritraryPolicySerializer(serializers.ModelSerializer):
+    product = GampArbitratyProductSerializer()
+    policy = GampArbitraryPolicySerializer()
+
+    class Meta:
+        model = GampPolicyProducts
+        fields = [
+            "product",
+            "policy"
+        ]
