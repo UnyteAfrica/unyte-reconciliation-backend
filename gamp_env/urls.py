@@ -7,5 +7,5 @@ urlpatterns = [
                                                                                                   'policies'),
     path('create-gamp-products/<int:count>', views.create_products_for_policy, name='create arbitrary '
                                                                                                   'products'),
-    path('view-gamp-insurer/policies/<str:policy_uuid>', views.view_policies, name='view insurer policies')
+    path('view-gamp-insurer/<str:insurer>', views.view_product_by_insurer, name='view insurer policies'),
 ]
