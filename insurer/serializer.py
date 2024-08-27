@@ -10,7 +10,7 @@ from django.utils.http import urlsafe_base64_decode
 
 from datetime import datetime
 
-from .models import Insurer
+from .models import Insurer, InsurerProfile
 from policies.models import Policies
 from agents.models import Agent
 
@@ -314,3 +314,18 @@ class InsurerProfileSerializier(serializers.Serializer):
             'profile_image',
             'email'
         ]
+
+
+class UpdateProfileImageSerializer(serializers.ModelSerializer):
+    profile_image = serializers.ImageField()
+
+    class Meta:
+        model = InsurerProfile
+        fields = [
+            'profile_image'
+        ]
+
+    def update(self, instance, validated_data):
+        instance.profile_image = validated_data.get('profile_image', instance.profile_image)
+        instance.save()
+        return instance

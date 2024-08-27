@@ -8,4 +8,5 @@ urlpatterns = [
     path('create-gamp-products/<int:count>', views.create_products_for_policy, name='create arbitrary '
                                                                                                   'products'),
     path('view-gamp-insurer/<str:insurer>', views.view_product_by_insurer, name='view insurer policies'),
+    path('customer-buy-products', views.customer_purchase_policy, name='customer buy policies'),
 ]

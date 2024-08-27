@@ -1,8 +1,9 @@
-import json
-from uuid import uuid4
+from pprint import pprint
+
+from django.shortcuts import get_object_or_404
 from .serializers import GampUserSerializer, GampArbitraryPolicySerializer, GampArbitratyProductSerializer, \
-    GampPolicyProducts
-from .models import GampArbitraryUser, GampArbitraryPolicy, GampArbitraryProduct, Product, ProductType
+    UserPolicySerializer
+from .models import GampArbitraryUser, GampArbitraryPolicy, GampArbitraryProduct, Product, ProductType, UserPolicy
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
@@ -136,44 +137,44 @@ def create_products_for_policy(request: Request, count: int) -> Response:
         })
 
 
-@swagger_auto_schema(
-    method='GET',
-    operation_description='Create Gamp Insurer Policies',
-    responses={
-        '201': "Created",
-        '400': 'Bad Request'
-    },
-    tags=['Gamp']
-)
-@api_view(['GET'])
-def view_policies(request: Request, policy_uuid: uuid4) -> Response:
-    try:
-        policy = GampArbitraryPolicy.objects.get(policy_uuid=policy_uuid)
-        all_products_per_policy = GampPolicyProducts.objects.filter(policy=policy)
-        print(all_products_per_policy)
-        # serializer_class = ViewAritraryPolicySerializer(all_products_per_policy, many=True)
-
-        # ChatGPT generated code
-        response_data = {
-            "product_name": policy.policy_name,
-            "insurer": policy.insurer,
-            "product_types": []
-        }
-
-        # Add the product details to the response
-        for product in all_products_per_policy:
-            response_data["product_types"].append({
-                "type": product.policy.policy_type,
-                "premium": product.product.premium,
-                "flat_fee": product.product.flat_fee,
-                "broker_commission": "20%"
-            })
-        return Response(response_data, status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({
-            "error": f"The error {e} occurred"
-        }, status.HTTP_400_BAD_REQUEST)
+# @swagger_auto_schema(
+#     method='GET',
+#     operation_description='Create Gamp Insurer Policies',
+#     responses={
+#         '201': "Created",
+#         '400': 'Bad Request'
+#     },
+#     tags=['Gamp']
+# )
+# @api_view(['GET'])
+# def view_policies(request: Request, policy_uuid: uuid4) -> Response:
+#     try:
+#         policy = GampArbitraryPolicy.objects.get(policy_uuid=policy_uuid)
+#         all_products_per_policy = GampPolicyProducts.objects.filter(policy=policy)
+#         print(all_products_per_policy)
+#         # serializer_class = ViewAritraryPolicySerializer(all_products_per_policy, many=True)
+#
+#         # ChatGPT generated code
+#         response_data = {
+#             "product_name": policy.policy_name,
+#             "insurer": policy.insurer,
+#             "product_types": []
+#         }
+#
+#         # Add the product details to the response
+#         for product in all_products_per_policy:
+#             response_data["product_types"].append({
+#                 "type": product.policy.policy_type,
+#                 "premium": product.product.premium,
+#                 "flat_fee": product.product.flat_fee,
+#                 "broker_commission": "20%"
+#             })
+#         return Response(response_data, status.HTTP_200_OK)
+#
+#     except Exception as e:
+#         return Response({
+#             "error": f"The error {e} occurred"
+#         }, status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(
@@ -211,6 +212,63 @@ def view_product_by_insurer(request, insurer: str):
 
     except Exception as e:
         return Response(e, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Buy products by customers',
+    request_body=UserPolicySerializer,
+    responses={
+        '201': "Created",
+        '400': 'Bad Request'
+    },
+    tags=['Gamp']
+)
+@api_view(['POST'])
+def customer_purchase_policy(request) -> Response:
+    serializer_class = UserPolicySerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    first_name = serializer_class.validated_data.get('first_name')
+    last_name = serializer_class.validated_data.get('last_name')
+    product = serializer_class.validated_data.get('policy')
+    product_types = serializer_class.validated_data.get('product_type')
+
+    customer_obj = get_object_or_404(GampArbitraryUser, first_name=first_name, last_name=last_name)
+    product_obj = get_object_or_404(Product, product_name=product)
+
+    product_type_objs = ProductType.objects.filter(product=product_obj)
+
+    product_type_list_obj = []
+    for product_type_obj in product_type_objs:
+        product_type_list_obj.append({
+            "product_name": product_type_obj.type,
+            "premium": product_type_obj.premium,
+            "flat_fee": product_type_obj.flat_fee
+        })
+
+    for product_type in product_types:
+        if product_type not in product_type_list_obj:
+            print(product_type)
+            continue
+        else:
+            print("I am here")
+            try:
+                policy_product_type = ProductType.objects.get(product=product_obj,
+                                                              type=product_type.get('product_name'))
+                customer_policy_obj = UserPolicy.objects.create(
+                    customer=customer_obj,
+                    product_bought=policy_product_type
+                )
+            except Exception as e:
+                return Response({
+                    "error": f"{e}"
+                }, status.HTTP_200_OK)
+
+    return Response({
+        "message": "All available policies have been bought"
+    }, status.HTTP_200_OK)
 
 
 @api_view(['GET'])

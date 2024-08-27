@@ -8,16 +8,19 @@ from django.urls import reverse
 from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from dotenv import load_dotenv, find_dotenv
+from drf_yasg import openapi
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import status
 
 from policies.models import Policies
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
-    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, InsurerViewAllPolicies, InsurerProfileSerializier, CustomAgentSerializer, \
-    ValidateRefreshToken, CreatePolicies
+    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, InsurerViewAllPolicies, \
+    InsurerProfileSerializier, CustomAgentSerializer, \
+    ValidateRefreshToken, CreatePolicies, UpdateProfileImageSerializer
 from rest_framework.response import Response
 from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
@@ -487,6 +490,7 @@ def list_all_agents_for_insurer(request):
 
     return Response(serializer_class.data, status.HTTP_200_OK)
 
+
 #
 # @swagger_auto_schema(
 #     method='POST',
@@ -752,3 +756,17 @@ def create_policy(request) -> Response:
         return Response({
             "error": f"The error '{e}' occurred"
         }, status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_profile_image(request) -> Response:
+    serializer_class = UpdateProfileImageSerializer(data=request.data)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    profile_image = serializer_class.validated_data.get('profile_image')
+    print(profile_image)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
