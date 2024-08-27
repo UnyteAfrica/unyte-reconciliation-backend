@@ -1,14 +1,12 @@
+import json
 from uuid import uuid4
-
-from django.shortcuts import render
-from .serializers import GampUserSerializer, GampDeviceSerializer, GampClaimSerializer, GampArbitraryPolicySerializer, \
-    GampArbitratyProductSerializer, ViewAritraryPolicySerializer, GampPolicyProducts
-from .models import GampArbitraryUser, GampArbitraryPolicy, GampArbitraryProduct
+from .serializers import GampUserSerializer, GampArbitraryPolicySerializer, GampArbitratyProductSerializer, \
+    GampPolicyProducts
+from .models import GampArbitraryUser, GampArbitraryPolicy, GampArbitraryProduct, Product, ProductType
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
-from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from faker import Faker
 import random
@@ -176,3 +174,60 @@ def view_policies(request: Request, policy_uuid: uuid4) -> Response:
         return Response({
             "error": f"The error {e} occurred"
         }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View all Insurer policies with their product types',
+    responses={
+        '201': "Created",
+        '400': 'Bad Request'
+    },
+    tags=['Gamp']
+)
+@api_view(['GET'])
+def view_product_by_insurer(request, insurer: str):
+    insurer = 'NEM'
+    try:
+        all_products = Product.objects.filter(insurer=insurer)
+        hol = []
+
+        for products in all_products:
+            res = {'insurer': insurer, 'product_name': products.product_name}
+            product_type_list = []
+
+            product_types = ProductType.objects.filter(product=products)
+
+            for product_type in product_types:
+                product_type_list.append({
+                    "name": product_type.type,
+                    "premium": product_type.premium,
+                    "flat_fee": product_type.flat_fee,
+                    "broker_commission": product_type.broker_commission
+                })
+            res['product_type'] = product_type_list
+            hol.append(res)
+        return Response(hol, status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(e, status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def view_policies_customer_bought(customer: str):
+    pass
+
+
+@api_view(['GET'])
+def view_claims_made_by_customer(customer: str):
+    pass
+
+
+@api_view(['GET'])
+def view_all_devices_insured_by_customer(customer: str):
+    pass
+
+
+@api_view(['GET'])
+def view_all_devices_insured_by_a_policy():
+    pass

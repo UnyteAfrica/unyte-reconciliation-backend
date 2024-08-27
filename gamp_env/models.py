@@ -1,6 +1,25 @@
 from django.db import models
 
 
+class Product(models.Model):
+    product_name = models.CharField(max_length=255)
+    insurer = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.product_name
+
+
+class ProductType(models.Model):
+    product = models.ForeignKey(Product, related_name='product_types', on_delete=models.CASCADE)
+    type = models.CharField(max_length=100)
+    premium = models.DecimalField(max_digits=10, decimal_places=2)
+    flat_fee = models.CharField(max_length=3, choices=[('YES', 'Yes'), ('NO', 'No')])
+    broker_commission = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.type} - {self.product.product_name}"
+
+
 class GampArbitraryUser(models.Model):
     uuid = models.UUIDField(null=False)
     first_name = models.CharField(max_length=70,
