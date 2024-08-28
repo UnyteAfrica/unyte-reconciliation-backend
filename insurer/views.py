@@ -769,14 +769,27 @@ def create_policy(request) -> Response:
         }, status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Create Policy',
+    request_body=UpdateProfileImageSerializer,
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_profile_image(request) -> Response:
-    serializer_class = UpdateProfileImageSerializer(data=request.data)
+    insurer = get_object_or_404(Insurer, pk=request.user.id)
+    insurer_profile_obj = get_object_or_404(InsurerProfile, insurer=insurer)
+    serializer_class = UpdateProfileImageSerializer(insurer_profile_obj, data=request.data, partial=True)
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
-    profile_image = serializer_class.validated_data.get('profile_image')
-    print(profile_image)
-
-    return Response(serializer_class.data, status.HTTP_200_OK)
+    serializer_class.save()
+    return Response({
+        "message": "Profile image updated"
+    }, status.HTTP_200_OK)
