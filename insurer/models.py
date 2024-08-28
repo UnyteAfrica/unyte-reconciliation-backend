@@ -38,11 +38,11 @@ class Insurer(CustomUser):
         return self.business_name
 
     def get_policies(self):
-        policies = Policies.objects.filter(insurerpolicy__insurer=self)
+        policies = Policies.objects.filter(agentpolicy__agent=self)
         return policies
 
     def get_sold_policies(self):
-        sold_policies = Policies.objects.filter(insurerpolicy__insurer=self, insurerpolicy__is_sold=True)
+        sold_policies = Policies.objects.filter(agentpolicy__insurer=self, agentpolicy__is_sold=True)
         return sold_policies
 
 

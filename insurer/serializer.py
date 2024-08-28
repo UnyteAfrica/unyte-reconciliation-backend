@@ -297,9 +297,11 @@ class InsurerViewAllPolicies(serializers.ModelSerializer):
     class Meta:
         model = Policies
         fields = [
-            'id',
             'name',
+            'policy_type',
             'amount',
+            'valid_from',
+            'valid_to'
         ]
 
 

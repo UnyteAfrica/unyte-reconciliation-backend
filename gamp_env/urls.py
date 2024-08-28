@@ -9,4 +9,5 @@ urlpatterns = [
                                                                                                   'products'),
     path('view-gamp-insurer/<str:insurer>', views.view_product_by_insurer, name='view insurer policies'),
     path('customer-buy-products', views.customer_purchase_policy, name='customer buy policies'),
+    path('view-all-policies-bought-by-customer', views.view_policies_customer_bought, name='policies bought by customer'),
 ]

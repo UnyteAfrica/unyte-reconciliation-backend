@@ -77,6 +77,13 @@ class UserPolicySerializer(serializers.Serializer):
     product_type = UserPolicyProductTypeSerializer(many=True)
 
 
+class ViewUserPolicySerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=240,
+                                       help_text="User first name")
+    last_name = serializers.CharField(max_length=240,
+                                      help_text="User last name")
+
+
 # class ViewAritraryPolicySerializer(serializers.ModelSerializer):
 #     product = GampArbitratyProductSerializer()
 #     policy = GampArbitraryPolicySerializer()
