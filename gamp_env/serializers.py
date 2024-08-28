@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import GampArbitraryClaim, GampArbitraryUser, GampArbitraryDevice, GampArbitraryPolicy, \
-    GampArbitraryProduct, GampPolicyProducts
+    GampArbitraryProduct, UserPolicy
 
 
 class GampDeviceSerializer(serializers.ModelSerializer):
@@ -57,13 +57,40 @@ class GampArbitratyProductSerializer(serializers.ModelSerializer):
         ]
 
 
-class ViewAritraryPolicySerializer(serializers.ModelSerializer):
-    product = GampArbitratyProductSerializer()
-    policy = GampArbitraryPolicySerializer()
+class UserPolicyProductTypeSerializer(serializers.Serializer):
+    product_name = serializers.CharField(max_length=240,
+                                         help_text="Name of product under the policy that user wants to purchase")
+    premium = serializers.DecimalField(max_digits=10,
+                                       decimal_places=2,
+                                       help_text="Price of the product")
+    flat_fee = serializers.CharField(max_length=3,
+                                     help_text="Flat fee of policy customer wants to purchase")
 
-    class Meta:
-        model = GampPolicyProducts
-        fields = [
-            "product",
-            "policy"
-        ]
+
+class UserPolicySerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=240,
+                                   help_text="User first name")
+    last_name = serializers.CharField(max_length=240,
+                                   help_text="User last name")
+    policy = serializers.CharField(max_length=240,
+                                   help_text="Policy user wants to buy")
+    product_type = UserPolicyProductTypeSerializer(many=True)
+
+
+class ViewUserPolicySerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=240,
+                                       help_text="User first name")
+    last_name = serializers.CharField(max_length=240,
+                                      help_text="User last name")
+
+
+# class ViewAritraryPolicySerializer(serializers.ModelSerializer):
+#     product = GampArbitratyProductSerializer()
+#     policy = GampArbitraryPolicySerializer()
+#
+#     class Meta:
+#         model = GampPolicyProducts
+#         fields = [
+#             "product",
+#             "policy"
+#         ]

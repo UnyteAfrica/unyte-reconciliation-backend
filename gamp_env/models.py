@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Product(models.Model):
-    product_name = models.CharField(max_length=255)
+    product_name = models.CharField(max_length=255, unique=True)
     insurer = models.CharField(max_length=255)
 
     def __str__(self):
@@ -182,3 +182,16 @@ class GampPolicyProducts(models.Model):
 
     def __str__(self):
         return f"{self.policy.policy_name}, {self.product.product_name}"
+
+
+class UserPolicy(models.Model):
+    customer = models.ForeignKey(GampArbitraryUser,
+                                 on_delete=models.CASCADE,
+                                 help_text="Customer who bought the policy")
+    product_bought = models.ForeignKey(ProductType,
+                                       on_delete=models.CASCADE,
+                                       help_text="Product bought by customer")
+    bought_date = models.DateTimeField(auto_now_add=True, editable=False)
+
+    def __str__(self):
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.product_bought.product.product_name}"

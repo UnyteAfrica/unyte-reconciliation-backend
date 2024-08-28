@@ -19,4 +19,5 @@ urlpatterns = [
     path('generate-agent-sign-up', views.generate_sign_up_link_for_agent, name='generate-signup-link-for-agent'),
     path('insurer-profile', views.view_insurer_profile, name='insurer-profile'),
     path('refresh-access-token', views.refresh_access_token, name='reset-access-token'),
+    path('update-profile-picture', views.update_profile_image, name='update-profile-picture'),
 ]
