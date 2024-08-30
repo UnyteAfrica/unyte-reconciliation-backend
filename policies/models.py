@@ -3,50 +3,67 @@ from django.utils.translation import gettext as _
 
 
 class Policies(models.Model):
-    DEVICE_POLICY = 'device'
-
-    POLICY_TYPES = (
-        DEVICE_POLICY, _('Policy for Devices'),
-    )
-
+    POLICY_CATEGORY = [
+        ('LAUNCH', 'LAUNCH'),
+        ('CREDIT LIFE', 'CREDIT LIFE'),
+        ('DEVICE PROTECTION', 'DEVICE PROTECTION'),
+        ('TRAVEL COVER', 'TRAVEL COVER'),
+        ('HEALTH', 'HEALTH'),
+        ('MOTOR REGISTRATION', 'MOTOR REGISTRATION'),
+        ('STUDENT PROTECTION', 'STUDENT PROTECTION'),
+        ('LOGISTICS', 'LOGISTICS'),
+        ('CARD PROTECTION', 'CARD PROTECTION')
+    ]
     insurer = models.ForeignKey("insurer.Insurer",
                                 on_delete=models.CASCADE,
                                 help_text="Insurer that create the policy")
 
     name = models.CharField(null=False,
                             blank=False,
-                            unique=True,
                             max_length=200,
                             help_text="The name of the policy")
-    policy_type = models.CharField(null=False,
-                                   blank=False,
-                                   max_length=50,
-                                   default=DEVICE_POLICY,
-                                   help_text="The class a policy falls under. For now, we only support Device Policies")
-    amount = models.CharField(null=False,
-                              blank=False,
-                              max_length=200,
-                              help_text="Amount policy should be sold at")
+    policy_category = models.CharField(null=False,
+                                       blank=False,
+                                       max_length=50,
+                                       choices=POLICY_CATEGORY,
+                                       help_text="The class a policy falls under")
     valid_from = models.DateTimeField(null=False,
                                       blank=False,
                                       help_text="Date at which policy is valid from")
     valid_to = models.DateTimeField(null=False,
                                     blank=False,
                                     help_text="Policy Expiration date")
-    created_at = models.DateTimeField(null=False,
-                                      auto_now_add=True,
-                                      help_text="Date policy was created")
-    updated_at = models.DateTimeField(null=False,
-                                      blank=False,
-                                      auto_now=True,
-                                      help_text="Date at which the policy was updated")
 
     def __str__(self):
-        return self.name
+        return f"{self.insurer.business_name} - {self.name}"
 
     class Meta:
         verbose_name = 'policy'
         verbose_name_plural = 'policies'
+
+
+class PolicyProductType(models.Model):
+    policy = models.ForeignKey(Policies,
+                               on_delete=models.CASCADE,
+                               help_text='Policy with product(s)')
+    name = models.CharField(null=False,
+                            blank=False,
+                            unique=True,
+                            max_length=200,
+                            help_text="The name of the product")
+    premium = models.CharField(null=False,
+                               blank=False,
+                               max_length=200,
+                               help_text="Amount policy should be sold at")
+    flat_fee = models.CharField(max_length=3,
+                                choices=[('YES', 'Yes'), ('NO', 'No')],
+                                help_text='Flat fee for the policy')
+    broker_commission = models.DecimalField(max_digits=5,
+                                            decimal_places=2,
+                                            help_text='commission attached to the product')
+
+    def __str__(self):
+        return f"{self.policy.name} - {self.name}"
 
 
 class AgentPolicy(models.Model):
@@ -82,6 +99,3 @@ class AgentPolicy(models.Model):
         #             return False
 
         return True
-
-
-

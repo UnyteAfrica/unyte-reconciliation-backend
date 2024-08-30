@@ -21,7 +21,7 @@ from policies.models import Policies, AgentPolicy
 from .models import Agent, AgentProfile
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
-    UpdateAgentDetails, AgentClaimPolicySerializer, AgentSellPolicySerializer, AgentViewAllClaimedPolicies, \
+    AgentClaimPolicySerializer, AgentSellPolicySerializer, AgentViewAllClaimedPolicies, \
     ViewAgentProfile, LogoutAgentSerializer, AgentValidateRefreshToken, AgentViewAllAvailablePolicies
 from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_unique_agent_id
 
@@ -465,39 +465,6 @@ def view_agent_details(request):
     serializer_class = ViewAgentDetailsSerializer(agent)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
-
-
-@swagger_auto_schema(
-    method='PATCH',
-    operation_description='Update Agent Details',
-    request_body=UpdateAgentDetails,
-    responses={
-        200: 'OK',
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Agent']
-)
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def update_agent_details(request):
-    serializer_class = UpdateAgentDetails(request.user, data=request.data, partial=True)
-
-    if not serializer_class.is_valid():
-        return Response({
-            "error": f"{serializer_class.errors}"
-        }, status.HTTP_400_BAD_REQUEST)
-
-    try:
-        serializer_class.save()
-        return Response({
-            "message": "Agent data successfully updated"
-        }, status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({
-            "error": f"{e}"
-        }, status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(

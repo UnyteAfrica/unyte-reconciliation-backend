@@ -11,7 +11,7 @@ from django.utils.http import urlsafe_base64_decode
 from datetime import datetime
 
 from .models import Insurer, InsurerProfile
-from policies.models import Policies
+from policies.models import Policies, PolicyProductType
 from agents.models import Agent
 
 custom_user = get_user_model()
@@ -258,30 +258,12 @@ class InsurerClaimSellPolicySerializer(serializers.ModelSerializer):
 
 
 class CreatePolicies(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=200,
-                                 allow_blank=False,
-                                 allow_null=False,
-                                 help_text="The name of the policy")
-    policy_type = serializers.CharField(max_length=200,
-                                        allow_blank=False,
-                                        allow_null=False,
-                                        help_text="The class a policy falls under. For now, we only support Device "
-                                                  "Policies")
-    amount = serializers.CharField(max_length=200,
-                                   allow_blank=False,
-                                   allow_null=False,
-                                   help_text="Amount policy should be sold at")
-    valid_from = serializers.DateTimeField(allow_null=False,
-                                           help_text="Date at which policy is valid from")
-    valid_to = serializers.DateTimeField(allow_null=False,
-                                         help_text="Policy Expiration date")
 
     class Meta:
         model = Policies
         fields = [
             "name",
-            "policy_type",
-            "amount",
+            "policy_category",
             "valid_from",
             "valid_to"
         ]
@@ -291,6 +273,18 @@ class CreatePolicies(serializers.ModelSerializer):
         if valid_to < valid_from:
             raise ValidationError({"error": "valid_to must be greater than valid_from"}, 400)
         return attrs
+
+
+class CreateProductForPolicy(serializers.ModelSerializer):
+
+    class Meta:
+        model = PolicyProductType
+        fields = [
+            "name",
+            "premium",
+            "flat_fee",
+            "broker_commission"
+        ]
 
 
 class InsurerViewAllPolicies(serializers.ModelSerializer):

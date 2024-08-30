@@ -238,36 +238,36 @@ class ViewAgentDetailsSerializer(serializers.ModelSerializer):
         ]
 
 
-class UpdateAgentDetails(serializers.ModelSerializer):
-    first_name = serializers.CharField(max_length=30,
-                                       min_length=1)
-    last_name = serializers.CharField(max_length=30,
-                                      min_length=1)
-    middle_name = serializers.CharField(max_length=30,
-                                        min_length=1)
+class PolicyProductTypeSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100,
+                                 allow_blank=False,
+                                 help_text="Name of policy product type")
+    premium = serializers.CharField(max_length=100,
+                                    allow_blank=False,
+                                    help_text="Price of product type")
+    flat_fee = serializers.CharField(max_length=3,
+                                     allow_blank=False,
+                                     help_text="Flat fee availability")
+    broker_commission = serializers.DecimalField(max_digits=5,
+                                                 decimal_places=2,
+                                                 help_text="Commission attached to a product")
+
+
+class AgentSellPolicySerializer(serializers.ModelSerializer):
+    policy_name = serializers.CharField(max_length=100,
+                                        min_length=1,
+                                        allow_blank=False)
+    quantity_to_sell = serializers.IntegerField(allow_null=False,
+                                                default=0)
+    product_type = PolicyProductTypeSerializer(many=True)
 
     class Meta:
         model = Agent
         fields = [
-            'first_name',
-            'last_name',
-            'middle_name'
+            'policy_name',
+            'quantity_to_sell',
+            'product_type'
         ]
-
-    def update(self, instance, validated_data):
-        print(validated_data)
-        print(instance.first_name)
-        try:
-            instance.first_name = validated_data.get('first_name', instance.first_name)
-            instance.last_name = validated_data.get('last_name', instance.last_name)
-            instance.middle_name = validated_data.get('middle_name', instance.middle_name)
-
-            instance.save()
-
-            return instance
-
-        except Exception as e:
-            raise e
 
 
 class AgentClaimPolicySerializer(serializers.ModelSerializer):
@@ -292,21 +292,6 @@ class AgentClaimPolicySerializer(serializers.ModelSerializer):
             })
 
         return attrs
-
-
-class AgentSellPolicySerializer(serializers.ModelSerializer):
-    policy_name = serializers.CharField(max_length=100,
-                                        min_length=1,
-                                        allow_blank=False)
-    quantity_to_sell = serializers.IntegerField(allow_null=False,
-                                                default=0)
-
-    class Meta:
-        model = Agent
-        fields = [
-            'policy_name',
-            'quantity_to_sell'
-        ]
 
 
 class AgentPolicySerializer(serializers.ModelSerializer):
