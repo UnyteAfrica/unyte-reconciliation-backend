@@ -11,7 +11,6 @@ urlpatterns = [
     path('new-otp', views.request_new_otp, name='request_new_otp'),
     path('password-reset/<id_base64>/<token>', views.password_token_check, name='password-reset-confirm'),
     path('details', views.view_agent_details, name='agent-details'),
-    path('update', views.update_agent_details, name='update-details'),
     path('claim-policy', views.agent_claim_policy, name='claim-policy'),
     path('sell-policy', views.agent_sell_policy, name='claim-policy'),
     path('view-all-claimed-policies', views.view_all_claimed_policies, name='view-all-claimed-policies'),

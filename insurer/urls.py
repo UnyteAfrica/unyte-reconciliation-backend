@@ -12,6 +12,7 @@ urlpatterns = [
     path('details', views.view_insurer, name='view-insurer'),
     path('all-agents', views.list_all_agents_for_insurer, name='all-insurer-agents'),
     path('create-policy', views.create_policy, name='create-policy'),
+    path('create-product-for-policy/<str:policy_id>', views.create_products_for_policy, name='create product for policy'),
     # path('claim-policy', views.insurer_claim_policy, name='claim-policy'),
     # path('sell-policy', views.insurer_sell_policy, name='claim-policy'),
     path('view-all-policies', views.view_all_policies, name='view-all-policies'),

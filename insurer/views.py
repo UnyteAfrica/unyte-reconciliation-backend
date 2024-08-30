@@ -8,21 +8,19 @@ from django.urls import reverse
 from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from dotenv import load_dotenv, find_dotenv
-from drf_yasg import openapi
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import status
 
 from agents.models import Agent
 from agents.serializer import AgentViewAllClaimedPolicies
-from policies.models import Policies, AgentPolicy
+from policies.models import Policies, AgentPolicy, PolicyProductType
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
     ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, InsurerViewAllPolicies, \
     InsurerProfileSerializier, CustomAgentSerializer, \
-    ValidateRefreshToken, CreatePolicies, UpdateProfileImageSerializer
+    ValidateRefreshToken, CreatePolicies, UpdateProfileImageSerializer, CreateProductForPolicy
 from rest_framework.response import Response
 from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
@@ -600,10 +598,31 @@ def list_all_agents_for_insurer(request):
 def view_all_policies(request):
     insurer_id = request.user.id
     insurer = get_object_or_404(Insurer, id=insurer_id)
-    queryset = Policies.objects.filter(insurer=insurer)
-    serializer_class = InsurerViewAllPolicies(queryset, many=True)
+    policies_queryset = Policies.objects.filter(insurer=insurer)
 
-    return Response(serializer_class.data, status.HTTP_200_OK)
+    all_policies = []
+    for policy in policies_queryset:
+        policy_product_types = []
+        res = {'policy': policy.name,
+               'policy_category': policy.policy_category,
+               'valid_from': policy.valid_from,
+               'valid_to': policy.valid_to}
+
+        policy_product_types_queryset = PolicyProductType.objects.filter(policy=policy)
+        print(f"{policy.name} - has {len(policy_product_types_queryset)} product types")
+        for policy_product_type in policy_product_types_queryset:
+            if policy_product_type.policy.name == policy.name:
+                policy_product_types.append({
+                    "name": policy_product_type.name,
+                    "premium": policy_product_type.premium,
+                    "flat_fee": policy_product_type.flat_fee,
+                })
+            else:
+                print(policy.name)
+        res['policy_product_types'] = policy_product_types
+        all_policies.append(res)
+
+    return Response(all_policies, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -758,15 +777,81 @@ def create_policy(request) -> Response:
     serializer_class = CreatePolicies(data=request.data)
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    policy_name = serializer_class.validated_data.get('name')
+    policy = get_object_or_404(Policies, name=policy_name)
+
+    if policy:
+        return Response({
+            "error": f"Policy with name {policy_name} already exists",
+            "existing_policy_id": f"{policy.id}"
+        }, status.HTTP_400_BAD_REQUEST)
+
     try:
         policy = Policies.objects.create(**serializer_class.validated_data, insurer=insurer)
         policy.save()
-        return Response(serializer_class.data, status.HTTP_200_OK)
+        res = {
+            "id": policy.id,
+            "policy": policy.name,
+            "policy_category": policy.policy_category,
+            "valid_from": policy.valid_from,
+            "valid_to": policy.valid_to
+        }
+
+        policy_types = []
+        policy_type_objs = PolicyProductType.objects.filter(policy=policy)
+
+        for policy_type in policy_type_objs:
+            policy_types.append({
+                "type": policy_type.name,
+                "premium": policy_type.premium,
+                "flat_fee": policy_type.flat_fee
+            })
+        res['policy_types'] = policy_types
+
+        return Response(res, status.HTTP_200_OK)
 
     except Exception as e:
         return Response({
             "error": f"The error '{e}' occurred"
         }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Create Product for Policy',
+    request_body=CreateProductForPolicy,
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def create_products_for_policy(request, policy_id) -> Response:
+    serializer_class = CreateProductForPolicy(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        policy = get_object_or_404(Policies, pk=policy_id)
+        product_policy = PolicyProductType.objects.create(policy=policy, **serializer_class.data)
+        product_policy.save()
+
+        return Response({
+            "message": f"A new product has been added to {policy.name}"
+        }, status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "error": f"The error '{e}' occurred"
+        }, status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 @swagger_auto_schema(
