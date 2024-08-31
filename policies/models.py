@@ -68,21 +68,17 @@ class PolicyProductType(models.Model):
 
 class AgentPolicy(models.Model):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE)
-    policy = models.ForeignKey(Policies, on_delete=models.CASCADE)
-    quantity_bought = models.IntegerField(null=False, blank=False, default=1)
-    quantity_sold = models.IntegerField(null=False, blank=False, default=0)
-    is_sold = models.BooleanField(default=False)
+    product_type = models.ForeignKey(PolicyProductType, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ['agent', 'policy']
         verbose_name = 'agent policy'
         verbose_name_plural = 'agent policies'
 
     def __str__(self):
-        return f'{self.agent} - {self.policy}'
+        return f'{self.agent} - {self.product_type.policy.name}: {self.product_type.name}'
 
-    @staticmethod
-    def can_sell_policy(policy: Policies = None, policy_list: list[Policies] = None) -> bool:
+    # @staticmethod
+    # def can_sell_policy(policy: Policies = None, policy_list: list[Policies] = None) -> bool:
         # if policy is not None:
         #     valid_from = policy.valid_from.date()
         #     valid_to = policy.valid_to.date()
@@ -98,4 +94,4 @@ class AgentPolicy(models.Model):
         #         if (valid_from - valid_to).days < 30:
         #             return False
 
-        return True
+        # return True

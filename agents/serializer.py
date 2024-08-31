@@ -248,24 +248,17 @@ class PolicyProductTypeSerializer(serializers.Serializer):
     flat_fee = serializers.CharField(max_length=3,
                                      allow_blank=False,
                                      help_text="Flat fee availability")
-    broker_commission = serializers.DecimalField(max_digits=5,
-                                                 decimal_places=2,
-                                                 help_text="Commission attached to a product")
 
 
-class AgentSellPolicySerializer(serializers.ModelSerializer):
+class AgentSellPolicySerializer(serializers.Serializer):
     policy_name = serializers.CharField(max_length=100,
                                         min_length=1,
                                         allow_blank=False)
-    quantity_to_sell = serializers.IntegerField(allow_null=False,
-                                                default=0)
     product_type = PolicyProductTypeSerializer(many=True)
 
     class Meta:
-        model = Agent
         fields = [
             'policy_name',
-            'quantity_to_sell',
             'product_type'
         ]
 
@@ -306,15 +299,13 @@ class AgentPolicySerializer(serializers.ModelSerializer):
 
 
 class AgentViewAllClaimedPolicies(serializers.ModelSerializer):
-    policy = AgentPolicySerializer()
+    product_type = PolicyProductTypeSerializer()
 
     class Meta:
         model = AgentPolicy
         fields = [
             'id',
-            'policy',
-            'quantity_bought',
-            'quantity_sold'
+            'product_type',
         ]
 
 
