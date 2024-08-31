@@ -779,12 +779,14 @@ def create_policy(request) -> Response:
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
     policy_name = serializer_class.validated_data.get('name')
-    policy = get_object_or_404(Policies, name=policy_name)
+    policies = Policies.objects.all()
+    all_policy_names = [policy.name for policy in policies]
 
-    if policy:
+    if policy_name in all_policy_names:
+        existing_policy = Policies.objects.get(name=policy_name)
         return Response({
             "error": f"Policy with name {policy_name} already exists",
-            "existing_policy_id": f"{policy.id}"
+            "policy_id": f"{existing_policy.id}"
         }, status.HTTP_400_BAD_REQUEST)
 
     try:

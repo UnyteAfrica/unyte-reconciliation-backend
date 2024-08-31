@@ -324,8 +324,7 @@ class AgentViewAllAvailablePolicies(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
-            'amount',
-            'policy_type',
+            'policy_category',
             'valid_to',
             'valid_from'
         ]

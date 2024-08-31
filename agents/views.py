@@ -17,7 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from insurer.models import Insurer
-from policies.models import Policies, AgentPolicy
+from policies.models import Policies, AgentPolicy, PolicyProductType
 from .models import Agent, AgentProfile
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
@@ -37,7 +37,7 @@ from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_un
     request_body=CreateAgentSerializer,
     operation_description='Create New Agent',
     responses={
-        '201': "Created",
+        '201': 'Created',
         '400': 'Bad Request'
     },
     tags=['Agent']
@@ -686,13 +686,28 @@ def view_all_available_policies(request) -> Response:
     agent = get_object_or_404(Agent, pk=agent_id)
     insurer = agent.affiliated_company
 
-    try:
-        policies_queryset = Policies.objects.filter(insurer=insurer)
-        serializer_class = AgentViewAllAvailablePolicies(policies_queryset, many=True)
+    policies_queryset = Policies.objects.filter(insurer=insurer)
 
-        return Response(serializer_class.data, status.HTTP_200_OK)
+    all_policies = []
+    for policy in policies_queryset:
+        policy_product_types = []
+        res = {'policy': policy.name,
+               'policy_category': policy.policy_category,
+               'valid_from': policy.valid_from,
+               'valid_to': policy.valid_to}
 
-    except Exception as e:
-        return Response({
-            "error": f"The error '{e}' occurred"
-        })
+        policy_product_types_queryset = PolicyProductType.objects.filter(policy=policy)
+        print(f"{policy.name} - has {len(policy_product_types_queryset)} product types")
+        for policy_product_type in policy_product_types_queryset:
+            if policy_product_type.policy.name == policy.name:
+                policy_product_types.append({
+                    "name": policy_product_type.name,
+                    "premium": policy_product_type.premium,
+                    "flat_fee": policy_product_type.flat_fee,
+                })
+            else:
+                print(policy.name)
+        res['policy_product_types'] = policy_product_types
+        all_policies.append(res)
+
+    return Response(all_policies, status.HTTP_200_OK)
