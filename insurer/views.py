@@ -30,15 +30,6 @@ from .utils import generate_otp, verify_otp, gen_absolute_url, gen_sign_up_url_f
 load_dotenv(find_dotenv())
 
 
-def store_insurer_profile_pictures(profile_picture):
-    """
-    Store profile picture in GCP
-    :param profile_picture: string
-    :return: string
-    """
-    return
-
-
 @swagger_auto_schema(
     method='POST',
     request_body=CreateInsurerSerializer,
@@ -170,42 +161,10 @@ def login_insurer(request) -> Response:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# TODO: Ask Seun for the workflow
-@swagger_auto_schema(
-    method='POST',
-    request_body=ValidateRefreshToken,
-    operation_description='Validate Refresh Token',
-    responses={
-        200: 'OK',
-        400: 'Bad Request'
-    },
-    tags=['Insurer']
-)
-@api_view(['POST'])
-def validate_refresh_token(request):
-    serializer_class = ValidateRefreshToken(data=request.data)
-
-    if not serializer_class.is_valid():
-        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
-
-    print(serializer_class.validated_data.get('refresh_token'))
-    try:
-        refresh_token = serializer_class.validated_data.get('refresh_token')
-        # token = RefreshToken.get(key=refresh_token)
-        print(refresh_token)
-        return Response({
-            "message": "Token still valid"
-        }, status.HTTP_200_OK)
-    except (InvalidToken, TokenError) as e:
-        return Response({
-            f"{e}"
-        }, status.HTTP_400_BAD_REQUEST)
-
-
 @swagger_auto_schema(
     method='POST',
     request_body=SendNewOTPSerializer,
-    operation_description='Request New OTP',
+    operation_description='Sends new OTP to Insurer email',
     responses={
         200: 'OK',
         400: 'Bad Request'
@@ -260,7 +219,7 @@ def request_new_otp(request):
 @swagger_auto_schema(
     method='POST',
     request_body=OTPSerializer,
-    operation_description='Verify OTP',
+    operation_description='Verifies Insurer OTP Token',
     responses={
         200: 'OK',
         400: 'Bad Request'
@@ -368,7 +327,7 @@ def forgot_password_email(request) -> Response:
 
 @swagger_auto_schema(
     method='POST',
-    operation_description='Reset Password',
+    operation_description='Resets Insurer forgotten password',
     request_body=ForgotPasswordResetSerializer,
     responses={
         200: 'OK',
@@ -390,7 +349,7 @@ def reset_password(request) -> Response:
 
 @swagger_auto_schema(
     method='POST',
-    operation_description='Refresh Access Token',
+    operation_description='Returns a new access token from a valid refresh token',
     request_body=ValidateRefreshToken,
     responses={
         200: 'OK',
@@ -419,7 +378,7 @@ def refresh_access_token(request):
 
 @swagger_auto_schema(
     method='GET',
-    operation_description='Id and Token Verification',
+    operation_description='ID and Token Verification',
     responses={
         200: 'OK',
         400: 'Bad Request'
@@ -451,7 +410,7 @@ def password_token_check(request, id_base64, token):
 
 @swagger_auto_schema(
     method='GET',
-    operation_description='View Insurer Details',
+    operation_description='View Insurer details',
     responses={
         200: 'OK',
         400: 'Bad Request'
@@ -470,7 +429,7 @@ def view_insurer(request):
 
 @swagger_auto_schema(
     method='GET',
-    operation_description='View All Agents For Insurer',
+    operation_description='View all agents invited by an Insurer',
     responses={
         200: 'OK',
         403: 'Unauthorized',
@@ -491,101 +450,48 @@ def list_all_agents_for_insurer(request):
     return Response(serializer_class.data, status.HTTP_200_OK)
 
 
-#
-# @swagger_auto_schema(
-#     method='POST',
-#     operation_description='Agent Claim Policy',
-#     request_body=InsurerClaimSellPolicySerializer,
-#     responses={
-#         200: 'OK',
-#         400: 'Bad Request',
-#         404: 'Not Found'
-#     },
-#     tags=['Insurer']
-# )
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def insurer_sell_policy(request):
-#     insurer_id = request.user.id
-#     serializer_class = InsurerClaimSellPolicySerializer(data=request.data)
-#
-#     if not serializer_class.is_valid():
-#         return Response({
-#             serializer_class.errors
-#         }, status.HTTP_400_BAD_REQUEST)
-#
-#     try:
-#         policy_name = serializer_class.validated_data.get('policy_name')
-#         insurer = Insurer.objects.get(id=insurer_id)
-#         policy = Policies.objects.get(name=policy_name)
-#         claim_policy = InsurerPolicy.objects.get(insurer=insurer, policy=policy)
-#
-#         if claim_policy.is_sold is True:
-#             return Response({
-#                 "error": "You have already sold this policy"
-#             }, status.HTTP_400_BAD_REQUEST)
-#
-#         claim_policy.is_sold = True
-#         claim_policy.save()
-#
-#         return Response({
-#             "message": "You have successfully sold this policy"
-#         }, status.HTTP_200_OK)
-#
-#     except Exception as e:
-#         return Response({
-#             "error": f"The error '{e}' occurred"
-#         }, status.HTTP_400_BAD_REQUEST)
+@swagger_auto_schema(
+    method='GET',
+    operation_description='Returns a list of all products (unsold policies) created by an Insurer',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_all_products(request):
+    insurer_id = request.user.id
+    insurer = get_object_or_404(Insurer, id=insurer_id)
+    policies_queryset = Policies.objects.filter(insurer=insurer)
 
+    all_policies = []
+    for policy in policies_queryset:
+        policy_product_types = []
+        res = {'product': policy.name,
+               'product_category': policy.policy_category,
+               'valid_from': policy.valid_from,
+               'valid_to': policy.valid_to}
 
-# @swagger_auto_schema(
-#     method='POST',
-#     operation_description='Agent Claim Policy',
-#     request_body=InsurerClaimSellPolicySerializer,
-#     responses={
-#         200: 'OK',
-#         400: 'Bad Request',
-#         404: 'Not Found'
-#     },
-#     tags=['Insurer']
-# )
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def insurer_claim_policy(request):
-#     insurer_id = request.user.id
-#     serializer_class = InsurerClaimSellPolicySerializer(data=request.data)
-#
-#     if not serializer_class.is_valid():
-#         return Response({
-#             serializer_class.errors
-#         }, status.HTTP_400_BAD_REQUEST)
-#
-#     try:
-#         policy_name = serializer_class.validated_data.get('policy_name')
-#         insurer = Insurer.objects.get(id=insurer_id)
-#         policy = Policies.objects.get(name=policy_name)
-#
-#         if Insurer.objects.filter(email=insurer).exists():
-#             return Response({
-#                 "error": "You have claimed this policy already"
-#             }, status.HTTP_400_BAD_REQUEST)
-#
-#         claim_policy = InsurerPolicy.objects.create(insurer=insurer, policy=policy)
-#
-#         claim_policy.save()
-#         return Response({
-#             "message": "You have claimed a new policy"
-#         }, status.HTTP_200_OK)
-#
-#     except Exception as e:
-#         return Response({
-#             "error": f"The error '{e}' occurred"
-#         }, status.HTTP_400_BAD_REQUEST)
+        policy_product_types_queryset = PolicyProductType.objects.filter(policy=policy)
+        for policy_product_type in policy_product_types_queryset:
+            if policy_product_type.policy.name == policy.name:
+                policy_product_types.append({
+                    "name": policy_product_type.name,
+                    "premium": policy_product_type.premium,
+                    "flat_fee": policy_product_type.flat_fee,
+                })
+        res['product_types'] = policy_product_types
+        all_policies.append(res)
+
+    return Response(all_policies, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
     method='GET',
-    operation_description='Agent Claim Policy',
+    operation_description='Returns a list of all policies (sold products) sold by agents under an Insurer',
     responses={
         200: 'OK',
         400: 'Bad Request',
@@ -597,64 +503,23 @@ def list_all_agents_for_insurer(request):
 @permission_classes([IsAuthenticated])
 def view_all_policies(request):
     insurer_id = request.user.id
-    insurer = get_object_or_404(Insurer, id=insurer_id)
-    policies_queryset = Policies.objects.filter(insurer=insurer)
-
-    all_policies = []
-    for policy in policies_queryset:
-        policy_product_types = []
-        res = {'policy': policy.name,
-               'policy_category': policy.policy_category,
-               'valid_from': policy.valid_from,
-               'valid_to': policy.valid_to}
-
-        policy_product_types_queryset = PolicyProductType.objects.filter(policy=policy)
-        print(f"{policy.name} - has {len(policy_product_types_queryset)} product types")
-        for policy_product_type in policy_product_types_queryset:
-            if policy_product_type.policy.name == policy.name:
-                policy_product_types.append({
-                    "name": policy_product_type.name,
-                    "premium": policy_product_type.premium,
-                    "flat_fee": policy_product_type.flat_fee,
-                })
-            else:
-                print(policy.name)
-        res['policy_product_types'] = policy_product_types
-        all_policies.append(res)
-
-    return Response(all_policies, status.HTTP_200_OK)
-
-
-@swagger_auto_schema(
-    method='GET',
-    operation_description='Sold Policies',
-    responses={
-        200: 'OK',
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def view_all_sold_policies(request):
-    insurer_id = request.user.id
 
     # insurer = get_object_or_404(Insurer, id=insurer_id)
     agents = Agent.objects.filter(affiliated_company=insurer_id)
 
-    res = {}
     agent_sold_policies = []
     for agent in agents:
-        res['agent'] = f"{agent.first_name} {agent.last_name}"
-        queryset = AgentPolicy.objects.filter(agent=agent, is_sold=True)
-        serializer_class = AgentViewAllClaimedPolicies(queryset, many=True)
-        agent_sold_policies.append(serializer_class.data)
-
-    res['agent_sold_policies'] = agent_sold_policies
-    # serializer_class = InsurerViewAllPolicies(res, many=True)
-
-    return Response(res, status.HTTP_200_OK)
+        res = {'agent': f"{agent.first_name} {agent.last_name}",
+               'policies_sold': []}
+        queryset = AgentPolicy.objects.filter(agent=agent)
+        for policy_type in queryset:
+            res['policies_sold'].append({
+                "name": policy_type.product_type.name,
+                "premium": policy_type.product_type.premium,
+                "flat_fee": policy_type.product_type.flat_fee
+            })
+        agent_sold_policies.append(res)
+    return Response(agent_sold_policies, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -760,7 +625,7 @@ def view_insurer_profile(request) -> Response:
 
 @swagger_auto_schema(
     method='POST',
-    operation_description='Create Policy',
+    operation_description='Create Product',
     request_body=CreatePolicies,
     responses={
         200: 'OK',
@@ -771,7 +636,7 @@ def view_insurer_profile(request) -> Response:
 )
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])
-def create_policy(request) -> Response:
+def create_product(request) -> Response:
     insurer_id = request.user.id
     insurer = get_object_or_404(Insurer, pk=insurer_id)
     serializer_class = CreatePolicies(data=request.data)
@@ -779,12 +644,14 @@ def create_policy(request) -> Response:
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
     policy_name = serializer_class.validated_data.get('name')
-    policy = get_object_or_404(Policies, name=policy_name)
+    policies = Policies.objects.filter(insurer=insurer)
+    all_policy_names = [policy.name for policy in policies]
 
-    if policy:
+    if policy_name in all_policy_names:
+        existing_policy = Policies.objects.get(name=policy_name)
         return Response({
             "error": f"Policy with name {policy_name} already exists",
-            "existing_policy_id": f"{policy.id}"
+            "policy_id": f"{existing_policy.id}"
         }, status.HTTP_400_BAD_REQUEST)
 
     try:
@@ -851,7 +718,35 @@ def create_products_for_policy(request, policy_id) -> Response:
         }, status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View products an agent has sold',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
+@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+def view_products_an_agent_has_sold(request, agent_id: int):
+    # insurer = get_object_or_404(Insurer, id=insurer_id)
+    agent = get_object_or_404(Agent, pk=agent_id)
 
+    agent_sold_policies = []
+
+    res = {'agent': f"{agent.first_name} {agent.last_name}",
+           'policies_sold': []}
+    queryset = AgentPolicy.objects.filter(agent=agent)
+    for policy_type in queryset:
+        res['policies_sold'].append({
+            "name": policy_type.product_type.name,
+            "premium": policy_type.product_type.premium,
+            "flat_fee": policy_type.product_type.flat_fee
+        })
+    agent_sold_policies.append(res)
+    return Response(agent_sold_policies, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
