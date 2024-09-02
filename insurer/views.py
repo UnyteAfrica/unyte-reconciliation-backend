@@ -625,7 +625,7 @@ def view_insurer_profile(request) -> Response:
 
 @swagger_auto_schema(
     method='POST',
-    operation_description='Create Policy',
+    operation_description='Create Product',
     request_body=CreatePolicies,
     responses={
         200: 'OK',

@@ -48,7 +48,6 @@ class PolicyProductType(models.Model):
                                help_text='Policy with product(s)')
     name = models.CharField(null=False,
                             blank=False,
-                            unique=True,
                             max_length=200,
                             help_text="The name of the product")
     premium = models.CharField(null=False,

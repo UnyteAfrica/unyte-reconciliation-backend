@@ -40,7 +40,7 @@ class Agent(CustomUser):
                                     help_text='GAMP ID for users associated with GAMP')
 
     def __str__(self):
-        return self.first_name.upper()
+        return f"{self.first_name}: {self.affiliated_company.business_name}"
 
     def get_policies(self):
         policies = Policies.objects.filter(agentpolicy__agent=self)
