@@ -513,6 +513,8 @@ def view_all_policies(request):
                'policies_sold': []}
         queryset = AgentPolicy.objects.filter(agent=agent)
         for policy_type in queryset:
+            res['policy_name'] = policy_type.product_type.policy.name
+            res['policy_category'] = policy_type.product_type.policy.policy_category
             res['policies_sold'].append({
                 "name": policy_type.product_type.name,
                 "premium": policy_type.product_type.premium,
