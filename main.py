@@ -16,17 +16,27 @@ django.setup()
 from insurer.utils import generate_unyte_unique_insurer_id
 from insurer.models import Insurer
 from agents.models import Agent
-from policies.models import Policies, PolicyProductType
+from policies.models import Policies, PolicyProductType, AgentPolicy
 
 load_dotenv(find_dotenv())
-
 
 faker = Faker()
 
 DEV_URL = 'http://localhost:8000/api/'
 PROD_URL = 'https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app/api/'
 
-all_insurers = [insurer for insurer in Insurer.objects.all()]
+logging.basicConfig(
+    level=logging.INFO,  # Set to DEBUG if you want more detailed logs
+    format="{asctime} - {levelname} - {message}",
+    style="{",
+    datefmt="%Y-%m-%d %H:%M",
+    handlers=[
+        logging.StreamHandler()  # Sends logging output to console
+        # To log to a file, use: logging.FileHandler("app.log")
+    ]
+)
+
+all_insurers = Insurer.objects.all()
 policy_names = [
     "Comprehensive Protection Plan",
     "SecureShield Insurance",
@@ -225,38 +235,37 @@ def create_arbitrary_agents(env: str, count: int):
         }
 
 
-def create_arbitrary_products(env: str, count: int):
-    logging.info(f"Inserting fake values into the policies table in {env}")
+def create_arbitrary_products(count: int):
+    logging.info(f"Inserting fake values into the policies table in env or prod")
 
     try:
 
-        for _ in range(count):
-            existing_insurer = random.choice(all_insurers)
+        for insurer in all_insurers:
+            for _ in range(count):
+                # tbc -> to be created
+                tbc_policy_name = random.choice(policy_names)
+                policies = Policies.objects.filter(insurer=insurer)
+                all_policy_names = [policy.name for policy in policies]
 
-            # tbc -> to be created
-            tbc_policy_name = random.choice(policy_names)
-            policies = Policies.objects.filter(insurer=existing_insurer)
-            all_policy_names = [policy.name for policy in policies]
-
-            if tbc_policy_name in all_policy_names:
-                pass
-            else:
-                policy_name = tbc_policy_name
-                policy_category = random.choice(policy_categories)
-                valid_from = faker.date_time_between(
-                    start_date=datetime.datetime(2023, 1, 20, 20, 8, 7, tzinfo=pytz.UTC),
-                    end_date=datetime.datetime(2023, 9, 20, 20, 8, 7, tzinfo=pytz.UTC))
-                valid_to = faker.date_time_between(
-                    start_date=datetime.datetime(2023, 10, 20, 20, 8, 7, tzinfo=pytz.UTC),
-                    end_date=datetime.datetime(2023, 11, 20, 20, 8, 7, tzinfo=pytz.UTC))
-                policy = Policies.objects.create(
-                    name=policy_name,
-                    insurer=existing_insurer,
-                    policy_category=policy_category,
-                    valid_from=valid_from,
-                    valid_to=valid_to
-                )
-                policy.save()
+                if tbc_policy_name in all_policy_names:
+                    pass
+                else:
+                    policy_name = tbc_policy_name
+                    policy_category = random.choice(policy_categories)
+                    valid_from = faker.date_time_between(
+                        start_date=datetime.datetime(2023, 1, 20, 20, 8, 7, tzinfo=pytz.UTC),
+                        end_date=datetime.datetime(2023, 9, 20, 20, 8, 7, tzinfo=pytz.UTC))
+                    valid_to = faker.date_time_between(
+                        start_date=datetime.datetime(2023, 10, 20, 20, 8, 7, tzinfo=pytz.UTC),
+                        end_date=datetime.datetime(2023, 11, 20, 20, 8, 7, tzinfo=pytz.UTC))
+                    policy = Policies.objects.create(
+                        name=policy_name,
+                        insurer=insurer,
+                        policy_category=policy_category,
+                        valid_from=valid_from,
+                        valid_to=valid_to
+                    )
+                    policy.save()
         logging.info("Done!")
         logging.info(f"{count} number of policies have been loaded successfully into the DB")
         return {
@@ -341,17 +350,21 @@ def create_arbitrary_product_types_for_one_product(env: str, count: int, product
         }
 
 
-def create_arbitrary_product_types_for_all_products(env: str):
-    logging.info(f"Inserting fake values into the policy_product_type table in {env}")
+def create_arbitrary_product_types_for_all_products():
+    logging.info(f"Inserting fake values into the policy_product_type table in env or prod \n")
     try:
         for insurer in all_insurers:
-            logging.info(f"Currently attaching product_types for all products associated with {insurer.business_name}")
+            logging.info(
+                f"Currently attaching product_types for all products associated with {insurer.business_name} \n")
             products = Policies.objects.filter(insurer=insurer)
             for one_product in products:
                 count = 0
-                logging.info(
-                    f"Currently attaching product_types for all products associated with {one_product.name}")
-                for _ in range(random.randrange(len(product_type))):
+                iteration_value = random.randrange(1, 4)
+                logging.info(f"Currently attaching product_types for all products associated with {one_product.name}")
+                if iteration_value == 0:
+                    logging.info("Random iteration value is 3, reset to 3")
+                    iteration_value = 3
+                for _ in range(iteration_value):
                     random_product_type = random.choice(product_type)
                     product_type_obj = PolicyProductType.objects.create(
                         policy=one_product,
@@ -362,8 +375,8 @@ def create_arbitrary_product_types_for_all_products(env: str):
                     )
                     count += 1
                     product_type_obj.save()
-                logging.info(f"Done attaching {count} number of products to {one_product.name}")
-            logging.info(f"Done attaching product_types to all products under {insurer.business_name}")
+                logging.info(f"Done attaching {count} number of products to {one_product.name} \n")
+            logging.info(f"Done attaching product_types to all products under {insurer.business_name} \n")
         return {
             "statusCode": 200,
             "message": "Completed loading arbitrary product_types to all products for all insurers"
@@ -375,24 +388,62 @@ def create_arbitrary_product_types_for_all_products(env: str):
         }
 
 
+def agent_sell_policies():
+    # try:
+    for insurer in all_insurers:
+        print(insurer)
+        insurer_product = Policies.objects.filter(insurer=insurer)
+        all_agent_obj = Agent.objects.filter(affiliated_company=insurer)
+
+        all_agent_names = [f"{agent.first_name} {agent.last_name}" for agent in all_agent_obj]
+        logging.info(f"All agents under insurer: {insurer} are {all_agent_names} \n")
+
+        if len(insurer_product) == 0 or len(all_agent_obj) == 0:
+            pass
+        else:
+            for _ in range(len(insurer_product)):
+                random_insurer_product_type_obj = PolicyProductType.objects.filter(
+                    policy=random.choice(insurer_product))
+                if len(random_insurer_product_type_obj) == 0:
+                    pass
+                else:
+                    for i in range(len(random_insurer_product_type_obj)):
+                        random_agent_obj = random.choice(all_agent_obj)
+                        agent_sold_policy_obj = AgentPolicy.objects.create(
+                            agent=random_agent_obj,
+                            product_type=random_insurer_product_type_obj[i]
+                        )
+                        agent_sold_policy_obj.save()
+                        logging.info(
+                            f"Agent: {random_agent_obj.first_name} {random_agent_obj.last_name} has sold product type: "
+                            f"{random_insurer_product_type_obj[i].name} "
+                            f"for product {random_insurer_product_type_obj[i].policy.name}")
+        logging.info(f"Done with insurer {insurer.id}")
+    #     return {
+    #         "statusCode": 200,
+    #         "message": "Successfully sold random policy products"
+    #     }
+    # except Exception as e:
+    #     return {
+    #         "statusCode": 400,
+    #         "error": e.__str__()
+    #     }
+
+
 def main():
     pass
-    # print(create_arbitrary_insurers("dev", 10))
-    # print(create_arbitrary_agents("dev", 30))
+    # create_arbitrary_insurers("prod", 10)
+    # create_arbitrary_agents("prod", 30)
 
-    # print(create_arbitrary_products("dev", 20))
+    # print(create_arbitrary_products(5))
     # print(create_arbitrary_products_for_one_insurer("dev", 20, 'sheila07@example.com'))
     # print(create_arbitrary_product_types_for_one_product("dev", 5, 'Smart Student Insurance', 'sheila07@example.com'))
 
-    # print(create_arbitrary_product_types_for_all_products("env"))
+    # print(agent_sell_policies())
+    # print(create_arbitrary_product_types_for_all_products())
 
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        format="{asctime} - {levelname} - {message}",
-        style="{",
-        datefmt="%Y-%m-%d %H:%M",
-    )
     logging.info("Loader is up and grateful...")
 
     main()
