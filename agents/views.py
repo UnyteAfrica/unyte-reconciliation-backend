@@ -526,10 +526,12 @@ def view_all_policies(request):
     for agent_policy in queryset:
         res = {
             'policy_name': agent_policy.product_type.policy.name,
+            'policy_category': agent_policy.product_type.policy.policy_category,
+            "date_sold": agent_policy.date_sold,
             'product_type': {
                 "name": agent_policy.product_type.name,
                 "premium": agent_policy.product_type.premium,
-                "flat_fee": agent_policy.product_type.flat_fee
+                "flat_fee": agent_policy.product_type.flat_fee,
             }
         }
         policies.append(res)

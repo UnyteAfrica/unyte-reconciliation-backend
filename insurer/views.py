@@ -518,7 +518,8 @@ def view_all_policies(request):
             res['policies_sold'].append({
                 "name": policy_type.product_type.name,
                 "premium": policy_type.product_type.premium,
-                "flat_fee": policy_type.product_type.flat_fee
+                "flat_fee": policy_type.product_type.flat_fee,
+                'date_sold': policy_type.date_sold
             })
         agent_sold_policies.append(res)
     return Response(agent_sold_policies, status.HTTP_200_OK)
@@ -751,6 +752,20 @@ def view_products_an_agent_has_sold(request, agent_id: int):
         })
     agent_sold_policies.append(res)
     return Response(agent_sold_policies, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_sold_products_with_date_params(request) -> Response:
+    insurer_id = request.user.id
+    insurer_obj = get_object_or_404(Insurer, pk=insurer_id)
+    start_date = request.query_params.get('start_date')
+    end_date = request.query_params.get('end_date')
+
+    insurer_agents_obj = Agent.objects.filter(affiliated_company=insurer_obj)
+
+    queryset = []
+    return Response(queryset, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(

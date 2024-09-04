@@ -2,11 +2,14 @@ import datetime
 import os
 import random
 import logging
+import sys
+
 import django
 import pytz
 import requests
 from faker import Faker
 from dotenv import load_dotenv, find_dotenv
+from datetime import date
 
 from agents.utils import generate_unyte_unique_agent_id
 
@@ -36,7 +39,6 @@ logging.basicConfig(
     ]
 )
 
-all_insurers = Insurer.objects.all()
 policy_names = [
     "Comprehensive Protection Plan",
     "SecureShield Insurance",
@@ -135,7 +137,16 @@ product_type = [
 ]
 
 
-def create_arbitrary_insurers(env: str, count: int) -> dict[str]:
+def check_env() -> str:
+    sys_args: list = sys.argv
+    last_val: str = sys_args[-1]
+    env_var: str = last_val[2:]
+
+    return env_var
+
+
+def create_arbitrary_insurers(count: int) -> dict[str]:
+    env: str = check_env()
     logging.info(f"Inserting fake values into the Insurers table in {env}")
     try:
         for _ in range(count):
@@ -158,15 +169,20 @@ def create_arbitrary_insurers(env: str, count: int) -> dict[str]:
                     url=BASE_URL,
                     data=payload
                 )
-                print(response.json())
-            else:
+                logging.info(response.json())
+            elif env == 'prod':
                 endpoint = 'insurer/sign-up'
                 BASE_URL = PROD_URL + endpoint
                 response = requests.post(
                     url=BASE_URL,
                     data=payload
                 )
-                print(response.json())
+                logging.info(response.json())
+            else:
+                return {
+                    "statusCode": 400,
+                    "error": "Invalid env type. Allowed env types [dev, prod]"
+                }
         logging.info("Done!")
         logging.info(f"{count} number of insurers have been loaded successfully into the DB")
         return {
@@ -180,8 +196,11 @@ def create_arbitrary_insurers(env: str, count: int) -> dict[str]:
         }
 
 
-def create_arbitrary_agents(env: str, count: int):
+def create_arbitrary_agents(count: int):
+    env: str = check_env()
     logging.info(f"Inserting fake values into the agent table in {env}")
+    all_insurers = Insurer.objects.all()
+
     try:
         for _ in range(count):
             home_address = faker.unique.address()
@@ -215,13 +234,18 @@ def create_arbitrary_agents(env: str, count: int):
                     data=payload
                 )
                 print(response.json())
-            else:
+            elif env == 'prod':
                 BASE_URL = PROD_URL + endpoint
                 response = requests.post(
                     url=BASE_URL,
                     data=payload
                 )
                 print(response.json())
+            else:
+                return {
+                    "statusCode": 400,
+                    "error": "Invalid env type. Allowed env types [dev, prod]"
+                }
         logging.info("Done!")
         logging.info(f"{count} number of agents have been loaded successfully into the DB")
         return {
@@ -237,6 +261,7 @@ def create_arbitrary_agents(env: str, count: int):
 
 def create_arbitrary_products(count: int):
     logging.info(f"Inserting fake values into the policies table in env or prod")
+    all_insurers = Insurer.objects.all()
 
     try:
 
@@ -352,6 +377,8 @@ def create_arbitrary_product_types_for_one_product(env: str, count: int, product
 
 def create_arbitrary_product_types_for_all_products():
     logging.info(f"Inserting fake values into the policy_product_type table in env or prod \n")
+    all_insurers = Insurer.objects.all()
+
     try:
         for insurer in all_insurers:
             logging.info(
@@ -389,6 +416,8 @@ def create_arbitrary_product_types_for_all_products():
 
 
 def agent_sell_policies():
+    all_insurers = Insurer.objects.all()
+
     # try:
     for insurer in all_insurers:
         print(insurer)
@@ -411,7 +440,8 @@ def agent_sell_policies():
                         random_agent_obj = random.choice(all_agent_obj)
                         agent_sold_policy_obj = AgentPolicy.objects.create(
                             agent=random_agent_obj,
-                            product_type=random_insurer_product_type_obj[i]
+                            product_type=random_insurer_product_type_obj[i],
+                            date_sold=faker.date_between(start_date=date(2005, 1, 1), end_date=date(2025, 1, 1))
                         )
                         agent_sold_policy_obj.save()
                         logging.info(
@@ -431,16 +461,13 @@ def agent_sell_policies():
 
 
 def main():
-    pass
-    # create_arbitrary_insurers("prod", 10)
-    # create_arbitrary_agents("prod", 30)
+    # print(create_arbitrary_insurers(10))
+    # print(create_arbitrary_agents(30))
 
-    # print(create_arbitrary_products(5))
-    # print(create_arbitrary_products_for_one_insurer("dev", 20, 'sheila07@example.com'))
-    # print(create_arbitrary_product_types_for_one_product("dev", 5, 'Smart Student Insurance', 'sheila07@example.com'))
-
-    # print(agent_sell_policies())
+    # print(create_arbitrary_products(100))
     # print(create_arbitrary_product_types_for_all_products())
+
+    print(agent_sell_policies())
 
 
 if __name__ == "__main__":
