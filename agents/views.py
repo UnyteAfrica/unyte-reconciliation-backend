@@ -538,6 +538,9 @@ def view_all_policies(request):
             }
         }
         policies.append(res)
+    policies.append({
+        "number_of_sold_policies": len(queryset)
+    })
     return Response(policies, status.HTTP_200_OK)
 
 
@@ -601,7 +604,6 @@ def view_all_products(request) -> Response:
     insurer = agent.affiliated_company
 
     policies_queryset = Policies.objects.filter(insurer=insurer)
-    print(policies_queryset)
 
     all_policies = []
     for policy in policies_queryset:
@@ -612,7 +614,6 @@ def view_all_products(request) -> Response:
                'valid_to': policy.valid_to}
 
         policy_product_types_queryset = PolicyProductType.objects.filter(policy=policy)
-        print(f"{policy.name} - has {len(policy_product_types_queryset)} product types")
         for policy_product_type in policy_product_types_queryset:
             if policy_product_type.policy.name == policy.name:
                 policy_product_types.append({

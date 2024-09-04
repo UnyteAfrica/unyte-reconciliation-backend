@@ -9,14 +9,12 @@ from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_s
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from dotenv import load_dotenv, find_dotenv
 from drf_yasg import openapi
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 
 from agents.models import Agent
-from agents.serializer import AgentViewAllClaimedPolicies
 from policies.models import Policies, AgentPolicy, PolicyProductType
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
     ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, InsurerViewAllPolicies, \
