@@ -69,6 +69,9 @@ class AgentPolicy(models.Model):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE)
     product_type = models.ForeignKey(PolicyProductType, on_delete=models.CASCADE)
 
+    # TODO: Change implementation, set auto_now_add=True
+    date_sold = models.DateField()
+
     class Meta:
         verbose_name = 'agent policy'
         verbose_name_plural = 'agent policies'
