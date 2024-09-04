@@ -15,6 +15,7 @@ urlpatterns = [
     path('create-product-types-for-products/<str:policy_id>', views.create_products_for_policy, name='create product for policy'),
     path('view-all-products', views.view_all_products, name='view-all-policies'),
     path('view-all-policies', views.view_all_policies, name='view-sold-policies'),
+    path('view-all-policies-date-range', views.view_sold_products_with_date_params, name='view-all-policies-in-a-date-range'),
     path('view-products-an-agent-sold/<int:agent_id>', views.view_products_an_agent_has_sold, name='view-sold-policies'),
     path('generate-agent-sign-up', views.generate_sign_up_link_for_agent, name='generate-signup-link-for-agent'),
     path('insurer-profile', views.view_insurer_profile, name='insurer-profile'),

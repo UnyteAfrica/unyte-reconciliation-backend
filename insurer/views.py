@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils.encoding import smart_bytes, DjangoUnicodeDecodeError, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from dotenv import load_dotenv, find_dotenv
+from drf_yasg import openapi
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
@@ -510,10 +511,13 @@ def view_all_policies(request):
     agents = Agent.objects.filter(affiliated_company=insurer_id)
 
     agent_sold_policies = []
+    number_of_policies = 0
+
     for agent in agents:
         res = {'agent': f"{agent.first_name} {agent.last_name}",
                'policies_sold': []}
         queryset = AgentPolicy.objects.filter(agent=agent)
+        number_of_policies += len(queryset)
         for policy_type in queryset:
             res['policy_name'] = policy_type.product_type.policy.name
             res['policy_category'] = policy_type.product_type.policy.policy_category
@@ -524,6 +528,9 @@ def view_all_policies(request):
                 'date_sold': policy_type.date_sold
             })
         agent_sold_policies.append(res)
+    agent_sold_policies.append({
+        "number_of_sold_policies": number_of_policies
+    })
     return Response(agent_sold_policies, status.HTTP_200_OK)
 
 
@@ -756,18 +763,64 @@ def view_products_an_agent_has_sold(request, agent_id: int):
     return Response(agent_sold_policies, status.HTTP_200_OK)
 
 
+@swagger_auto_schema(
+    method='GET',
+    manual_parameters=[
+        openapi.Parameter('start_date',
+                          openapi.IN_QUERY,
+                          description="start date for date range",
+                          type=openapi.TYPE_STRING),
+        openapi.Parameter('end_date',
+                          openapi.IN_QUERY,
+                          description="end date for date range",
+                          type=openapi.TYPE_STRING),
+    ],
+    operation_description='View products agents sold in a date range',
+    responses={
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_sold_products_with_date_params(request) -> Response:
     insurer_id = request.user.id
-    insurer_obj = get_object_or_404(Insurer, pk=insurer_id)
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
 
-    insurer_agents_obj = Agent.objects.filter(affiliated_company=insurer_obj)
+    try:
+        agents = Agent.objects.filter(affiliated_company=insurer_id)
 
-    queryset = []
-    return Response(queryset, status.HTTP_200_OK)
+        agent_sold_policies = []
+
+        number_of_policies = 0
+
+        for agent in agents:
+            res = {'agent': f"{agent.first_name} {agent.last_name}",
+                   'policies_sold': []}
+            queryset = AgentPolicy.objects.filter(agent=agent, date_sold__range=[start_date, end_date])
+            number_of_policies += len(queryset)
+            for policy_type in queryset:
+                res['policy_name'] = policy_type.product_type.policy.name
+                res['policy_category'] = policy_type.product_type.policy.policy_category
+                res['policies_sold'].append({
+                    "name": policy_type.product_type.name,
+                    "premium": policy_type.product_type.premium,
+                    "flat_fee": policy_type.product_type.flat_fee,
+                    'date_sold': policy_type.date_sold
+                })
+            agent_sold_policies.append(res)
+        agent_sold_policies.append({
+            "number_of_sold_policies": number_of_policies
+        })
+        return Response(agent_sold_policies, status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "error": f"The error {e} occurred"
+        }, status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(
