@@ -138,6 +138,8 @@ def login_agent(request) -> Response:
 
         otp = generate_otp()
         agent.otp = otp
+        agent.otp_created_at = datetime.now().time()
+
         name = f"{agent.first_name} {agent.last_name}"
         current_year = datetime.now().year
 
@@ -160,12 +162,8 @@ def login_agent(request) -> Response:
             html_message=html_message
         )
 
-        auth_token = RefreshToken.for_user(agent)
-
         message = {
-            "login_status": True,
-            "access_token": str(auth_token.access_token),
-            "refresh_token": str(auth_token)
+            "message": "OTP has been sent out to your email"
         }
 
         return Response(message, status=status.HTTP_200_OK)
@@ -274,8 +272,13 @@ def verify_otp_token(request) -> Response:
                 'error': 'OTP has expired'
             }
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
+
+        auth_token = RefreshToken.for_user(agent)
+
         message = {
-            'message': 'OTP Verified'
+            "login_status": True,
+            "access_token": str(auth_token.access_token),
+            "refresh_token": str(auth_token)
         }
         return Response(message, status=status.HTTP_200_OK)
 

@@ -126,6 +126,7 @@ def login_insurer(request) -> Response:
 
         otp = generate_otp()
         insurer.otp = otp
+        insurer.otp_created_at = datetime.now().time()
 
         insurer.save()
 
@@ -146,14 +147,8 @@ def login_insurer(request) -> Response:
             recipient_list=[settings.TO_EMAIL, email],
             html_message=html_message
         )
-
-        auth_token = RefreshToken.for_user(insurer)
-
         message = {
-            "login_status": True,
-            'id': insurer.id,
-            "access_token": str(auth_token.access_token),
-            "refresh_token": str(auth_token)
+            "message": "OTP has been sent out to your email"
         }
         return Response(message, status=status.HTTP_200_OK)
 
@@ -262,9 +257,16 @@ def verify_otp_token(request) -> Response:
             }
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({
-            "message": "OTP Verified"
-        }, status=status.HTTP_200_OK)
+        auth_token = RefreshToken.for_user(insurer)
+
+        message = {
+            "login_status": True,
+            'id': insurer.id,
+            "access_token": str(auth_token.access_token),
+            "refresh_token": str(auth_token)
+        }
+
+        return Response(message, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({f"The error {e.__str__()} occurred"}, status=status.HTTP_400_BAD_REQUEST)
