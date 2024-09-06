@@ -17,9 +17,13 @@ from rest_framework import status
 from agents.models import Agent
 from policies.models import Policies, AgentPolicy, PolicyProductType
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
-    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, InsurerViewAllPolicies, \
+    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, \
     InsurerProfileSerializier, CustomAgentSerializer, \
     ValidateRefreshToken, CreatePolicies, UpdateProfileImageSerializer, CreateProductForPolicy
+from .response_serializers import SuccessfulCreateInsurerSerializer, SuccessfulLoginInsurerSerializer, \
+    SuccessfulSendNewOTPSerializer, SuccessfulVerifyOTPSerializer, SuccessfulForgotPasswordSerializer, \
+    SuccessfulResetPasswordSerializer, SuccessfulRefreshAccessTokenSerializer, SuccessfulPasswordTokenCheckSerializer, \
+    SuccessfulViewInsurerSerializer, SuccessfulListAllAgentsSerializer
 from rest_framework.response import Response
 from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
@@ -34,7 +38,10 @@ load_dotenv(find_dotenv())
     request_body=CreateInsurerSerializer,
     operation_description="Create new insurer",
     responses={
-        201: 'Created',
+        201: openapi.Response(
+            'Created',
+            SuccessfulCreateInsurerSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -94,7 +101,10 @@ def create_insurer(request) -> Response:
     request_body=LoginInsurerSerializer,
     operation_description='Login Insurer',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulLoginInsurerSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -160,7 +170,10 @@ def login_insurer(request) -> Response:
     request_body=SendNewOTPSerializer,
     operation_description='Sends new OTP to Insurer email',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulSendNewOTPSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -215,7 +228,10 @@ def request_new_otp(request):
     request_body=OTPSerializer,
     operation_description='Verifies Insurer OTP Token',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulVerifyOTPSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -276,7 +292,10 @@ def verify_otp_token(request) -> Response:
     operation_description='Send Verification OTP to Insurer Email',
     request_body=ForgotPasswordEmailSerializer,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulForgotPasswordSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -331,7 +350,10 @@ def forgot_password_email(request) -> Response:
     operation_description='Resets Insurer forgotten password',
     request_body=ForgotPasswordResetSerializer,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulResetPasswordSerializer,
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -353,7 +375,10 @@ def reset_password(request) -> Response:
     operation_description='Returns a new access token from a valid refresh token',
     request_body=ValidateRefreshToken,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulRefreshAccessTokenSerializer,
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -381,7 +406,10 @@ def refresh_access_token(request):
     method='GET',
     operation_description='ID and Token Verification',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulPasswordTokenCheckSerializer,
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -413,7 +441,10 @@ def password_token_check(request, id_base64, token):
     method='GET',
     operation_description='View Insurer details',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulViewInsurerSerializer,
+        ),
         400: 'Bad Request'
     },
     tags=['Insurer']
@@ -432,7 +463,10 @@ def view_insurer(request):
     method='GET',
     operation_description='View all agents invited by an Insurer',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulListAllAgentsSerializer,
+        ),
         403: 'Unauthorized',
         404: 'Not Found',
         400: 'Bad Request'
