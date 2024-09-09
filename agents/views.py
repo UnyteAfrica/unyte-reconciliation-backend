@@ -18,12 +18,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from insurer.models import Insurer
+from insurer.response_serializers import SuccessfulSendNewOTPSerializer
 from policies.models import Policies, AgentPolicy, PolicyProductType
 from .models import Agent, AgentProfile
+from .response_serializers import SuccessfulCreateAgentSerializer, SuccessfulLoginAgentSerializer, \
+    SuccessfulViewAgentSerializer, SuccessfulAgentSellProductSerializer, AgentPoliciesSerializer, \
+    SuccessfulViewAgentProfileSerializer, SuccessfulInsurerAgentProductsSerializer, \
+    AgentSuccessfulRefreshAccessTokenSerializer, AgentSuccessfulResetPasswordSerializer, \
+    AgentSuccessfulPasswordTokenCheckSerializer, AgentSuccessfulForgotPasswordSerializer, \
+    AgentSuccessfulVerifyOTPSerializer, AgentSuccessfulSendNewOTPSerializer
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
-    AgentClaimPolicySerializer, AgentSellPolicySerializer, AgentViewAllClaimedPolicies, \
-    ViewAgentProfile, LogoutAgentSerializer, AgentValidateRefreshToken
+    AgentSellPolicySerializer, ViewAgentProfile, AgentValidateRefreshToken
 from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_unique_agent_id
 
 
@@ -38,7 +44,10 @@ from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_un
     request_body=CreateAgentSerializer,
     operation_description='Create New Agent',
     responses={
-        '201': 'Created',
+        '201': openapi.Response(
+            'Created',
+            SuccessfulCreateAgentSerializer,
+        ),
         '400': 'Bad Request'
     },
     tags=['Agent']
@@ -112,7 +121,10 @@ def create_agent(request) -> Response:
     request_body=LoginAgentSerializer,
     operation_description='Login Agent',
     responses={
-        '200': "OK",
+        '200': openapi.Response(
+            'Created',
+            SuccessfulLoginAgentSerializer,
+        ),
         '400': 'Bad Request'
     },
     tags=['Agent']
@@ -177,7 +189,10 @@ def login_agent(request) -> Response:
     request_body=AgentSendNewOTPSerializer,
     operation_description='Request New OTP',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            AgentSuccessfulSendNewOTPSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Agent']
@@ -233,7 +248,10 @@ def request_new_otp(request):
     request_body=AgentOTPSerializer,
     operation_description='Verify OTP',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            AgentSuccessfulVerifyOTPSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Agent']
@@ -291,7 +309,10 @@ def verify_otp_token(request) -> Response:
     operation_description='Send Verification OTP to Agent Email',
     request_body=AgentForgotPasswordEmailSerializer,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            AgentSuccessfulForgotPasswordSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Agent']
@@ -347,7 +368,10 @@ def forgot_password_email(request) -> Response:
     method='GET',
     operation_description='ID and Token Verification',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            AgentSuccessfulPasswordTokenCheckSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Agent']
@@ -380,7 +404,10 @@ def password_token_check(request, id_base64, token):
     operation_description="Resets Agent's forgotten password",
     request_body=AgentForgotPasswordResetSerializer,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            AgentSuccessfulResetPasswordSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Agent']
@@ -402,7 +429,10 @@ def reset_password(request) -> Response:
     operation_description='Returns a new access token from a valid refresh token',
     request_body=AgentValidateRefreshToken,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            AgentSuccessfulRefreshAccessTokenSerializer
+        ),
         400: 'Bad Request'
     },
     tags=['Agent']
@@ -430,7 +460,10 @@ def refresh_access_token(request):
     method='GET',
     operation_description='View Agent Details',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulViewAgentSerializer
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -451,7 +484,10 @@ def view_agent_details(request):
     operation_description='Agents sell products',
     request_body=AgentSellPolicySerializer,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulAgentSellProductSerializer
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -506,13 +542,14 @@ def agent_sell_product(request):
     }, status.HTTP_200_OK)
 
 
-
-
 @swagger_auto_schema(
     method='GET',
     operation_description='Returns a list of policies (sold products)',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            AgentPoliciesSerializer(many=True)
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -548,7 +585,10 @@ def view_all_policies(request):
     method='GET',
     operation_description='View Agent Profile',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulViewAgentProfileSerializer
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -590,7 +630,10 @@ def view_agent_profile(request) -> Response:
     method='GET',
     operation_description='Returns a list of all products (unsold policies) by agent insurer',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulInsurerAgentProductsSerializer(many=True)
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },

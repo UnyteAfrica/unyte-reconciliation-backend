@@ -23,7 +23,9 @@ from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSeri
 from .response_serializers import SuccessfulCreateInsurerSerializer, SuccessfulLoginInsurerSerializer, \
     SuccessfulSendNewOTPSerializer, SuccessfulVerifyOTPSerializer, SuccessfulForgotPasswordSerializer, \
     SuccessfulResetPasswordSerializer, SuccessfulRefreshAccessTokenSerializer, SuccessfulPasswordTokenCheckSerializer, \
-    SuccessfulViewInsurerSerializer, SuccessfulListAllAgentsSerializer
+    SuccessfulViewInsurerSerializer, SuccessfulListAllAgentsSerializer, SuccessfulInsurerProductsSerializer, \
+    SuccessfulInsurerPoliciesSerializer, SuccessfulInsurerAgentSignupSerializer, SuccessfulCreateProductSerializer, \
+    SuccessfulCreateProductForPolicySerializer
 from rest_framework.response import Response
 from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
@@ -465,7 +467,7 @@ def view_insurer(request):
     responses={
         200: openapi.Response(
             'OK',
-            SuccessfulListAllAgentsSerializer,
+            SuccessfulListAllAgentsSerializer(many=True),
         ),
         403: 'Unauthorized',
         404: 'Not Found',
@@ -489,7 +491,10 @@ def list_all_agents_for_insurer(request):
     method='GET',
     operation_description='Returns a list of all products (unsold policies) created by an Insurer',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulInsurerProductsSerializer(many=True),
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -524,11 +529,15 @@ def view_all_products(request):
     return Response(all_policies, status.HTTP_200_OK)
 
 
+# TODO: Check out this logic
 @swagger_auto_schema(
     method='GET',
     operation_description='Returns a list of all policies (sold products) sold by agents under an Insurer',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulInsurerPoliciesSerializer(many=True),
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -571,7 +580,10 @@ def view_all_policies(request):
     operation_description='Generate SignUp Link for Insurer',
     request_body=CustomAgentSerializer,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulInsurerAgentSignupSerializer,
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -628,7 +640,6 @@ def generate_sign_up_link_for_agent(request):
     })
 
 
-# TODO: Review the functionality with Seun.
 @swagger_auto_schema(
     method='GET',
     operation_description='View Insurer Profile',
@@ -672,7 +683,10 @@ def view_insurer_profile(request) -> Response:
     operation_description='Create Product',
     request_body=CreatePolicies,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulCreateProductSerializer,
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -733,7 +747,10 @@ def create_product(request) -> Response:
     operation_description='Create Product for Policy',
     request_body=CreateProductForPolicy,
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulCreateProductForPolicySerializer,
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -766,7 +783,10 @@ def create_products_for_policy(request, policy_id) -> Response:
     method='GET',
     operation_description='View products an agent has sold',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulInsurerPoliciesSerializer,
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
@@ -809,7 +829,10 @@ def view_products_an_agent_has_sold(request, agent_id: int):
     ],
     operation_description='View products agents sold in a date range',
     responses={
-        200: 'OK',
+        200: openapi.Response(
+            'OK',
+            SuccessfulInsurerPoliciesSerializer,
+        ),
         400: 'Bad Request',
         404: 'Not Found'
     },
