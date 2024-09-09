@@ -1,4 +1,6 @@
 from datetime import datetime
+from pprint import pprint
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
@@ -12,14 +14,16 @@ from drf_yasg import openapi
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 
 from agents.models import Agent
 from policies.models import Policies, AgentPolicy, PolicyProductType
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
     ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, \
-    InsurerProfileSerializier, CustomAgentSerializer, \
-    ValidateRefreshToken, CreatePolicies, UpdateProfileImageSerializer, CreateProductForPolicy
+    InsurerProfileSerializer, CustomAgentSerializer, \
+    ValidateRefreshToken, CreatePolicies, UpdateProfileImageSerializer, CreateProductForPolicy, InsurerViewAllPolicies, \
+    InsurerViewAllProducts
 from .response_serializers import SuccessfulCreateInsurerSerializer, SuccessfulLoginInsurerSerializer, \
     SuccessfulSendNewOTPSerializer, SuccessfulVerifyOTPSerializer, SuccessfulForgotPasswordSerializer, \
     SuccessfulResetPasswordSerializer, SuccessfulRefreshAccessTokenSerializer, SuccessfulPasswordTokenCheckSerializer, \
@@ -504,29 +508,30 @@ def list_all_agents_for_insurer(request):
 @permission_classes([IsAuthenticated])
 def view_all_products(request):
     insurer_id = request.user.id
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+
     insurer = get_object_or_404(Insurer, id=insurer_id)
     policies_queryset = Policies.objects.filter(insurer=insurer)
 
     all_policies = []
     for policy in policies_queryset:
-        policy_product_types = []
-        res = {'product': policy.name,
-               'product_category': policy.policy_category,
-               'valid_from': policy.valid_from,
-               'valid_to': policy.valid_to}
-
         policy_product_types_queryset = PolicyProductType.objects.filter(policy=policy)
         for policy_product_type in policy_product_types_queryset:
+            res = {'product': policy.name,
+                   'product_category': policy.policy_category,
+                   'valid_from': policy.valid_from,
+                   'valid_to': policy.valid_to
+                   }
             if policy_product_type.policy.name == policy.name:
-                policy_product_types.append({
-                    "name": policy_product_type.name,
-                    "premium": policy_product_type.premium,
-                    "flat_fee": policy_product_type.flat_fee,
-                })
-        res['product_types'] = policy_product_types
-        all_policies.append(res)
+                # print(policy_product_type.name)
+                res["name"] = policy_product_type.name
+                res["premium"] = str(policy_product_type.premium)
+                res["flat_fee"] = policy_product_type.flat_fee
 
-    return Response(all_policies, status.HTTP_200_OK)
+                all_policies.append(res)
+    result_qs = paginator.paginate_queryset(all_policies, request)
+    return paginator.get_paginated_response(result_qs)
 
 
 # TODO: Check out this logic
@@ -547,6 +552,8 @@ def view_all_products(request):
 @permission_classes([IsAuthenticated])
 def view_all_policies(request):
     insurer_id = request.user.id
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
 
     # insurer = get_object_or_404(Insurer, id=insurer_id)
     agents = Agent.objects.filter(affiliated_company=insurer_id)
@@ -555,24 +562,18 @@ def view_all_policies(request):
     number_of_policies = 0
 
     for agent in agents:
-        res = {'agent': f"{agent.first_name} {agent.last_name}",
-               'policies_sold': []}
         queryset = AgentPolicy.objects.filter(agent=agent)
         number_of_policies += len(queryset)
         for policy_type in queryset:
-            res['policy_name'] = policy_type.product_type.policy.name
-            res['policy_category'] = policy_type.product_type.policy.policy_category
-            res['policies_sold'].append({
-                "name": policy_type.product_type.name,
-                "premium": policy_type.product_type.premium,
-                "flat_fee": policy_type.product_type.flat_fee,
-                'date_sold': policy_type.date_sold
-            })
-        agent_sold_policies.append(res)
-    agent_sold_policies.append({
-        "number_of_sold_policies": number_of_policies
-    })
-    return Response(agent_sold_policies, status.HTTP_200_OK)
+            res = {'agent': f"{agent.first_name} {agent.last_name}",
+                   'policy_name': policy_type.product_type.policy.name,
+                   'policy_category': policy_type.product_type.policy.policy_category,
+                   "name": policy_type.product_type.name, "premium": policy_type.product_type.premium,
+                   "flat_fee": policy_type.product_type.flat_fee, 'date_sold': policy_type.date_sold}
+
+            agent_sold_policies.append(res)
+    result_page = paginator.paginate_queryset(agent_sold_policies, request)
+    return paginator.get_paginated_response(result_page)
 
 
 @swagger_auto_schema(
@@ -668,7 +669,7 @@ def view_insurer_profile(request) -> Response:
         'profile_image': str(insurer_profile_pic)
     }
 
-    serializer_class = InsurerProfileSerializier(data=data)
+    serializer_class = InsurerProfileSerializer(data=data)
 
     if not serializer_class.is_valid():
         return Response({
@@ -797,22 +798,25 @@ def create_products_for_policy(request, policy_id) -> Response:
 def view_products_an_agent_has_sold(request, agent_id: int):
     # insurer = get_object_or_404(Insurer, id=insurer_id)
     agent = get_object_or_404(Agent, pk=agent_id)
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
 
     agent_sold_policies = []
 
-    res = {'agent': f"{agent.first_name} {agent.last_name}",
-           'policies_sold': []}
     queryset = AgentPolicy.objects.filter(agent=agent)
     for policy_type in queryset:
-        res['policy_name'] = policy_type.product_type.policy.name
-        res['policy_category'] = policy_type.product_type.policy.policy_category
-        res['policies_sold'].append({
-            "name": policy_type.product_type.name,
-            "premium": policy_type.product_type.premium,
-            "flat_fee": policy_type.product_type.flat_fee
-        })
-    agent_sold_policies.append(res)
-    return Response(agent_sold_policies, status.HTTP_200_OK)
+        res = {'agent': f"{agent.first_name} {agent.last_name}", 'policies_sold': [],
+               'policy_name': policy_type.product_type.policy.name,
+               'policy_category': policy_type.product_type.policy.policy_category,
+               "name": policy_type.product_type.name,
+               "premium": policy_type.product_type.premium,
+               "flat_fee": policy_type.product_type.flat_fee,
+               "date_sold": policy_type.date_sold
+               }
+
+        agent_sold_policies.append(res)
+    result_page = paginator.paginate_queryset(agent_sold_policies, request)
+    return paginator.get_paginated_response(result_page)
 
 
 @swagger_auto_schema(
@@ -845,33 +849,31 @@ def view_sold_products_with_date_params(request) -> Response:
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
 
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+
     try:
         agents = Agent.objects.filter(affiliated_company=insurer_id)
 
         agent_sold_policies = []
+        total_queryset = []
 
         number_of_policies = 0
 
         for agent in agents:
-            res = {'agent': f"{agent.first_name} {agent.last_name}",
-                   'policies_sold': []}
             queryset = AgentPolicy.objects.filter(agent=agent, date_sold__range=[start_date, end_date])
-            number_of_policies += len(queryset)
             for policy_type in queryset:
-                res['policy_name'] = policy_type.product_type.policy.name
-                res['policy_category'] = policy_type.product_type.policy.policy_category
-                res['policies_sold'].append({
-                    "name": policy_type.product_type.name,
-                    "premium": policy_type.product_type.premium,
-                    "flat_fee": policy_type.product_type.flat_fee,
-                    'date_sold': policy_type.date_sold
-                })
-            agent_sold_policies.append(res)
-        agent_sold_policies.append({
-            "number_of_sold_policies": number_of_policies
-        })
-        return Response(agent_sold_policies, status.HTTP_200_OK)
-
+                res = {'agent': f"{agent.first_name} {agent.last_name}",
+                       'policy_name': policy_type.product_type.policy.name,
+                       'policy_category': policy_type.product_type.policy.policy_category,
+                       "name": policy_type.product_type.name,
+                       "premium": policy_type.product_type.premium,
+                       "flat_fee": policy_type.product_type.flat_fee,
+                       'date_sold': policy_type.date_sold
+                       }
+                agent_sold_policies.append(res)
+        result_page = paginator.paginate_queryset(agent_sold_policies, request)
+        return paginator.get_paginated_response(result_page)
     except Exception as e:
         return Response({
             "error": f"The error {e} occurred"

@@ -73,6 +73,7 @@ class AgentPolicy(models.Model):
     date_sold = models.DateField()
 
     class Meta:
+        ordering = ['-date_sold']
         verbose_name = 'agent policy'
         verbose_name_plural = 'agent policies'
 
