@@ -258,7 +258,6 @@ class InsurerClaimSellPolicySerializer(serializers.ModelSerializer):
 
 
 class CreatePolicies(serializers.ModelSerializer):
-
     class Meta:
         model = Policies
         fields = [
@@ -276,7 +275,6 @@ class CreatePolicies(serializers.ModelSerializer):
 
 
 class CreateProductForPolicy(serializers.ModelSerializer):
-
     class Meta:
         model = PolicyProductType
         fields = [
@@ -287,19 +285,50 @@ class CreateProductForPolicy(serializers.ModelSerializer):
         ]
 
 
-class InsurerViewAllPolicies(serializers.ModelSerializer):
+class InsurerViewAllPolicies(serializers.Serializer):
+    agent = serializers.CharField()
+    policy_name = serializers.CharField()
+    policy_category = serializers.CharField()
+    name = serializers.CharField()
+    premium = serializers.CharField()
+    flat_fee = serializers.CharField(max_length=3)
+    date_sold = serializers.DateField()
+
     class Meta:
-        model = Policies
         fields = [
+            'agent',
+            'policy_name',
+            'policy_category',
             'name',
-            'policy_type',
-            'amount',
-            'valid_from',
-            'valid_to'
+            'premium',
+            'flat_fee',
+            'date_sold'
         ]
 
 
-class InsurerProfileSerializier(serializers.Serializer):
+class InsurerViewAllProducts(serializers.Serializer):
+    product = serializers.CharField()
+    product_category = serializers.CharField()
+    valid_from = serializers.DateTimeField()
+    valid_to = serializers.DateTimeField()
+    name = serializers.CharField()
+    premium = serializers.CharField()
+    flat_fee = serializers.CharField(max_length=3)
+
+    class Meta:
+        ordering = ['-date_sold']
+        fields = [
+            'product',
+            'product_category',
+            'valid_from',
+            'valid_to',
+            'name',
+            'premium',
+            'flat_fee',
+        ]
+
+
+class InsurerProfileSerializer(serializers.Serializer):
     business_name = serializers.CharField()
     email = serializers.EmailField()
     profile_image = serializers.CharField()
@@ -325,3 +354,21 @@ class UpdateProfileImageSerializer(serializers.ModelSerializer):
         instance.profile_image = validated_data.get('profile_image', instance.profile_image)
         instance.save()
         return instance
+
+# res = {'agent': f"{agent.first_name} {agent.last_name}"}
+#         queryset = AgentPolicy.objects.filter(agent=agent)
+#         number_of_policies += len(queryset)
+#         for policy_type in queryset:
+#             res['policy_name'] = policy_type.product_type.policy.name
+#             res['policy_category'] = policy_type.product_type.policy.policy_category
+#             res["name"] = policy_type.product_type.name
+#             res["premium"] = policy_type.product_type.premium
+#             res["flat_fee"] = policy_type.product_type.flat_fee
+#             res['date_sold'] = policy_type.date_sold
+#
+#         agent_sold_policies.append(res)
+#
+#     serializer_class = InsurerViewAllPolicies(data=agent_sold_policies, many=True)
+#
+#     if not serializer_class.is_valid():
+#         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
