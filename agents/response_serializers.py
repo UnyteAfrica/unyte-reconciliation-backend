@@ -1,17 +1,17 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from insurer.utils import FRONTED_URL
+from agents.utils import FRONTED_URL
 
 
-class SuccessfulCreateInsurerSerializer(serializers.Serializer):
+class SuccessfulCreateAgentSerializer(serializers.Serializer):
     id = serializers.IntegerField(
         default=1,
-        help_text='insurer id',
+        help_text='agent id',
     )
     message = serializers.CharField(
-        default='Account successfully created for <insurer.business_name>',
-        help_text='Success message displayed after insurer sign up'
+        default='Account successfully created for <agent.first_name> <agent.last_name>',
+        help_text='Success message displayed after agent sign up'
     )
 
     class Meta:
@@ -21,10 +21,10 @@ class SuccessfulCreateInsurerSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulLoginInsurerSerializer(serializers.Serializer):
+class SuccessfulLoginAgentSerializer(serializers.Serializer):
     message = serializers.CharField(
         default='OTP has been sent out to your email',
-        help_text='Success message displayed after insurer receives verification OTP'
+        help_text='Success message displayed after agent receives verification OTP'
     )
 
     class Meta:
@@ -33,7 +33,7 @@ class SuccessfulLoginInsurerSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulSendNewOTPSerializer(serializers.Serializer):
+class AgentSuccessfulSendNewOTPSerializer(serializers.Serializer):
     message = serializers.CharField(
         default="New OTP sent out!",
         help_text="Success message displayed when new OTP has been sent out"
@@ -45,10 +45,11 @@ class SuccessfulSendNewOTPSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulVerifyOTPSerializer(serializers.Serializer):
-    id = serializers.CharField(
-        default=1,
-        help_text="id of signed in user"
+
+class AgentSuccessfulVerifyOTPSerializer(serializers.Serializer):
+    login_status = serializers.BooleanField(
+        default=True,
+        help_text="login status of agent"
     ),
     access_token = serializers.CharField(
         default="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG"
@@ -69,7 +70,7 @@ class SuccessfulVerifyOTPSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulForgotPasswordSerializer(serializers.Serializer):
+class AgentSuccessfulForgotPasswordSerializer(serializers.Serializer):
     message = serializers.CharField(
         default="Confirmation email sent",
         help_text="Success message showed when the endpoint runs successfully"
@@ -81,7 +82,7 @@ class SuccessfulForgotPasswordSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulResetPasswordSerializer(serializers.Serializer):
+class AgentSuccessfulResetPasswordSerializer(serializers.Serializer):
     message = serializers.CharField(
         default="Password successfully updated",
         help_text="Success message displayed when the endpoint runs successfully"
@@ -93,7 +94,7 @@ class SuccessfulResetPasswordSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulRefreshAccessTokenSerializer(serializers.Serializer):
+class AgentSuccessfulRefreshAccessTokenSerializer(serializers.Serializer):
     access_token = serializers.CharField(
         default="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG"
                 "4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
@@ -106,7 +107,7 @@ class SuccessfulRefreshAccessTokenSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulPasswordTokenCheckSerializer(serializers.Serializer):
+class AgentSuccessfulPasswordTokenCheckSerializer(serializers.Serializer):
     message = serializers.CharField(
         default="Valid Token",
         help_text="Success message"
@@ -128,44 +129,58 @@ class SuccessfulPasswordTokenCheckSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulViewInsurerSerializer(serializers.Serializer):
+class SuccessfulViewAgentSerializer(serializers.Serializer):
     id = serializers.IntegerField(
         default=1,
         help_text='Insurer id',
     )
-    business_name = serializers.CharField(
-        default="Unyte Africa",
-        help_text='Insurer business name',
+    first_name = serializers.CharField(
+        default="John",
+        help_text='Agent first name',
+    )
+    last_name = serializers.CharField(
+        default="Doe",
+        help_text='Agent last name',
+    )
+    middle_name = serializers.CharField(
+        default="L",
+        help_text='Agent middle name',
     )
     email = serializers.EmailField(
-        default="yourbusinessemail@gmail.com",
-        help_text="Insurer email"
+        default="youragent@gmail.com",
+        help_text="Agent email"
     )
 
     class Meta:
         fields = [
             'id',
-            'business_name',
+            'first_name',
+            'last_name',
+            'middle_name',
             'email',
         ]
 
 
-class AllAgentsSerializer(serializers.Serializer):
-    id = serializers.IntegerField(
-        default=1,
-        help_text='Insurer id',
+class SuccessfulViewAgentProfileSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        default="youragent@gmail.com",
+        help_text="Agent email"
     )
     first_name = serializers.CharField(
-        default="first_name",
-        help_text="Agent first name"
+        default="John",
+        help_text='Agent first name',
     )
     last_name = serializers.CharField(
-        default="last_name",
-        help_text="Agent last name"
+        default="Doe",
+        help_text='Agent last name',
     )
-    email = serializers.EmailField(
-        default="yourbusinessemail@gmail.com",
-        help_text="Agent email"
+    middle_name = serializers.CharField(
+        default="L",
+        help_text='Agent middle name',
+    )
+    profile_image = serializers.URLField(
+        default='',
+        help_text='url for agent profile picture'
     )
 
     class Meta:
@@ -173,38 +188,24 @@ class AllAgentsSerializer(serializers.Serializer):
             'id',
             'first_name',
             'last_name',
-            'email'
+            'middle_name',
+            'email',
         ]
 
 
-class SuccessfulListAllAgentsSerializer(serializers.Serializer):
-    id = serializers.IntegerField(
-        default=1,
-        help_text='Insurer id',
-    )
-    first_name = serializers.CharField(
-        default="first_name",
-        help_text="Agent first name"
-    )
-    last_name = serializers.CharField(
-        default="last_name",
-        help_text="Agent last name"
-    )
-    email = serializers.EmailField(
-        default="yourbusinessemail@gmail.com",
-        help_text="Agent email"
+class SuccessfulAgentSellProductSerializer(serializers.Serializer):
+    message = serializers.CharField(
+        default='You have successfully sold this product',
+        help_text='successful message'
     )
 
     class Meta:
         fields = [
-            'id',
-            'first_name',
-            'last_name',
-            'email'
+            'message'
         ]
 
 
-class ProductPolicyTypeSerializer(serializers.Serializer):
+class AgentProductPolicyTypeSerializer(serializers.Serializer):
     name = serializers.CharField(
         default="Basic",
         help_text="product/policy type name"
@@ -221,6 +222,7 @@ class ProductPolicyTypeSerializer(serializers.Serializer):
     )
 
     class Meta:
+        ref_name = 'agents'
         fields = [
             "name",
             "premium",
@@ -228,7 +230,7 @@ class ProductPolicyTypeSerializer(serializers.Serializer):
         ]
 
 
-class SuccessfulInsurerProductsSerializer(serializers.Serializer):
+class SuccessfulInsurerAgentProductsSerializer(serializers.Serializer):
     product = serializers.CharField(
         default="Product Plan",
         help_text="Product name"
@@ -245,7 +247,7 @@ class SuccessfulInsurerProductsSerializer(serializers.Serializer):
         default=timezone.now(),
         help_text="date at which policy is valid to"
     )
-    product_types = ProductPolicyTypeSerializer(many=True)
+    product_types = AgentProductPolicyTypeSerializer(many=True)
 
     class Meta:
         fields = [
@@ -257,7 +259,7 @@ class SuccessfulInsurerProductsSerializer(serializers.Serializer):
         ]
 
 
-class PoliciesTypeSerializer(serializers.Serializer):
+class AgentPoliciesTypeSerializer(serializers.Serializer):
     name = serializers.CharField(
         default="Basic",
         help_text="policy type name"
@@ -281,7 +283,7 @@ class PoliciesTypeSerializer(serializers.Serializer):
         ]
 
 
-class InsurerAgentPoliciesSerializer(serializers.Serializer):
+class AgentPoliciesSerializer(serializers.Serializer):
     policy_name = serializers.CharField(
         default="Policy Plan",
         help_text="policy name"
@@ -290,26 +292,12 @@ class InsurerAgentPoliciesSerializer(serializers.Serializer):
         default="DEVICES",
         help_text="policy category"
     )
-    policy_types = PoliciesTypeSerializer(many=True)
+    policy_types = AgentPoliciesTypeSerializer(many=True)
 
     class Meta:
         fields = [
             'policy_name',
             'policy_category'
-        ]
-
-
-class SuccessfulInsurerPoliciesSerializer(serializers.Serializer):
-    agents = serializers.CharField(
-        default="John Doe",
-        help_text="agent's details [first_name + last_name]"
-    )
-    policies_sold = InsurerAgentPoliciesSerializer(many=True)
-
-    class Meta:
-        fields = [
-            'agents',
-            'policies_sold'
         ]
 
 
@@ -342,7 +330,7 @@ class SuccessfulCreateProductSerializer(serializers.Serializer):
         default=timezone.now(),
         help_text="date at which policy is valid to"
     )
-    policy_type = ProductPolicyTypeSerializer(many=True)
+    policy_type = AgentProductPolicyTypeSerializer(many=True)
 
     class Meta:
         fields = [
