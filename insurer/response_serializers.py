@@ -325,6 +325,19 @@ class SuccessfulInsurerAgentSignupSerializer(serializers.Serializer):
         ]
 
 
+class SuccessfulInsurerAgentSignupCSVSerializer(serializers.Serializer):
+    message = serializers.CharField(
+        default=f'Successfully sent out invite links to <number_of_agents> agent(s)',
+        help_text="success message after email has been sent to agent(s) email(s)"
+    )
+
+    class Meta:
+        fields = [
+            'message'
+        ]
+
+
+
 class SuccessfulCreateProductSerializer(serializers.Serializer):
     policy = serializers.CharField(
         default="Policy Plan",

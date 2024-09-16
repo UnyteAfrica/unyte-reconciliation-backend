@@ -1,5 +1,6 @@
 from datetime import datetime
-from pprint import pprint
+import csv
+from io import TextIOWrapper
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -29,7 +30,7 @@ from .response_serializers import SuccessfulCreateInsurerSerializer, SuccessfulL
     SuccessfulResetPasswordSerializer, SuccessfulRefreshAccessTokenSerializer, SuccessfulPasswordTokenCheckSerializer, \
     SuccessfulViewInsurerSerializer, SuccessfulListAllAgentsSerializer, SuccessfulInsurerProductsSerializer, \
     SuccessfulInsurerPoliciesSerializer, SuccessfulInsurerAgentSignupSerializer, SuccessfulCreateProductSerializer, \
-    SuccessfulCreateProductForPolicySerializer
+    SuccessfulCreateProductForPolicySerializer, SuccessfulInsurerAgentSignupCSVSerializer
 from rest_framework.response import Response
 from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
@@ -578,7 +579,7 @@ def view_all_policies(request):
 
 @swagger_auto_schema(
     method='POST',
-    operation_description='Generate SignUp Link for Insurer',
+    operation_description='Generate SignUp Link for Agents',
     request_body=CustomAgentSerializer,
     responses={
         200: openapi.Response(
@@ -592,7 +593,7 @@ def view_all_policies(request):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def generate_sign_up_link_for_agent(request):
+def invite_agents(request):
     serializer_class = CustomAgentSerializer(data=request.data)
     insurer_id = request.user.id
     insurer = get_object_or_404(Insurer, pk=insurer_id)
@@ -639,6 +640,75 @@ def generate_sign_up_link_for_agent(request):
     return Response({
         "message": f"Link generated: {link}"
     })
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Generate SignUp Link for Agents through CSV file',
+    responses={
+        200: openapi.Response(
+            'OK',
+            SuccessfulInsurerAgentSignupCSVSerializer,
+        ),
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=['Insurer']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def invite_agents_csv(request):
+    insurer_id = request.user.id
+    insurer = get_object_or_404(Insurer, pk=insurer_id)
+    unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
+    company_name = insurer.business_name
+    current_year = datetime.now().year
+
+    relative_link = reverse('agents:register_agent')
+    relative_link = relative_link.replace('/api/', '/')
+    link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
+
+    try:
+        file = request.FILES['agents_csv']
+        file_extension = file.name.split('.')[-1]
+        if file_extension != 'csv':
+            return Response({
+                "error": f"Unacceptable file format {file_extension}. Must be a csv file"
+            }, status.HTTP_400_BAD_REQUEST)
+        csv_file = TextIOWrapper(file.file, encoding='utf-8')
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        all_rows = list(csv_reader)
+        for agent in range(len(all_rows)):
+            if agent == 0:
+                pass
+            else:
+                agent_name = all_rows[agent][0]
+                agent_email = all_rows[agent][1]
+
+                context = {
+                    "current_year": current_year,
+                    "company_name": company_name,
+                    "unyte_unique_insurer_id": unyte_unique_insurer_id,
+                    "name": agent_name
+                }
+                html_message = render_to_string('invitation.html', context)
+                """
+                Sends email to the email of agents
+                """
+                send_mail(
+                    subject='Agent SignUp Link',
+                    message=f'{link}',
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[agent_email, settings.TO_EMAIL],
+                    html_message=html_message
+                )
+        return Response({
+            "message": f"Successfully sent out invite links to {len(all_rows)} agent(s)"
+        })
+    except Exception as e:
+        return Response({
+            "error": f"{e.__str__()}"
+        }, status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(
