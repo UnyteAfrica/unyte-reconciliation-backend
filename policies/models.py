@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.translation import gettext as _
 
 
 class Policies(models.Model):
@@ -43,6 +42,11 @@ class Policies(models.Model):
 
 
 class PolicyProductType(models.Model):
+    frequency_payment_list = [
+        ('QUARTERLY', 'QUARTERLY'),
+        ('MONTHLY', 'MONTHLY'),
+        ('YEARLY', 'YEARLY')
+    ]
     policy = models.ForeignKey(Policies,
                                on_delete=models.CASCADE,
                                help_text='Policy with product(s)')
@@ -57,9 +61,10 @@ class PolicyProductType(models.Model):
     flat_fee = models.CharField(max_length=3,
                                 choices=[('YES', 'Yes'), ('NO', 'No')],
                                 help_text='Flat fee for the policy')
-    broker_commission = models.DecimalField(max_digits=5,
-                                            decimal_places=2,
-                                            help_text='commission attached to the product')
+    payment_frequency = models.CharField(default='MONTHLY',
+                                         choices=frequency_payment_list,
+                                         help_text="frequency at which product is sold/bought")
+    broker_commission = models.CharField(help_text='commission attached to the product')
 
     def __str__(self):
         return f"{self.policy.name} - {self.name}"
