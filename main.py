@@ -546,7 +546,7 @@ class RandomDataDBLoader:
         #     }
 
     @staticmethod
-    def give_one_insurer_more_agents(self, insurer_unique_id: str, number_of_agents: int):
+    def give_one_insurer_more_agents(insurer_unique_id: str, number_of_agents: int):
         try:
             insurer = Insurer.objects.get(unyte_unique_insurer_id=insurer_unique_id)
             all_agents = Agent.objects.all()
@@ -558,7 +558,7 @@ class RandomDataDBLoader:
 
                 logging.info(
                     f"Changed agent: {random_agent.first_name} {random_agent.last_name} insurer from {original_insurer}"
-                    f"to {insurer} successfully")
+                    f" to {insurer} successfully")
 
             return {
                 "statusCode": 200,
@@ -575,6 +575,8 @@ class RandomDataDBLoader:
 def main():
     random_loader = RandomDataDBLoader()
     random_loader.create_arbitrary_insurers(count=1)
+
+    print(random_loader.give_one_insurer_more_agents("Davis-Jenkins+3311+unyte.com", 20))
 
     """
         random_loader = RandomDataDBLoader(10)
