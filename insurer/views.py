@@ -779,8 +779,8 @@ def create_product(request) -> Response:
     if policy_name in all_policy_names:
         existing_policy = Policies.objects.get(name=policy_name)
         return Response({
-            "error": f"Policy with name {policy_name} already exists",
-            "policy_id": f"{existing_policy.id}"
+            "error": f"Product with name {policy_name} already exists",
+            "product_id": f"{existing_policy.id}"
         }, status.HTTP_400_BAD_REQUEST)
 
     try:
@@ -837,6 +837,14 @@ def create_products_for_policy(request, policy_id) -> Response:
 
     try:
         policy = get_object_or_404(Policies, pk=policy_id)
+        all_product_types = [product_type.name for product_type in PolicyProductType.objects.all()]
+        product_type_name = serializer_class.validated_data.get('name')
+
+        if product_type_name in all_product_types:
+            return Response({
+                "error": f"An existing product type for this product with name {product_type_name} already exists"
+            }, status.HTTP_400_BAD_REQUEST)
+
         product_policy = PolicyProductType.objects.create(policy=policy, **serializer_class.data)
         product_policy.save()
 

@@ -77,7 +77,7 @@ class GCPLoader:
 
     def load_insurance_product_and_product_type(self, db_loader: RandomDataDBLoader, insurance_email: str) -> None:
         db_loader.create_arbitrary_products_for_insurer(insurance_email, self.products)
-        db_loader.create_arbitrary_product_types_for_all_products_for_insurer(insurance_email, self.products)
+        # db_loader.create_arbitrary_product_types_for_all_products_for_insurer(insurance_email, self.products)
 
     def validate_load_all_products_for_insurer(self, db_loader: RandomDataDBLoader, insurer_email: str) -> bool:
         total_product_count = len(self.products)
