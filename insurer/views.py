@@ -24,7 +24,7 @@ from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSeri
     ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, \
     InsurerProfileSerializer, CustomAgentSerializer, \
     ValidateRefreshToken, CreatePolicies, UpdateProfileImageSerializer, CreateProductForPolicy, InsurerViewAllPolicies, \
-    InsurerViewAllProducts
+    InsurerViewAllProducts, UploadCSVFileSerializer
 from .response_serializers import SuccessfulCreateInsurerSerializer, SuccessfulLoginInsurerSerializer, \
     SuccessfulSendNewOTPSerializer, SuccessfulVerifyOTPSerializer, SuccessfulForgotPasswordSerializer, \
     SuccessfulResetPasswordSerializer, SuccessfulRefreshAccessTokenSerializer, SuccessfulPasswordTokenCheckSerializer, \
@@ -658,6 +658,11 @@ def invite_agents(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def invite_agents_csv(request):
+    serializer_class = UploadCSVFileSerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
     insurer_id = request.user.id
     insurer = get_object_or_404(Insurer, pk=insurer_id)
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
@@ -669,6 +674,22 @@ def invite_agents_csv(request):
     link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
 
     try:
+        otp = serializer_class.validated_data.get('otp')
+
+        if otp != insurer.otp:
+            return Response({
+                "error": "Invalid OTP"
+            }, status.HTTP_400_BAD_REQUEST)
+
+        otp_created_time = insurer.otp_created_at
+        verify = verify_otp(otp_created_time)
+
+        if not verify:
+            message = {
+                'error': 'OTP has expired'
+            }
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
+
         file = request.FILES['agents_csv']
         file_extension = file.name.split('.')[-1]
         if file_extension != 'csv':
@@ -703,7 +724,7 @@ def invite_agents_csv(request):
                     html_message=html_message
                 )
         return Response({
-            "message": f"Successfully sent out invite links to {len(all_rows)} agent(s)"
+            "message": f"Successfully sent out invite links to {len(all_rows) - 1} agent(s)"
         })
     except Exception as e:
         return Response({
@@ -779,8 +800,8 @@ def create_product(request) -> Response:
     if policy_name in all_policy_names:
         existing_policy = Policies.objects.get(name=policy_name)
         return Response({
-            "error": f"Policy with name {policy_name} already exists",
-            "policy_id": f"{existing_policy.id}"
+            "error": f"Product with name {policy_name} already exists",
+            "product_id": f"{existing_policy.id}"
         }, status.HTTP_400_BAD_REQUEST)
 
     try:
@@ -837,6 +858,14 @@ def create_products_for_policy(request, policy_id) -> Response:
 
     try:
         policy = get_object_or_404(Policies, pk=policy_id)
+        all_product_types = [product_type.name for product_type in PolicyProductType.objects.all()]
+        product_type_name = serializer_class.validated_data.get('name')
+
+        if product_type_name in all_product_types:
+            return Response({
+                "error": f"An existing product type for this product with name {product_type_name} already exists"
+            }, status.HTTP_400_BAD_REQUEST)
+
         product_policy = PolicyProductType.objects.create(policy=policy, **serializer_class.data)
         product_policy.save()
 
@@ -926,9 +955,6 @@ def view_sold_products_with_date_params(request) -> Response:
         agents = Agent.objects.filter(affiliated_company=insurer_id)
 
         agent_sold_policies = []
-        total_queryset = []
-
-        number_of_policies = 0
 
         for agent in agents:
             queryset = AgentPolicy.objects.filter(agent=agent, date_sold__range=[start_date, end_date])
