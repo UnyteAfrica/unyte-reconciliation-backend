@@ -70,14 +70,15 @@ class GCPLoader:
                     pass
                 else:
                     logging.info(f"Currently processing {len(policies)} policies in {insurer_policy_name} from insurer: {insurer_name}")
-                    self.products.append(policies[0])
+                    for policy in policies:
+                        self.products.append(policy)
 
             except Exception as e:
                 logging.warning(f'{e}')
 
     def load_insurance_product_and_product_type(self, db_loader: RandomDataDBLoader, insurance_email: str) -> None:
         db_loader.create_arbitrary_products_for_insurer(insurance_email, self.products)
-        # db_loader.create_arbitrary_product_types_for_all_products_for_insurer(insurance_email, self.products)
+        db_loader.create_arbitrary_product_types_for_all_products_for_insurer(insurance_email, self.products)
 
     def validate_load_all_products_for_insurer(self, db_loader: RandomDataDBLoader, insurer_email: str) -> bool:
         total_product_count = len(self.products)
@@ -97,7 +98,7 @@ class GCPLoader:
         logging.info(f"Total number of product objects count from db: {all_product_types_obj_count}")
         logging.info(f"Total number of product  loaded JSON: {total_no_of_product_types}")
 
-        return all_product_types_obj_count == all_product_types_obj_count
+        return all_product_types_obj_count == total_no_of_product_types
 
 
 def main():

@@ -83,22 +83,3 @@ class AgentPolicy(models.Model):
 
     def __str__(self):
         return f'{self.agent} - {self.product_type.policy.name}: {self.product_type.name}'
-
-    # @staticmethod
-    # def can_sell_policy(policy: Policies = None, policy_list: list[Policies] = None) -> bool:
-        # if policy is not None:
-        #     valid_from = policy.valid_from.date()
-        #     valid_to = policy.valid_to.date()
-        #     if (valid_from - valid_to).days < 30:
-        #         return False
-        #     return True
-        #
-        # if policy_list is not None:
-        #     for policy_ in policy_list:
-        #         valid_from = policy_.valid_from.date()
-        #         valid_to = policy_.valid_to.date()
-        #
-        #         if (valid_from - valid_to).days < 30:
-        #             return False
-
-        # return True

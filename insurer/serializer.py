@@ -355,20 +355,13 @@ class UpdateProfileImageSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-# res = {'agent': f"{agent.first_name} {agent.last_name}"}
-#         queryset = AgentPolicy.objects.filter(agent=agent)
-#         number_of_policies += len(queryset)
-#         for policy_type in queryset:
-#             res['policy_name'] = policy_type.product_type.policy.name
-#             res['policy_category'] = policy_type.product_type.policy.policy_category
-#             res["name"] = policy_type.product_type.name
-#             res["premium"] = policy_type.product_type.premium
-#             res["flat_fee"] = policy_type.product_type.flat_fee
-#             res['date_sold'] = policy_type.date_sold
-#
-#         agent_sold_policies.append(res)
-#
-#     serializer_class = InsurerViewAllPolicies(data=agent_sold_policies, many=True)
-#
-#     if not serializer_class.is_valid():
-#         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+class UploadCSVFileSerializer(serializers.Serializer):
+    otp = serializers.CharField()
+    agents_csv = serializers.FileField()
+
+    class Meta:
+        fields = [
+            'otp',
+            'agents_csv'
+        ]

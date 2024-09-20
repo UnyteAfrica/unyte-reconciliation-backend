@@ -318,12 +318,17 @@ class RandomDataDBLoader:
 
                     for premium in premiums:
                         name = premium.get('Product Type')
+                        price = premium.get('Premium (cost per unit) (N)')
                         broker_commission = policy.get(
                             'Commission per policy (Unyte’s cut) (%)') or policy.get(
-                            'Premium (cost per unit) (N)') or 20
+                            'Premium (cost per unit) (N)') or policy.get("Commission(%)") or 20
                         frequency_payment = premium.get('Premium Payment Frequency', 'MONTHLY')
                         flat_fee = premium.get('Flat Fee', 'YES')
 
+                        if name == "":
+                            name = 'NIL'
+                        if price == "":
+                            price = 'NIL'
                         if broker_commission == "":
                             broker_commission = 20
                         if frequency_payment == "":
@@ -332,10 +337,10 @@ class RandomDataDBLoader:
                             flat_fee = 'YES'
 
                         try:
-                            product_type_obj = PolicyProductType.object.create(
+                            product_type_obj = PolicyProductType.objects.create(
                                 policy=product,
                                 name=name,
-                                premium=premium.get('Premium (cost per unit) (N)'),
+                                premium=price,
                                 broker_commission=broker_commission,
                                 payment_frequency=frequency_payment,
                                 flat_fee=flat_fee
@@ -388,7 +393,7 @@ class RandomDataDBLoader:
                 for premium in premiums:
                     logging.info(f"Attaching {premium.get('Product Type')} to {product.name}")
                     all_product_type_for_product = [product_type.name for product_type in
-                                                    PolicyProductType.objects.all()]
+                                                    PolicyProductType.objects.filter(policy=product)]
 
                     name = premium.get('Product Type')
                     frequency_payment = premium.get('Premium Payment Frequency', 'MONTHLY')
@@ -578,15 +583,53 @@ class RandomDataDBLoader:
             logging.info(f"Done with insurer {insurer.id}")
 
     @staticmethod
-    def give_one_insurer_more_agents(insurer_unique_id: str, number_of_agents: int):
+    def one_insurer_agents_sell_products(insurer_email: str) -> None:
+
         try:
-            insurer = Insurer.objects.get(unyte_unique_insurer_id=insurer_unique_id)
+            insurer = Insurer.objects.get(email=insurer_email)
+            insurer_product = Policies.objects.filter(insurer=insurer)
+            all_agent_obj = Agent.objects.filter(affiliated_company=insurer)
+
+            all_agent_names = [f"{agent.first_name} {agent.last_name}" for agent in all_agent_obj]
+            logging.info(f"All agents under insurer: {insurer} are {all_agent_names} \n")
+
+            if len(insurer_product) == 0 or len(all_agent_obj) == 0:
+                pass
+            else:
+                for _ in range(len(insurer_product)):
+                    random_insurer_product_type_obj = PolicyProductType.objects.filter(
+                        policy=random.choice(insurer_product))
+                    if len(random_insurer_product_type_obj) == 0:
+                        pass
+                    else:
+                        for i in range(len(random_insurer_product_type_obj)):
+                            random_agent_obj = random.choice(all_agent_obj)
+                            agent_sold_policy_obj = AgentPolicy.objects.create(
+                                agent=random_agent_obj,
+                                product_type=random_insurer_product_type_obj[i],
+                                date_sold=faker.date_between(start_date=date(2005, 1, 1), end_date=date(2025, 1, 1))
+                            )
+                            agent_sold_policy_obj.save()
+                            logging.info(
+                                f"Agent: {random_agent_obj.first_name} {random_agent_obj.last_name} has sold product "
+                                f"type:"
+                                f"{random_insurer_product_type_obj[i].name} "
+                                f"for product {random_insurer_product_type_obj[i].policy.name}")
+            logging.info(f"Done with insurer {insurer.id}")
+        except Exception as e:
+            logging.info(f"{e}")
+
+    @staticmethod
+    def give_one_insurer_more_agents(insurer_email: str, number_of_agents: int):
+        try:
+            insurer = Insurer.objects.get(email=insurer_email)
             all_agents = Agent.objects.all()
 
             for agent in range(number_of_agents):
                 random_agent = random.choice(all_agents)
                 original_insurer = random_agent.affiliated_company.business_name
                 random_agent.affiliated_company = insurer
+                random_agent.save()
 
                 logging.info(
                     f"Changed agent: {random_agent.first_name} {random_agent.last_name} insurer from {original_insurer}"
@@ -606,15 +649,15 @@ class RandomDataDBLoader:
 
 def main():
     random_loader = RandomDataDBLoader()
-    # print(random_loader.give_one_insurer_more_agents("NemInsurancePlc.+9232+unyte.com", 10))
+    # print(random_loader.give_one_insurer_more_agents("nem@insurance.com", 3))
 
     # print(random_loader.create_arbitrary_insurers(10))
     # print(random_loader.create_arbitrary_agents(30))
 
     # print(random_loader.create_arbitrary_products(100))
-    print(random_loader.create_arbitrary_product_types_for_all_products())
+    # print(random_loader.create_arbitrary_product_types_for_all_products())
 
-    print(random_loader.agent_sell_policies())
+    # print(random_loader.one_insurer_agents_sell_products("nem@insurance.com"))
 
     # give_one_insurer_more_agents("Davis-Jenkins+3311+unyte.com", 10)
 
