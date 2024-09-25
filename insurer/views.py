@@ -948,9 +948,6 @@ def view_sold_products_with_date_params(request) -> Response:
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
 
-    paginator = PageNumberPagination()
-    paginator.page_size = 10
-
     try:
         agents = Agent.objects.filter(affiliated_company=insurer_id)
 
@@ -968,8 +965,8 @@ def view_sold_products_with_date_params(request) -> Response:
                        'date_sold': policy_type.date_sold
                        }
                 agent_sold_policies.append(res)
-        result_page = paginator.paginate_queryset(agent_sold_policies, request)
-        return paginator.get_paginated_response(result_page)
+        serializer_class = InsurerViewAllPolicies(agent_sold_policies, many=True)
+        return Response(serializer_class.data, status.HTTP_200_OK)
     except Exception as e:
         return Response({
             "error": f"The error {e} occurred"
