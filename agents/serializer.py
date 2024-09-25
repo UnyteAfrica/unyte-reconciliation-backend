@@ -40,8 +40,8 @@ class CreateAgentSerializer(serializers.ModelSerializer):
                                 max_length=11,
                                 allow_null=False,
                                 allow_blank=False)
-    agent_gampID = serializers.CharField(allow_null=True,
-                                         allow_blank=True)
+    # agent_gampID = serializers.CharField(allow_null=True,
+    #                                      allow_blank=True)
     password = serializers.CharField(max_length=16,
                                      allow_blank=False,
                                      allow_null=False)
@@ -56,64 +56,64 @@ class CreateAgentSerializer(serializers.ModelSerializer):
             "email",
             "bank_account",
             "bvn",
-            "agent_gampID",
+            # "agent_gampID",
             "password"
         ]
 
     def validate(self, attrs):
-        agent_gampID = attrs.get('agent_gampID')
-        first_name = attrs.get('first_name')
-        middle_name = attrs.get('middle_name')
+        # agent_gampID = attrs.get('agent_gampID')
+        # first_name = attrs.get('first_name')
+        # middle_name = attrs.get('middle_name')
         bank_account = attrs.get('bank_account')
         email = attrs.get('email')
         home_address = attrs.get('home_address')
         bvn = attrs.get('bvn')
 
-        print(middle_name)
+        # print(middle_name)
 
-        if agent_gampID == '' or middle_name == '':
-            if Agent.objects.filter(email=email).exists():
-                raise CustomValidationError({"error": "Email already exists"})
+        # if agent_gampID == '' or middle_name == '':
+        #     if Agent.objects.filter(email=email).exists():
+        #         raise CustomValidationError({"error": "Email already exists"})
 
-            if custom_user.objects.filter(email=email).exists():
-                raise CustomValidationError({"error": "Email already exists!"})
+        if custom_user.objects.filter(email=email).exists():
+            raise CustomValidationError({"error": "Email already exists!"})
 
-            if Agent.objects.filter(home_address=home_address).exists():
-                raise CustomValidationError({"error": "Home address already exists"})
+        if Agent.objects.filter(home_address=home_address).exists():
+            raise CustomValidationError({"error": "Home address already exists"})
 
-            if Agent.objects.filter(bvn=bvn).exists():
-                raise CustomValidationError({"error": "bvn already exists"})
+        if Agent.objects.filter(bvn=bvn).exists():
+            raise CustomValidationError({"error": "bvn already exists"})
 
-            if Agent.objects.filter(bank_account=bank_account).exists():
-                raise CustomValidationError({"error": "bank_account already exists"})
+        if Agent.objects.filter(bank_account=bank_account).exists():
+            raise CustomValidationError({"error": "bank_account already exists"})
 
-            return attrs
+        #     return attrs
+        #
+        # else:
+        #     if Agent.objects.filter(email=email).exists():
+        #         raise CustomValidationError({"error": "Email already exists"})
+        #
+        #     if custom_user.objects.filter(email=email).exists():
+        #         raise CustomValidationError({"error": "Email already exists!"})
+        #
+        #     if Agent.objects.filter(home_address=home_address).exists():
+        #         raise CustomValidationError({"error": "Home address already exists"})
+        #
+        #     if Agent.objects.filter(bvn=bvn).exists():
+        #         raise CustomValidationError({"error": "bvn already exists"})
+        #
+        #     if Agent.objects.filter(bank_account=bank_account).exists():
+        #         raise CustomValidationError({"error": "bank_account already exists"})
+        #
+        #     pattern = f'{first_name}+{bank_account}@getgamp.com'
+        #
+        #     if agent_gampID != pattern:
+        #         raise CustomValidationError({"error": "Invalid GampID"})
+        #
+        #     if Agent.objects.filter(agent_gampID=agent_gampID).exists():
+        #         raise CustomValidationError({"error": "GampID already exists"})
 
-        else:
-            if Agent.objects.filter(email=email).exists():
-                raise CustomValidationError({"error": "Email already exists"})
-
-            if custom_user.objects.filter(email=email).exists():
-                raise CustomValidationError({"error": "Email already exists!"})
-
-            if Agent.objects.filter(home_address=home_address).exists():
-                raise CustomValidationError({"error": "Home address already exists"})
-
-            if Agent.objects.filter(bvn=bvn).exists():
-                raise CustomValidationError({"error": "bvn already exists"})
-
-            if Agent.objects.filter(bank_account=bank_account).exists():
-                raise CustomValidationError({"error": "bank_account already exists"})
-
-            pattern = f'{first_name}+{bank_account}@getgamp.com'
-
-            if agent_gampID != pattern:
-                raise CustomValidationError({"error": "Invalid GampID"})
-
-            if Agent.objects.filter(agent_gampID=agent_gampID).exists():
-                raise CustomValidationError({"error": "GampID already exists"})
-
-            return attrs
+        return attrs
 
 
 class AgentValidateRefreshToken(serializers.Serializer):
