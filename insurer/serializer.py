@@ -36,8 +36,8 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=16,
                                      allow_null=False,
                                      allow_blank=False)
-    insurer_gampID = serializers.CharField(allow_blank=True,
-                                           allow_null=True)
+    # insurer_gampID = serializers.CharField(allow_blank=True,
+    #                                        allow_null=True)
 
     class Meta:
         model = Insurer
@@ -47,7 +47,7 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
             'business_registration_number',
             'email',
             'password',
-            'insurer_gampID'
+            # 'insurer_gampID'
         ]
 
     def validate(self, attrs):
@@ -57,41 +57,41 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         business_name = attrs.get('business_name')
         email = attrs.get('email')
 
-        if insurer_gampID == '':
-            if Insurer.objects.filter(email=email).exists():
-                raise CustomValidationError({"error": "Email already exists"})
+        # if insurer_gampID == '':
+        if Insurer.objects.filter(email=email).exists():
+            raise CustomValidationError({"error": "Email already exists"})
 
-            if custom_user.objects.filter(email=email).exists():
-                raise CustomValidationError({"error": "Email already exists"})
+        if custom_user.objects.filter(email=email).exists():
+            raise CustomValidationError({"error": "Email already exists"})
 
-            if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
-                raise CustomValidationError({"error": "Business Registration number already exists"})
+        if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
+            raise CustomValidationError({"error": "Business Registration number already exists"})
 
-            if Insurer.objects.filter(business_name=business_name).exists():
-                raise CustomValidationError({"error": "Business Name  already exists"})
+        if Insurer.objects.filter(business_name=business_name).exists():
+            raise CustomValidationError({"error": "Business Name  already exists"})
 
-            return attrs
+        # return attrs
 
-        else:
-            if Insurer.objects.filter(insurer_gampID=insurer_gampID).exists():
-                raise CustomValidationError({"error": "GampID already exists"})
-
-            if Insurer.objects.filter(email=email).exists():
-                raise CustomValidationError({"error": "Email already exists"})
-
-            if custom_user.objects.filter(email=email).exists():
-                raise CustomValidationError({"error": "Email already exists"})
-
-            if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
-                raise CustomValidationError({"error": "Business Registration number already exists"})
-
-            if Insurer.objects.filter(business_name=business_name).exists():
-                raise CustomValidationError({"error": "Business Name  already exists"})
-
-        pattern = f'{admin_name}+{business_reg_num}@getgamp.com'
-
-        if insurer_gampID != pattern:
-            raise CustomValidationError({"error": "Invalid GampID"})
+        # else:
+        #     if Insurer.objects.filter(insurer_gampID=insurer_gampID).exists():
+        #         raise CustomValidationError({"error": "GampID already exists"})
+        #
+        #     if Insurer.objects.filter(email=email).exists():
+        #         raise CustomValidationError({"error": "Email already exists"})
+        #
+        #     if custom_user.objects.filter(email=email).exists():
+        #         raise CustomValidationError({"error": "Email already exists"})
+        #
+        #     if Insurer.objects.filter(business_registration_number=business_reg_num).exists():
+        #         raise CustomValidationError({"error": "Business Registration number already exists"})
+        #
+        #     if Insurer.objects.filter(business_name=business_name).exists():
+        #         raise CustomValidationError({"error": "Business Name  already exists"})
+        #
+        # pattern = f'{admin_name}+{business_reg_num}@getgamp.com'
+        #
+        # if insurer_gampID != pattern:
+        #     raise CustomValidationError({"error": "Invalid GampID"})
 
         return attrs
 
