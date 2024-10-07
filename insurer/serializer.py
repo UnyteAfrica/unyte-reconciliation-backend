@@ -11,7 +11,6 @@ from django.utils.http import urlsafe_base64_decode
 from datetime import datetime
 
 from .models import Insurer, InsurerProfile
-from policies.models import Policies, PolicyProductType
 from agents.models import Agent
 
 custom_user = get_user_model()
@@ -233,98 +232,6 @@ class ViewInsurerDetails(serializers.ModelSerializer):
             'id',
             'business_name',
             'email',
-        ]
-
-
-class InsurerClaimSellPolicySerializer(serializers.ModelSerializer):
-    policy_name = serializers.CharField(max_length=100,
-                                        min_length=1,
-                                        allow_blank=False)
-
-    class Meta:
-        model = Insurer
-        fields = [
-            'policy_name'
-        ]
-
-    def validate(self, attrs):
-        policy_name = attrs.get('policy_name')
-        if not Policies.objects.filter(name=policy_name).exists():
-            raise CustomValidationError({
-                "error": f"Policy: {policy_name} does not exist"
-            })
-
-        return attrs
-
-
-class CreatePolicies(serializers.ModelSerializer):
-    class Meta:
-        model = Policies
-        fields = [
-            "name",
-            "policy_category",
-            "valid_from",
-            "valid_to"
-        ]
-
-    def validate(self, attrs):
-        valid_from, valid_to = attrs.get('valid_from'), attrs.get('valid_to')
-        if valid_to < valid_from:
-            raise ValidationError({"error": "valid_to must be greater than valid_from"}, 400)
-        return attrs
-
-
-class CreateProductForPolicy(serializers.ModelSerializer):
-    class Meta:
-        model = PolicyProductType
-        fields = [
-            "name",
-            "premium",
-            "flat_fee",
-            "broker_commission"
-        ]
-
-
-class InsurerViewAllPolicies(serializers.Serializer):
-    agent = serializers.CharField()
-    policy_name = serializers.CharField()
-    policy_category = serializers.CharField()
-    name = serializers.CharField()
-    premium = serializers.CharField()
-    flat_fee = serializers.CharField(max_length=3)
-    date_sold = serializers.DateField()
-
-    class Meta:
-        fields = [
-            'agent',
-            'policy_name',
-            'policy_category',
-            'name',
-            'premium',
-            'flat_fee',
-            'date_sold'
-        ]
-
-
-class InsurerViewAllProducts(serializers.Serializer):
-    product = serializers.CharField()
-    product_category = serializers.CharField()
-    valid_from = serializers.DateTimeField()
-    valid_to = serializers.DateTimeField()
-    name = serializers.CharField()
-    premium = serializers.CharField()
-    flat_fee = serializers.CharField(max_length=3)
-
-    class Meta:
-        ordering = ['-date_sold']
-        fields = [
-            'product',
-            'product_category',
-            'valid_from',
-            'valid_to',
-            'name',
-            'premium',
-            'flat_fee',
         ]
 
 

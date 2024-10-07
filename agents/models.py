@@ -2,7 +2,6 @@ from django.db import models
 from django_resized import ResizedImageField
 
 from user.models import CustomUser
-from policies.models import Policies
 
 
 class Agent(CustomUser):
@@ -41,14 +40,6 @@ class Agent(CustomUser):
 
     def __str__(self):
         return f"{self.first_name}: {self.affiliated_company.business_name}"
-
-    def get_policies(self):
-        policies = Policies.objects.filter(agentpolicy__agent=self)
-        return policies
-
-    def get_sold_policies(self):
-        sold_policies = Policies.objects.filter(agentpolicy__agent=self, agentpolicy__is_sold=True)
-        return sold_policies
 
 
 class AgentProfile(models.Model):

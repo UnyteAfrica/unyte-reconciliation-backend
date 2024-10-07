@@ -34,9 +34,6 @@ INSTALLED_APPS = [
     'user',
     'insurer',
     'agents',
-    'policies',
-    'devices',
-    'gamp_env'
 ]
 
 MIDDLEWARE = [

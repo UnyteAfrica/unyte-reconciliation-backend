@@ -1,7 +1,6 @@
 from PIL import Image
 from django.db import models
 from django_resized import ResizedImageField
-from policies.models import Policies
 from user.models import CustomUser
 
 
@@ -36,15 +35,6 @@ class Insurer(CustomUser):
 
     def __str__(self):
         return self.business_name
-
-    def get_policies(self):
-        policies = Policies.objects.filter(agentpolicy__agent=self)
-        return policies
-
-    def get_sold_policies(self):
-        sold_policies = Policies.objects.filter(agentpolicy__insurer=self, agentpolicy__is_sold=True)
-        return sold_policies
-
 
 class InsurerProfile(models.Model):
     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
