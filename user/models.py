@@ -28,17 +28,6 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=40,
-                                  blank=True,
-                                  null=True,
-                                  help_text='User firstname')
-    middle_name = models.CharField(blank=True,
-                                   null=True,
-                                   help_text='User middle name')
-    last_name = models.CharField(max_length=40,
-                                 blank=True,
-                                 null=True,
-                                 help_text='User lastname')
     is_active = models.BooleanField(default=True,
                                     help_text='Set to know active users on the platform. Instead of deleting a user, '
                                               'set to False')

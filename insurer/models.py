@@ -1,16 +1,9 @@
-from PIL import Image
 from django.db import models
 from django_resized import ResizedImageField
 from user.models import CustomUser
 
 
 class Insurer(CustomUser):
-    otp = models.CharField(unique=True,
-                           max_length=6,
-                           blank=True,
-                           null=True)
-    otp_created_at = models.TimeField(blank=True,
-                                      null=True)
     business_name = models.CharField(unique=True,
                                      max_length=50,
                                      null=False,
@@ -32,13 +25,28 @@ class Insurer(CustomUser):
                                                unique=True,
                                                null=False,
                                                blank=False)
+    otp = models.CharField(unique=True,
+                           max_length=6,
+                           blank=True,
+                           null=True)
+    otp_created_at = models.TimeField(blank=True,
+                                      null=True)
+
+    class Meta:
+        verbose_name = "INSURER"
+        verbose_name_plural = "INSURERS"
 
     def __str__(self):
         return self.business_name
 
+
 class InsurerProfile(models.Model):
     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
     profile_image = ResizedImageField(size=[400, 400], default='profile_pic/default.png', upload_to='profile_pic')
+
+    class Meta:
+        verbose_name = "INSURER PROFILE"
+        verbose_name_plural = "INSURER PROFILES"
 
     def __str__(self):
         return f'{self.insurer} Profile'
