@@ -145,7 +145,7 @@ class OTPSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         email = attrs.get('email')
-        if not Insurer.objects.filter(email=email).exists():
+        if not CustomUser.objects.filter(email=email).exists():
             raise ObjectDoesNotExist
         return attrs
 
@@ -164,18 +164,17 @@ class SendNewOTPSerializer(serializers.ModelSerializer):
         ]
 
 
-class ForgotPasswordEmailSerializer(serializers.ModelSerializer):
+class ForgotPasswordEmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     class Meta:
-        model = Insurer
         fields = [
             'email'
         ]
 
     def validate(self, attrs):
         insurer_email = attrs.get('email')
-        if not Insurer.objects.filter(email=insurer_email).exists():
+        if not CustomUser.objects.filter(email=insurer_email).exists():
             message = {
                 "error": "This email does not exist"
             }
@@ -204,20 +203,20 @@ class ForgotPasswordResetSerializer(serializers.Serializer):
             new_password = attrs.get('new_password')
             confirm_password = attrs.get('confirm_password')
 
-            insurer_id = force_str(urlsafe_base64_decode(id_base64))
-            insurer = Insurer.objects.get(id=insurer_id)
+            user_id = force_str(urlsafe_base64_decode(id_base64))
+            user = CustomUser.objects.get(id=user_id)
 
-            if not PasswordResetTokenGenerator().check_token(insurer, token):
+            if not PasswordResetTokenGenerator().check_token(user, token):
                 raise AuthenticationFailed('The reset link is invalid', 401)
 
             if new_password != confirm_password:
                 raise ValidationError("Password Mismatch")
 
-            if insurer.check_password(raw_password=new_password):
+            if user.check_password(raw_password=new_password):
                 raise ValidationError('Password must not be the same as the last')
 
-            insurer.set_password(new_password)
-            insurer.save()
+            user.set_password(new_password)
+            user.save()
 
         except Exception as e:
             raise e
@@ -244,9 +243,8 @@ class CustomAgentSerializer(serializers.Serializer):
     agents_list = AgentsSignUpListSerializer(many=True)
 
 
-class ViewInsurerDetails(serializers.ModelSerializer):
+class ViewInsurerDetails(serializers.Serializer):
     class Meta:
-        model = Insurer
         fields = [
             'id',
             'business_name',
@@ -263,7 +261,6 @@ class InsurerProfileSerializer(serializers.Serializer):
         fields = [
             'business_name',
             'profile_image',
-            'email'
         ]
 
 
