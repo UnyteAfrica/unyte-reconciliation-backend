@@ -194,42 +194,54 @@ def request_new_otp(request):
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    insurer_email = serializer_class.validated_data.get('email')
+    email = serializer_class.validated_data.get('email')
 
-    if not Insurer.objects.filter(email=insurer_email).exists():
+    try:
+        if not CustomUser.objects.filter(email=email).exists():
+            return Response({
+                "message": f"Email: {email} does not exists"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user = CustomUser.objects.get(email=email)
+        if not user.is_insurer:
+            return Response({
+                "error": "This user is not an insurer"
+            }, status.HTTP_400_BAD_REQUEST)
+
+        insurer = Insurer.objects.get(user=user)
+
+        otp = generate_otp()
+        insurer.otp = otp
+        insurer.otp_created_at = datetime.now().time()
+
+        insurer.save()
+
+        current_year = datetime.now().year
+        company_name = insurer.business_name
+        context = {
+            "current_year": current_year,
+            "company_name": company_name,
+            "otp": otp
+        }
+
+        html_message = render_to_string('otp.html', context)
+
+        send_mail(
+            subject='Request New OTP',
+            message=f'{otp}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.TO_EMAIL, email],
+            html_message=html_message
+        )
+
         return Response({
-            "message": f"Email: {insurer_email} does not exists"
-        }, status=status.HTTP_400_BAD_REQUEST)
+            "message": "New OTP sent out!"
+        }, status=status.HTTP_200_OK)
 
-    insurer = Insurer.objects.get(email=insurer_email)
-
-    otp = generate_otp()
-    insurer.otp = otp
-    insurer.otp_created_at = datetime.now().time()
-
-    insurer.save()
-
-    current_year = datetime.now().year
-    company_name = insurer.business_name
-    context = {
-        "current_year": current_year,
-        "company_name": company_name,
-        "otp": otp
-    }
-
-    html_message = render_to_string('otp.html', context)
-
-    send_mail(
-        subject='Request New OTP',
-        message=f'{otp}',
-        from_email=settings.EMAIL_HOST_USER,
-        recipient_list=[settings.TO_EMAIL, insurer_email],
-        html_message=html_message
-    )
-
-    return Response({
-        "message": "New OTP sent out!"
-    }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            "error": str(e)
+        })
 
 
 @swagger_auto_schema(
@@ -246,7 +258,6 @@ def request_new_otp(request):
     tags=['Insurer']
 )
 @api_view(['POST'])
-@permission_classes([AllowAny])
 def verify_otp_token(request) -> Response:
     """
     Verify OTP endpoint
@@ -259,11 +270,17 @@ def verify_otp_token(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        insurer_email = serializer_class.validated_data.get('email')
+        email = serializer_class.validated_data.get('email')
         otp = serializer_class.validated_data.get('otp')
 
-        insurer = Insurer.objects.get(email=insurer_email)
+        user = CustomUser.objects.get(email=email)
 
+        if not user.is_insurer:
+            return Response({
+                "error": "This user is not an insurer"
+            }, status.HTTP_400_BAD_REQUEST)
+
+        insurer = Insurer.objects.get(user=user)
         insurer_otp = insurer.otp
 
         if insurer_otp != otp:
@@ -281,7 +298,7 @@ def verify_otp_token(request) -> Response:
             }
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
-        auth_token = RefreshToken.for_user(insurer)
+        auth_token = RefreshToken.for_user(user)
 
         message = {
             "login_status": True,
@@ -316,12 +333,19 @@ def forgot_password_email(request) -> Response:
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    insurer_email = serializer_class.validated_data.get('email')
+    email = serializer_class.validated_data.get('email')
 
     try:
-        insurer = Insurer.objects.get(email=insurer_email)
-        id_base64 = urlsafe_base64_encode(smart_bytes(insurer.id))
-        token = PasswordResetTokenGenerator().make_token(insurer)
+        user = CustomUser.objects.get(email=email)
+        insurer = Insurer.objects.get(user=user)
+
+        if not user.is_insurer:
+            return Response({
+                "error": "This user is not an insurer"
+            }, status.HTTP_400_BAD_REQUEST)
+
+        id_base64 = urlsafe_base64_encode(smart_bytes(user.id))
+        token = PasswordResetTokenGenerator().make_token(user)
         abs_url = gen_absolute_url(id_base64, token)
         current_year = datetime.now().year
         company_name = insurer.business_name
@@ -339,7 +363,7 @@ def forgot_password_email(request) -> Response:
             subject='Forgot Password',
             message=f'{abs_url}',
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[settings.TO_EMAIL, insurer_email],
+            recipient_list=[settings.TO_EMAIL, email],
             html_message=html_message
         )
 
@@ -426,10 +450,10 @@ def refresh_access_token(request):
 @api_view(['GET'])
 def password_token_check(request, id_base64, token):
     try:
-        insurer_id = smart_str(urlsafe_base64_decode(id_base64))
-        insurer = Insurer.objects.get(id=insurer_id)
+        user_id = smart_str(urlsafe_base64_decode(id_base64))
+        user = CustomUser.objects.get(id=user_id)
 
-        if not PasswordResetTokenGenerator().check_token(insurer, token):
+        if not PasswordResetTokenGenerator().check_token(user, token):
             return Response({
                 "error": "Token is invalid, request a new one"
             }, status.HTTP_400_BAD_REQUEST)
@@ -461,9 +485,25 @@ def password_token_check(request, id_base64, token):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_insurer(request):
-    insurer_id = request.user.id
-    insurer = get_object_or_404(Insurer, pk=insurer_id)
-    serializer_class = ViewInsurerDetails(insurer)
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    insurer = get_object_or_404(Insurer, user=user)
+
+    insurer_details = {
+        "id": insurer.id,
+        "business_name": insurer.business_name,
+        "email": user.email
+    }
+    print(insurer_details)
+
+    serializer_class = ViewInsurerDetails(data=insurer_details)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
 
@@ -485,12 +525,18 @@ def view_insurer(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_all_agents_for_insurer(request):
-    insurer_id = request.user.id
+    user_id = request.user.id
+    user = get_object_or_404(CustomUser, pk=user_id)
 
-    insurer = get_object_or_404(Insurer, pk=insurer_id)
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    insurer = get_object_or_404(Insurer, user=user)
     query_set = insurer.agent_set.all()
-    serializer_class = AgentSerializer(query_set, many=True)
 
+    serializer_class = AgentSerializer(query_set, many=True)
     return Response(serializer_class.data, status.HTTP_200_OK)
 
 
@@ -512,9 +558,15 @@ def list_all_agents_for_insurer(request):
 @permission_classes([IsAuthenticated])
 def invite_agents(request):
     serializer_class = CustomAgentSerializer(data=request.data)
-    insurer_id = request.user.id
-    insurer = get_object_or_404(Insurer, pk=insurer_id)
+    user_id = request.user.id
+    user = get_object_or_404(CustomUser, pk=user_id)
 
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    insurer = get_object_or_404(Insurer, user=user)
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
 
     if not serializer_class.is_valid():
@@ -580,8 +632,13 @@ def invite_agents_csv(request):
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
-    insurer_id = request.user.id
-    insurer = get_object_or_404(Insurer, pk=insurer_id)
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    insurer = get_object_or_404(Insurer, user=user)
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
     company_name = insurer.business_name
     current_year = datetime.now().year
@@ -662,12 +719,11 @@ def invite_agents_csv(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_insurer_profile(request) -> Response:
-    insurer_id = request.user.id
-
-    insurer = get_object_or_404(Insurer, pk=insurer_id)
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    insurer = get_object_or_404(Insurer, user=user)
     insurer_profile = get_object_or_404(InsurerProfile, insurer=insurer)
 
-    insurer_email = insurer.email
+    insurer_email = user.email
     insurer_business_name = insurer.business_name
     insurer_profile_pic = insurer_profile.profile_image.url
 
@@ -701,7 +757,14 @@ def view_insurer_profile(request) -> Response:
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_profile_image(request) -> Response:
-    insurer = get_object_or_404(Insurer, pk=request.user.id)
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    insurer = get_object_or_404(Insurer, user=user)
     insurer_profile_obj = get_object_or_404(InsurerProfile, insurer=insurer)
     serializer_class = UpdateProfileImageSerializer(insurer_profile_obj, data=request.data, partial=True)
     if not serializer_class.is_valid():
