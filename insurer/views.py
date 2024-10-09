@@ -133,7 +133,14 @@ def login_insurer(request) -> Response:
                 "message": "Failed to authenticate insurer"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        insurer = Insurer.objects.get(email=email)
+        user = CustomUser.objects.get(email=email)
+
+        if not user.is_insurer:
+            return Response({
+                "error": "This user is not an insurer"
+            }, status.HTTP_400_BAD_REQUEST)
+
+        insurer = Insurer.objects.get(user=user)
 
         otp = generate_otp()
         insurer.otp = otp

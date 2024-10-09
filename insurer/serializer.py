@@ -106,7 +106,8 @@ class CreateInsurerSerializer(serializers.Serializer):
 
         user = CustomUser.objects.create_user(
             email=email,
-            password=password
+            password=password,
+            is_insurer=True
         )
         user.save()
 
@@ -123,12 +124,11 @@ class CreateInsurerSerializer(serializers.Serializer):
         return insurer
 
 
-class LoginInsurerSerializer(serializers.ModelSerializer):
+class LoginInsurerSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(max_length=255)
 
     class Meta:
-        model = Insurer
         fields = [
             'email',
             'password'

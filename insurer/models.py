@@ -3,7 +3,7 @@ from django_resized import ResizedImageField
 from django.conf import settings
 
 
-class  Insurer(models.Model):
+class Insurer(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
