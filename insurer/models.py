@@ -1,9 +1,13 @@
 from django.db import models
 from django_resized import ResizedImageField
-from user.models import CustomUser
+from django.conf import settings
 
 
-class Insurer(CustomUser):
+class  Insurer(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     business_name = models.CharField(unique=True,
                                      max_length=50,
                                      null=False,

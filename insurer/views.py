@@ -29,6 +29,7 @@ from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
 from .utils import generate_otp, verify_otp, gen_absolute_url, gen_sign_up_url_for_agent
+from user.models import CustomUser
 
 load_dotenv(find_dotenv())
 
@@ -66,10 +67,11 @@ def create_insurer(request) -> Response:
         Send email to insurer including otp.
         """
         serializer_class.save()
-        insurer = Insurer.objects.get(email=insurer_email)
+        insurer = CustomUser.objects.get(email=insurer_email)
 
         current_year = datetime.now().year
-        company_name = insurer.business_name
+        company_name = business_name
+
         context = {
             "current_year": current_year,
             "company_name": company_name,

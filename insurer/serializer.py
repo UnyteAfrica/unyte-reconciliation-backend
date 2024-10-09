@@ -13,10 +13,12 @@ from datetime import datetime
 from .models import Insurer, InsurerProfile
 from agents.models import Agent
 
+from user.models import CustomUser
+
 custom_user = get_user_model()
 
 
-class CreateInsurerSerializer(serializers.ModelSerializer):
+class CreateInsurerSerializer(serializers.Serializer):
     business_name = serializers.CharField(max_length=50,
                                           required=True,
                                           help_text='Insurer business name',
@@ -35,11 +37,11 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=16,
                                      allow_null=False,
                                      allow_blank=False)
+
     # insurer_gampID = serializers.CharField(allow_blank=True,
     #                                        allow_null=True)
 
     class Meta:
-        model = Insurer
         fields = [
             'business_name',
             'admin_name',
@@ -57,7 +59,7 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         email = attrs.get('email')
 
         # if insurer_gampID == '':
-        if Insurer.objects.filter(email=email).exists():
+        if custom_user.objects.filter(email=email).exists():
             raise CustomValidationError({"error": "Email already exists"})
 
         if custom_user.objects.filter(email=email).exists():
@@ -95,13 +97,30 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        email = validated_data.get('email')
+        password = validated_data.get('password')
         business_name = validated_data.get('business_name')
         business_reg_num = validated_data.get('business_registration_number')
         unyte_unique_insurer_id = generate_unyte_unique_insurer_id(business_name, business_reg_num)
-        user = Insurer.objects.create_user(**validated_data, unyte_unique_insurer_id=unyte_unique_insurer_id,
-                                           otp=generate_otp(), otp_created_at=datetime.now().time())
+        admin_name = validated_data.get('admin_name')
+
+        user = CustomUser.objects.create_user(
+            email=email,
+            password=password
+        )
         user.save()
-        return user
+
+        insurer = Insurer.objects.create(
+            business_name=business_name,
+            business_registration_number=business_reg_num,
+            unyte_unique_insurer_id=unyte_unique_insurer_id,
+            admin_name=admin_name,
+            otp=generate_otp(),
+            otp_created_at=datetime.now().time(),
+            user=user
+        )
+        insurer.save()
+        return insurer
 
 
 class LoginInsurerSerializer(serializers.ModelSerializer):

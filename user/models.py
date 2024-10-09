@@ -28,6 +28,10 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
+    reference_id = models.CharField(max_length=50,
+                                    null=False,
+                                    blank=False,
+                                    help_text="Reference id for new user")
     is_active = models.BooleanField(default=True,
                                     help_text='Set to know active users on the platform. Instead of deleting a user, '
                                               'set to False')
@@ -39,6 +43,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                                       help_text='Date when any update is made to the user model')
     is_verified = models.BooleanField(default=False,
                                       help_text='Check to know whether an agent or insurer is verified')
+    is_insurer = models.BooleanField(default=False,
+                                     help_text="Check to see if user is of type insurer")
+    is_agent = models.BooleanField(default=False,
+                                   help_text="Check to see if user is of type agent")
+    is_merchant = models.BooleanField(default=False,
+                                      help_text="Check to see if user if type merchant")
 
     objects = CustomUserManager()
 

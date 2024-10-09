@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'user',
     'insurer',
     'agents',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
