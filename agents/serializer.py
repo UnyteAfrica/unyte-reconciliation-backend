@@ -10,10 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from insurer.models import Insurer
 from .models import Agent
 from rest_framework import serializers
-from datetime import datetime
-from .utils import generate_otp, CustomValidationError
-from policies.models import AgentPolicy, Policies
-
+from .utils import CustomValidationError
 custom_user = get_user_model()
 
 
@@ -260,64 +257,6 @@ class AgentSellPolicySerializer(serializers.Serializer):
         fields = [
             'policy_name',
             'product_type'
-        ]
-
-
-class AgentClaimPolicySerializer(serializers.ModelSerializer):
-    policy_name = serializers.CharField(max_length=100,
-                                        min_length=1,
-                                        allow_blank=False)
-    quantity_bought = serializers.IntegerField(allow_null=False,
-                                               default=0)
-
-    class Meta:
-        model = Agent
-        fields = [
-            'policy_name',
-            'quantity_bought'
-        ]
-
-    def validate(self, attrs):
-        policy_name = attrs.get('policy_name')
-        if not Policies.objects.filter(name=policy_name).exists():
-            raise CustomValidationError({
-                "error": f"Policy: {policy_name} does not exist"
-            })
-
-        return attrs
-
-
-class AgentPolicySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Policies
-        fields = [
-            'name',
-            'amount',
-            'valid_from',
-            'valid_to'
-        ]
-
-
-class AgentViewAllClaimedPolicies(serializers.ModelSerializer):
-    product_type = PolicyProductTypeSerializer()
-
-    class Meta:
-        model = AgentPolicy
-        fields = [
-            'id',
-            'product_type',
-        ]
-
-
-class AgentViewAllAvailablePolicies(serializers.ModelSerializer):
-    class Meta:
-        model = Policies
-        fields = [
-            'id',
-            'name',
-            'policy_category',
-            'valid_to',
-            'valid_from'
         ]
 
 

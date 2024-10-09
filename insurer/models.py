@@ -1,17 +1,13 @@
-from PIL import Image
 from django.db import models
 from django_resized import ResizedImageField
-from policies.models import Policies
-from user.models import CustomUser
+from django.conf import settings
 
 
-class Insurer(CustomUser):
-    otp = models.CharField(unique=True,
-                           max_length=6,
-                           blank=True,
-                           null=True)
-    otp_created_at = models.TimeField(blank=True,
-                                      null=True)
+class Insurer(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     business_name = models.CharField(unique=True,
                                      max_length=50,
                                      null=False,
@@ -33,22 +29,28 @@ class Insurer(CustomUser):
                                                unique=True,
                                                null=False,
                                                blank=False)
+    otp = models.CharField(unique=True,
+                           max_length=6,
+                           blank=True,
+                           null=True)
+    otp_created_at = models.TimeField(blank=True,
+                                      null=True)
+
+    class Meta:
+        verbose_name = "INSURER"
+        verbose_name_plural = "INSURERS"
 
     def __str__(self):
         return self.business_name
-
-    def get_policies(self):
-        policies = Policies.objects.filter(agentpolicy__agent=self)
-        return policies
-
-    def get_sold_policies(self):
-        sold_policies = Policies.objects.filter(agentpolicy__insurer=self, agentpolicy__is_sold=True)
-        return sold_policies
 
 
 class InsurerProfile(models.Model):
     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)
     profile_image = ResizedImageField(size=[400, 400], default='profile_pic/default.png', upload_to='profile_pic')
+
+    class Meta:
+        verbose_name = "INSURER PROFILE"
+        verbose_name_plural = "INSURER PROFILES"
 
     def __str__(self):
         return f'{self.insurer} Profile'

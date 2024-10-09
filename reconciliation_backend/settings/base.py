@@ -34,9 +34,7 @@ INSTALLED_APPS = [
     'user',
     'insurer',
     'agents',
-    'policies',
-    'devices',
-    'gamp_env'
+    'django_extensions'
 ]
 
 MIDDLEWARE = [

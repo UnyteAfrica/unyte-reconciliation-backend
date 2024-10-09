@@ -15,27 +15,21 @@ from drf_yasg import openapi
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 
-from agents.models import Agent
-from policies.models import Policies, AgentPolicy, PolicyProductType
 from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
-    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, \
-    InsurerProfileSerializer, CustomAgentSerializer, \
-    ValidateRefreshToken, CreatePolicies, UpdateProfileImageSerializer, CreateProductForPolicy, InsurerViewAllPolicies, \
-    InsurerViewAllProducts, UploadCSVFileSerializer
+    ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, CustomAgentSerializer, \
+    ValidateRefreshToken, UpdateProfileImageSerializer, UploadCSVFileSerializer, InsurerProfileSerializer
 from .response_serializers import SuccessfulCreateInsurerSerializer, SuccessfulLoginInsurerSerializer, \
     SuccessfulSendNewOTPSerializer, SuccessfulVerifyOTPSerializer, SuccessfulForgotPasswordSerializer, \
     SuccessfulResetPasswordSerializer, SuccessfulRefreshAccessTokenSerializer, SuccessfulPasswordTokenCheckSerializer, \
-    SuccessfulViewInsurerSerializer, SuccessfulListAllAgentsSerializer, SuccessfulInsurerProductsSerializer, \
-    SuccessfulInsurerPoliciesSerializer, SuccessfulInsurerAgentSignupSerializer, SuccessfulCreateProductSerializer, \
-    SuccessfulCreateProductForPolicySerializer, SuccessfulInsurerAgentSignupCSVSerializer
+    SuccessfulViewInsurerSerializer, SuccessfulListAllAgentsSerializer, SuccessfulInsurerAgentSignupSerializer, SuccessfulInsurerAgentSignupCSVSerializer
 from rest_framework.response import Response
 from .models import Insurer, InsurerProfile
 from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
 from .utils import generate_otp, verify_otp, gen_absolute_url, gen_sign_up_url_for_agent
+from user.models import CustomUser
 
 load_dotenv(find_dotenv())
 
@@ -73,10 +67,11 @@ def create_insurer(request) -> Response:
         Send email to insurer including otp.
         """
         serializer_class.save()
-        insurer = Insurer.objects.get(email=insurer_email)
+        insurer = CustomUser.objects.get(email=insurer_email)
 
         current_year = datetime.now().year
-        company_name = insurer.business_name
+        company_name = business_name
+
         context = {
             "current_year": current_year,
             "company_name": company_name,
@@ -138,7 +133,14 @@ def login_insurer(request) -> Response:
                 "message": "Failed to authenticate insurer"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        insurer = Insurer.objects.get(email=email)
+        user = CustomUser.objects.get(email=email)
+
+        if not user.is_insurer:
+            return Response({
+                "error": "This user is not an insurer"
+            }, status.HTTP_400_BAD_REQUEST)
+
+        insurer = Insurer.objects.get(user=user)
 
         otp = generate_otp()
         insurer.otp = otp
@@ -493,91 +495,6 @@ def list_all_agents_for_insurer(request):
 
 
 @swagger_auto_schema(
-    method='GET',
-    operation_description='Returns a list of all products (unsold policies) created by an Insurer',
-    responses={
-        200: openapi.Response(
-            'OK',
-            SuccessfulInsurerProductsSerializer(many=True),
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def view_all_products(request):
-    insurer_id = request.user.id
-    paginator = PageNumberPagination()
-    paginator.page_size = 10
-
-    insurer = get_object_or_404(Insurer, id=insurer_id)
-    policies_queryset = Policies.objects.filter(insurer=insurer)
-
-    all_policies = []
-    for policy in policies_queryset:
-        policy_product_types_queryset = PolicyProductType.objects.filter(policy=policy)
-        for policy_product_type in policy_product_types_queryset:
-            res = {'product': policy.name,
-                   'product_category': policy.policy_category,
-                   'valid_from': policy.valid_from,
-                   'valid_to': policy.valid_to
-                   }
-            if policy_product_type.policy.name == policy.name:
-                # print(policy_product_type.name)
-                res["name"] = policy_product_type.name
-                res["premium"] = str(policy_product_type.premium)
-                res["flat_fee"] = policy_product_type.flat_fee
-
-                all_policies.append(res)
-    result_qs = paginator.paginate_queryset(all_policies, request)
-    return paginator.get_paginated_response(result_qs)
-
-
-# TODO: Check out this logic
-@swagger_auto_schema(
-    method='GET',
-    operation_description='Returns a list of all policies (sold products) sold by agents under an Insurer',
-    responses={
-        200: openapi.Response(
-            'OK',
-            SuccessfulInsurerPoliciesSerializer(many=True),
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def view_all_policies(request):
-    insurer_id = request.user.id
-    paginator = PageNumberPagination()
-    paginator.page_size = 10
-
-    # insurer = get_object_or_404(Insurer, id=insurer_id)
-    agents = Agent.objects.filter(affiliated_company=insurer_id)
-
-    agent_sold_policies = []
-    number_of_policies = 0
-
-    for agent in agents:
-        queryset = AgentPolicy.objects.filter(agent=agent)
-        number_of_policies += len(queryset)
-        for policy_type in queryset:
-            res = {'agent': f"{agent.first_name} {agent.last_name}",
-                   'policy_name': policy_type.product_type.policy.name,
-                   'policy_category': policy_type.product_type.policy.policy_category,
-                   "name": policy_type.product_type.name, "premium": policy_type.product_type.premium,
-                   "flat_fee": policy_type.product_type.flat_fee, 'date_sold': policy_type.date_sold}
-
-            agent_sold_policies.append(res)
-    result_page = paginator.paginate_queryset(agent_sold_policies, request)
-    return paginator.get_paginated_response(result_page)
-
-
-@swagger_auto_schema(
     method='POST',
     operation_description='Generate SignUp Link for Agents',
     request_body=CustomAgentSerializer,
@@ -772,209 +689,6 @@ def view_insurer_profile(request) -> Response:
 
 @swagger_auto_schema(
     method='POST',
-    operation_description='Create Product',
-    request_body=CreatePolicies,
-    responses={
-        200: openapi.Response(
-            'OK',
-            SuccessfulCreateProductSerializer,
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@permission_classes([IsAuthenticated])
-@api_view(['POST'])
-def create_product(request) -> Response:
-    insurer_id = request.user.id
-    insurer = get_object_or_404(Insurer, pk=insurer_id)
-    serializer_class = CreatePolicies(data=request.data)
-    if not serializer_class.is_valid():
-        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
-
-    policy_name = serializer_class.validated_data.get('name')
-    policies = Policies.objects.filter(insurer=insurer)
-    all_policy_names = [policy.name for policy in policies]
-
-    if policy_name in all_policy_names:
-        existing_policy = Policies.objects.get(name=policy_name)
-        return Response({
-            "error": f"Product with name {policy_name} already exists",
-            "product_id": f"{existing_policy.id}"
-        }, status.HTTP_400_BAD_REQUEST)
-
-    try:
-        policy = Policies.objects.create(**serializer_class.validated_data, insurer=insurer)
-        policy.save()
-        res = {
-            "id": policy.id,
-            "policy": policy.name,
-            "policy_category": policy.policy_category,
-            "valid_from": policy.valid_from,
-            "valid_to": policy.valid_to
-        }
-
-        policy_types = []
-        policy_type_objs = PolicyProductType.objects.filter(policy=policy)
-
-        for policy_type in policy_type_objs:
-            policy_types.append({
-                "type": policy_type.name,
-                "premium": policy_type.premium,
-                "flat_fee": policy_type.flat_fee
-            })
-        res['policy_types'] = policy_types
-
-        return Response(res, status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({
-            "error": f"The error '{e}' occurred"
-        }, status.HTTP_400_BAD_REQUEST)
-
-
-@swagger_auto_schema(
-    method='POST',
-    operation_description='Create Product for Policy',
-    request_body=CreateProductForPolicy,
-    responses={
-        200: openapi.Response(
-            'OK',
-            SuccessfulCreateProductForPolicySerializer,
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@permission_classes([IsAuthenticated])
-@api_view(['POST'])
-def create_products_for_policy(request, policy_id) -> Response:
-    serializer_class = CreateProductForPolicy(data=request.data)
-
-    if not serializer_class.is_valid():
-        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
-
-    try:
-        policy = get_object_or_404(Policies, pk=policy_id)
-        all_product_types = [product_type.name for product_type in PolicyProductType.objects.all()]
-        product_type_name = serializer_class.validated_data.get('name')
-
-        if product_type_name in all_product_types:
-            return Response({
-                "error": f"An existing product type for this product with name {product_type_name} already exists"
-            }, status.HTTP_400_BAD_REQUEST)
-
-        product_policy = PolicyProductType.objects.create(policy=policy, **serializer_class.data)
-        product_policy.save()
-
-        return Response({
-            "message": f"A new product has been added to {policy.name}"
-        }, status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({
-            "error": f"The error '{e}' occurred"
-        }, status.HTTP_400_BAD_REQUEST)
-
-
-@swagger_auto_schema(
-    method='GET',
-    operation_description='View products an agent has sold',
-    responses={
-        200: openapi.Response(
-            'OK',
-            SuccessfulInsurerPoliciesSerializer,
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@permission_classes([IsAuthenticated])
-@api_view(['GET'])
-def view_products_an_agent_has_sold(request, agent_id: int):
-    # insurer = get_object_or_404(Insurer, id=insurer_id)
-    agent = get_object_or_404(Agent, pk=agent_id)
-    paginator = PageNumberPagination()
-    paginator.page_size = 10
-
-    agent_sold_policies = []
-
-    queryset = AgentPolicy.objects.filter(agent=agent)
-    for policy_type in queryset:
-        res = {'agent': f"{agent.first_name} {agent.last_name}", 'policies_sold': [],
-               'policy_name': policy_type.product_type.policy.name,
-               'policy_category': policy_type.product_type.policy.policy_category,
-               "name": policy_type.product_type.name,
-               "premium": policy_type.product_type.premium,
-               "flat_fee": policy_type.product_type.flat_fee,
-               "date_sold": policy_type.date_sold
-               }
-
-        agent_sold_policies.append(res)
-    result_page = paginator.paginate_queryset(agent_sold_policies, request)
-    return paginator.get_paginated_response(result_page)
-
-
-@swagger_auto_schema(
-    method='GET',
-    manual_parameters=[
-        openapi.Parameter('start_date',
-                          openapi.IN_QUERY,
-                          description="start date for date range",
-                          type=openapi.TYPE_STRING),
-        openapi.Parameter('end_date',
-                          openapi.IN_QUERY,
-                          description="end date for date range",
-                          type=openapi.TYPE_STRING),
-    ],
-    operation_description='View products agents sold in a date range',
-    responses={
-        200: openapi.Response(
-            'OK',
-            SuccessfulInsurerPoliciesSerializer,
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Insurer']
-)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def view_sold_products_with_date_params(request) -> Response:
-    insurer_id = request.user.id
-    start_date = request.query_params.get('start_date')
-    end_date = request.query_params.get('end_date')
-
-    try:
-        agents = Agent.objects.filter(affiliated_company=insurer_id)
-
-        agent_sold_policies = []
-
-        for agent in agents:
-            queryset = AgentPolicy.objects.filter(agent=agent, date_sold__range=[start_date, end_date])
-            for policy_type in queryset:
-                res = {'agent': f"{agent.first_name} {agent.last_name}",
-                       'policy_name': policy_type.product_type.policy.name,
-                       'policy_category': policy_type.product_type.policy.policy_category,
-                       "name": policy_type.product_type.name,
-                       "premium": policy_type.product_type.premium,
-                       "flat_fee": policy_type.product_type.flat_fee,
-                       'date_sold': policy_type.date_sold
-                       }
-                agent_sold_policies.append(res)
-        serializer_class = InsurerViewAllPolicies(agent_sold_policies, many=True)
-        return Response(serializer_class.data, status.HTTP_200_OK)
-    except Exception as e:
-        return Response({
-            "error": f"The error {e} occurred"
-        }, status.HTTP_400_BAD_REQUEST)
-
-
-@swagger_auto_schema(
-    method='POST',
     operation_description='Create Policy',
     request_body=UpdateProfileImageSerializer,
     responses={
@@ -997,3 +711,4 @@ def update_profile_image(request) -> Response:
     return Response({
         "message": "Profile image updated"
     }, status.HTTP_200_OK)
+

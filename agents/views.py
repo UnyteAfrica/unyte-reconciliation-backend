@@ -1,5 +1,4 @@
 from datetime import datetime
-from pprint import pprint
 
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -18,18 +17,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from insurer.models import Insurer
-from insurer.response_serializers import SuccessfulSendNewOTPSerializer
-from policies.models import Policies, AgentPolicy, PolicyProductType
 from .models import Agent, AgentProfile
 from .response_serializers import SuccessfulCreateAgentSerializer, SuccessfulLoginAgentSerializer, \
-    SuccessfulViewAgentSerializer, SuccessfulAgentSellProductSerializer, AgentPoliciesSerializer, \
-    SuccessfulViewAgentProfileSerializer, SuccessfulInsurerAgentProductsSerializer, \
-    AgentSuccessfulRefreshAccessTokenSerializer, AgentSuccessfulResetPasswordSerializer, \
+    SuccessfulViewAgentSerializer, SuccessfulViewAgentProfileSerializer, AgentSuccessfulRefreshAccessTokenSerializer, AgentSuccessfulResetPasswordSerializer, \
     AgentSuccessfulPasswordTokenCheckSerializer, AgentSuccessfulForgotPasswordSerializer, \
     AgentSuccessfulVerifyOTPSerializer, AgentSuccessfulSendNewOTPSerializer
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
-    AgentSellPolicySerializer, ViewAgentProfile, AgentValidateRefreshToken
+    ViewAgentProfile, AgentValidateRefreshToken
 from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_unique_agent_id
 
 
@@ -480,108 +475,6 @@ def view_agent_details(request):
 
 
 @swagger_auto_schema(
-    method='POST',
-    operation_description='Agents sell products',
-    request_body=AgentSellPolicySerializer,
-    responses={
-        200: openapi.Response(
-            'OK',
-            SuccessfulAgentSellProductSerializer
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Agent']
-)
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def agent_sell_product(request):
-    agent_id = request.user.id
-    serializer_class = AgentSellPolicySerializer(data=request.data)
-
-    if not serializer_class.is_valid():
-        return Response({
-            serializer_class.errors
-        }, status.HTTP_400_BAD_REQUEST)
-
-    policy_name = serializer_class.validated_data.get('policy_name')
-    policy_obj = get_object_or_404(Policies, name=policy_name)
-
-    available_product_types_objs = PolicyProductType.objects.filter(policy=policy_obj)
-    available_product_types = [
-        {"name": product.name,
-         "premium": product.premium,
-         "flat_fee": product.flat_fee, }
-
-        for product in available_product_types_objs
-    ]
-
-    agent = get_object_or_404(Agent, pk=agent_id)
-    product_types = serializer_class.validated_data.get('product_type')
-    pprint(product_types)
-
-    for product_type in product_types:
-        if product_type not in available_product_types:
-            return Response({
-                "error": f"Invalid product type for product: {policy_name}"
-            }, status.HTTP_400_BAD_REQUEST)
-
-        product_type_obj = get_object_or_404(PolicyProductType, name=product_type.get('name'),
-                                             premium=product_type.get('premium'),
-                                             flat_fee=product_type.get('flat_fee'))
-        agent_policy = AgentPolicy.objects.create(agent=agent, product_type=product_type_obj)
-        agent_policy.save()
-
-    if len(product_types) > 1:
-        return Response({
-            "message": "You have successfully sold these product"
-        }, status.HTTP_200_OK)
-
-    return Response({
-        "message": "You have successfully sold this product"
-    }, status.HTTP_200_OK)
-
-
-@swagger_auto_schema(
-    method='GET',
-    operation_description='Returns a list of policies (sold products)',
-    responses={
-        200: openapi.Response(
-            'OK',
-            AgentPoliciesSerializer(many=True)
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Agent']
-)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def view_all_policies(request):
-    agent_id = request.user.id
-    agent = get_object_or_404(Agent, id=agent_id)
-    queryset = AgentPolicy.objects.filter(agent=agent)
-
-    policies = []
-    for agent_policy in queryset:
-        res = {
-            'policy_name': agent_policy.product_type.policy.name,
-            'policy_category': agent_policy.product_type.policy.policy_category,
-            "date_sold": agent_policy.date_sold,
-            'product_type': {
-                "name": agent_policy.product_type.name,
-                "premium": agent_policy.product_type.premium,
-                "flat_fee": agent_policy.product_type.flat_fee,
-            }
-        }
-        policies.append(res)
-    policies.append({
-        "number_of_sold_policies": len(queryset)
-    })
-    return Response(policies, status.HTTP_200_OK)
-
-
-@swagger_auto_schema(
     method='GET',
     operation_description='View Agent Profile',
     responses={
@@ -624,126 +517,3 @@ def view_agent_profile(request) -> Response:
         }, status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
-
-
-@swagger_auto_schema(
-    method='GET',
-    operation_description='Returns a list of all products (unsold policies) by agent insurer',
-    responses={
-        200: openapi.Response(
-            'OK',
-            SuccessfulInsurerAgentProductsSerializer(many=True)
-        ),
-        400: 'Bad Request',
-        404: 'Not Found'
-    },
-    tags=['Agent']
-)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def view_all_products(request) -> Response:
-    agent_id = request.user.id
-    agent = get_object_or_404(Agent, pk=agent_id)
-    insurer = agent.affiliated_company
-
-    policies_queryset = Policies.objects.filter(insurer=insurer)
-
-    all_policies = []
-    for policy in policies_queryset:
-        policy_product_types = []
-        res = {'policy': policy.name,
-               'policy_category': policy.policy_category,
-               'valid_from': policy.valid_from,
-               'valid_to': policy.valid_to}
-
-        policy_product_types_queryset = PolicyProductType.objects.filter(policy=policy)
-        for policy_product_type in policy_product_types_queryset:
-            if policy_product_type.policy.name == policy.name:
-                policy_product_types.append({
-                    "name": policy_product_type.name,
-                    "premium": policy_product_type.premium,
-                    "flat_fee": policy_product_type.flat_fee,
-                })
-            else:
-                print(policy.name)
-        res['policy_product_types'] = policy_product_types
-        all_policies.append(res)
-
-    return Response(all_policies, status.HTTP_200_OK)
-
-# @swagger_auto_schema(
-#     method='POST',
-#     operation_description='Agent Claim Policy',
-#     request_body=AgentClaimPolicySerializer,
-#     responses={
-#         200: 'OK',
-#         400: 'Bad Request',
-#         404: 'Not Found'
-#     },
-#     tags=['Agent']
-# )
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def agent_claim_policy(request):
-#     agent_id = request.user.id
-#     serializer_class = AgentClaimPolicySerializer(data=request.data)
-#
-#     if not serializer_class.is_valid():
-#         return Response({
-#             serializer_class.errors
-#         }, status.HTTP_400_BAD_REQUEST)
-#
-#     try:
-#         policy_name = serializer_class.validated_data.get('policy_name')
-#         quantity = serializer_class.validated_data.get('quantity_bought')
-#
-#         agent = Agent.objects.get(id=agent_id)
-#         policy_obj = Policies.objects.get(name=policy_name)
-#
-#         """
-#         Checks to see if the policy already exists in the AgentPolicy table.
-#         ISSUE: Figure out how to renew a policy that has expired and how to buy the same
-#         policy if the quantity_bought is 0.
-#         """
-#         if AgentPolicy.objects.filter(agent=agent, policy=policy_obj).exists():
-#             return Response({
-#                 "error": "You have claimed this policy already"
-#             }, status.HTTP_400_BAD_REQUEST)
-#
-#         policy = AgentPolicy.objects.create(agent=agent, policy=policy_obj, quantity_bought=quantity)
-#
-#         policy.save()
-#         return Response({
-#             "message": "You have claimed a new policy"
-#         }, status.HTTP_200_OK)
-#
-#     except Exception as e:
-#         return Response({
-#             "error": f"The error '{e}' occurred"
-#         }, status.HTTP_400_BAD_REQUEST)
-#
-
-# @swagger_auto_schema(
-#     method='GET',
-#     operation_description='Agent Claim Policy',
-#     responses={
-#         200: 'OK',
-#         400: 'Bad Request',
-#         404: 'Not Found'
-#     },
-#     tags=['Agent']
-# )
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def view_all_claimed_policies(request):
-#     agent_id = request.user.id
-#     agent = get_object_or_404(Agent, id=agent_id)
-#     try:
-#         queryset = AgentPolicy.objects.filter(agent=agent)
-#         serializer_class = AgentViewAllClaimedPolicies(queryset, many=True)
-#         return Response(serializer_class.data, status.HTTP_200_OK)
-#
-#     except Exception as e:
-#         return Response({
-#             "error": f"The error '{e}' occurred"
-#         }, status.HTTP_400_BAD_REQUEST)

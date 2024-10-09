@@ -10,12 +10,7 @@ urlpatterns = [
     path('new-otp', views.request_new_otp, name='request_new_otp'),
     path('password-reset/<id_base64>/<token>', views.password_token_check, name='password-reset-confirm'),
     path('details', views.view_agent_details, name='agent-details'),
-    path('sell-product', views.agent_sell_product, name='claim-policy'),
-    path('view-all-products', views.view_all_products, name='view-all-products'),
-    path('view-all-policies', views.view_all_policies, name='view-all-policies'),
     path('agent-profile', views.view_agent_profile, name='agent-profile'),
     path('refresh-access-token', views.refresh_access_token, name='reset-access-token')
-    # path('view-all-claimed-policies', views.view_all_claimed_policies, name='view-all-claimed-policies'),
-    # path('claim-policy', views.agent_claim_policy, name='claim-policy'),
 ]
 

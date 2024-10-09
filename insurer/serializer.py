@@ -11,13 +11,14 @@ from django.utils.http import urlsafe_base64_decode
 from datetime import datetime
 
 from .models import Insurer, InsurerProfile
-from policies.models import Policies, PolicyProductType
 from agents.models import Agent
+
+from user.models import CustomUser
 
 custom_user = get_user_model()
 
 
-class CreateInsurerSerializer(serializers.ModelSerializer):
+class CreateInsurerSerializer(serializers.Serializer):
     business_name = serializers.CharField(max_length=50,
                                           required=True,
                                           help_text='Insurer business name',
@@ -36,11 +37,11 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=16,
                                      allow_null=False,
                                      allow_blank=False)
+
     # insurer_gampID = serializers.CharField(allow_blank=True,
     #                                        allow_null=True)
 
     class Meta:
-        model = Insurer
         fields = [
             'business_name',
             'admin_name',
@@ -58,7 +59,7 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         email = attrs.get('email')
 
         # if insurer_gampID == '':
-        if Insurer.objects.filter(email=email).exists():
+        if custom_user.objects.filter(email=email).exists():
             raise CustomValidationError({"error": "Email already exists"})
 
         if custom_user.objects.filter(email=email).exists():
@@ -96,21 +97,38 @@ class CreateInsurerSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        email = validated_data.get('email')
+        password = validated_data.get('password')
         business_name = validated_data.get('business_name')
         business_reg_num = validated_data.get('business_registration_number')
         unyte_unique_insurer_id = generate_unyte_unique_insurer_id(business_name, business_reg_num)
-        user = Insurer.objects.create_user(**validated_data, unyte_unique_insurer_id=unyte_unique_insurer_id,
-                                           otp=generate_otp(), otp_created_at=datetime.now().time())
+        admin_name = validated_data.get('admin_name')
+
+        user = CustomUser.objects.create_user(
+            email=email,
+            password=password,
+            is_insurer=True
+        )
         user.save()
-        return user
+
+        insurer = Insurer.objects.create(
+            business_name=business_name,
+            business_registration_number=business_reg_num,
+            unyte_unique_insurer_id=unyte_unique_insurer_id,
+            admin_name=admin_name,
+            otp=generate_otp(),
+            otp_created_at=datetime.now().time(),
+            user=user
+        )
+        insurer.save()
+        return insurer
 
 
-class LoginInsurerSerializer(serializers.ModelSerializer):
+class LoginInsurerSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(max_length=255)
 
     class Meta:
-        model = Insurer
         fields = [
             'email',
             'password'
@@ -233,98 +251,6 @@ class ViewInsurerDetails(serializers.ModelSerializer):
             'id',
             'business_name',
             'email',
-        ]
-
-
-class InsurerClaimSellPolicySerializer(serializers.ModelSerializer):
-    policy_name = serializers.CharField(max_length=100,
-                                        min_length=1,
-                                        allow_blank=False)
-
-    class Meta:
-        model = Insurer
-        fields = [
-            'policy_name'
-        ]
-
-    def validate(self, attrs):
-        policy_name = attrs.get('policy_name')
-        if not Policies.objects.filter(name=policy_name).exists():
-            raise CustomValidationError({
-                "error": f"Policy: {policy_name} does not exist"
-            })
-
-        return attrs
-
-
-class CreatePolicies(serializers.ModelSerializer):
-    class Meta:
-        model = Policies
-        fields = [
-            "name",
-            "policy_category",
-            "valid_from",
-            "valid_to"
-        ]
-
-    def validate(self, attrs):
-        valid_from, valid_to = attrs.get('valid_from'), attrs.get('valid_to')
-        if valid_to < valid_from:
-            raise ValidationError({"error": "valid_to must be greater than valid_from"}, 400)
-        return attrs
-
-
-class CreateProductForPolicy(serializers.ModelSerializer):
-    class Meta:
-        model = PolicyProductType
-        fields = [
-            "name",
-            "premium",
-            "flat_fee",
-            "broker_commission"
-        ]
-
-
-class InsurerViewAllPolicies(serializers.Serializer):
-    agent = serializers.CharField()
-    policy_name = serializers.CharField()
-    policy_category = serializers.CharField()
-    name = serializers.CharField()
-    premium = serializers.CharField()
-    flat_fee = serializers.CharField(max_length=3)
-    date_sold = serializers.DateField()
-
-    class Meta:
-        fields = [
-            'agent',
-            'policy_name',
-            'policy_category',
-            'name',
-            'premium',
-            'flat_fee',
-            'date_sold'
-        ]
-
-
-class InsurerViewAllProducts(serializers.Serializer):
-    product = serializers.CharField()
-    product_category = serializers.CharField()
-    valid_from = serializers.DateTimeField()
-    valid_to = serializers.DateTimeField()
-    name = serializers.CharField()
-    premium = serializers.CharField()
-    flat_fee = serializers.CharField(max_length=3)
-
-    class Meta:
-        ordering = ['-date_sold']
-        fields = [
-            'product',
-            'product_category',
-            'valid_from',
-            'valid_to',
-            'name',
-            'premium',
-            'flat_fee',
         ]
 
 
