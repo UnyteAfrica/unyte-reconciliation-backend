@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import get_object_or_404
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
@@ -11,10 +12,10 @@ from insurer.models import Insurer
 from .models import Agent
 from rest_framework import serializers
 from .utils import CustomValidationError
-custom_user = get_user_model()
+from user.models import CustomUser
 
 
-class CreateAgentSerializer(serializers.ModelSerializer):
+class CreateAgentSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=30,
                                        required=True,
                                        allow_null=False,
@@ -44,7 +45,6 @@ class CreateAgentSerializer(serializers.ModelSerializer):
                                      allow_null=False)
 
     class Meta:
-        model = Agent
         fields = [
             "first_name",
             "last_name",
@@ -72,7 +72,7 @@ class CreateAgentSerializer(serializers.ModelSerializer):
         #     if Agent.objects.filter(email=email).exists():
         #         raise CustomValidationError({"error": "Email already exists"})
 
-        if custom_user.objects.filter(email=email).exists():
+        if CustomUser.objects.filter(email=email).exists():
             raise CustomValidationError({"error": "Email already exists!"})
 
         if Agent.objects.filter(home_address=home_address).exists():
@@ -117,12 +117,11 @@ class AgentValidateRefreshToken(serializers.Serializer):
     refresh_token = serializers.CharField()
 
 
-class LoginAgentSerializer(serializers.ModelSerializer):
+class LoginAgentSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
     class Meta:
-        model = Agent
         fields = [
             'email',
             'password'
@@ -163,18 +162,17 @@ class AgentSendNewOTPSerializer(serializers.ModelSerializer):
         ]
 
 
-class AgentForgotPasswordEmailSerializer(serializers.ModelSerializer):
+class AgentForgotPasswordEmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     class Meta:
-        model = Insurer
         fields = [
             'email'
         ]
 
     def validate(self, attrs):
         agent_email = attrs.get('email')
-        if not Agent.objects.filter(email=agent_email).exists():
+        if not CustomUser.objects.filter(email=agent_email, is_agent=True).exists():
             message = {
                 "error": "This email does not exist"
             }
@@ -203,29 +201,28 @@ class AgentForgotPasswordResetSerializer(serializers.Serializer):
             new_password = attrs.get('new_password')
             confirm_password = attrs.get('confirm_password')
 
-            agent_id = force_str(urlsafe_base64_decode(id_base64))
-            agent = Agent.objects.get(id=agent_id)
+            user_id = force_str(urlsafe_base64_decode(id_base64))
+            user = get_object_or_404(CustomUser, pk=user_id)
 
-            if not PasswordResetTokenGenerator().check_token(agent, token):
+            if not PasswordResetTokenGenerator().check_token(user, token):
                 raise AuthenticationFailed('The reset link is invalid', 401)
 
             if new_password != confirm_password:
                 raise ValidationError("Password Mismatch")
 
-            if agent.check_password(raw_password=new_password):
+            if user.check_password(raw_password=new_password):
                 raise ValidationError('Password must not be the same as the last')
 
-            agent.set_password(new_password)
-            agent.save()
+            user.set_password(new_password)
+            user.save()
 
         except Exception as e:
             raise e
         return attrs
 
 
-class ViewAgentDetailsSerializer(serializers.ModelSerializer):
+class ViewAgentDetailsSerializer(serializers.Serializer):
     class Meta:
-        model = Agent
         fields = [
             'id',
             'first_name',
