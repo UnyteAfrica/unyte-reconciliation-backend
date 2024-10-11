@@ -19,13 +19,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from insurer.models import Insurer
 from .models import Agent, AgentProfile
 from .response_serializers import SuccessfulCreateAgentSerializer, SuccessfulLoginAgentSerializer, \
-    SuccessfulViewAgentSerializer, SuccessfulViewAgentProfileSerializer, AgentSuccessfulRefreshAccessTokenSerializer, AgentSuccessfulResetPasswordSerializer, \
+    SuccessfulViewAgentSerializer, SuccessfulViewAgentProfileSerializer, AgentSuccessfulRefreshAccessTokenSerializer, \
+    AgentSuccessfulResetPasswordSerializer, \
     AgentSuccessfulPasswordTokenCheckSerializer, AgentSuccessfulForgotPasswordSerializer, \
     AgentSuccessfulVerifyOTPSerializer, AgentSuccessfulSendNewOTPSerializer
 from .serializer import CreateAgentSerializer, LoginAgentSerializer, AgentSendNewOTPSerializer, AgentOTPSerializer, \
     AgentForgotPasswordEmailSerializer, AgentForgotPasswordResetSerializer, ViewAgentDetailsSerializer, \
     ViewAgentProfile, AgentValidateRefreshToken
 from .utils import generate_otp, verify_otp, gen_absolute_url, generate_unyte_unique_agent_id
+from user.models import CustomUser
 
 
 @swagger_auto_schema(
@@ -60,7 +62,15 @@ def create_agent(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        agent_email = serializer_class.validated_data.get('email')
+        user_email = serializer_class.validated_data.get('email')
+        user_password = serializer_class.validated_data.get('password')
+
+        user = CustomUser.objects.create_user(
+            email=user_email,
+            password=user_password,
+            is_agent=True
+        )
+        user.save()
         uuid = request.query_params.get('invite')
 
         insurer = Insurer.objects.get(unyte_unique_insurer_id=uuid)
@@ -71,16 +81,23 @@ def create_agent(request) -> Response:
         first_name = agent_data.get("first_name")
         last_name = agent_data.get("last_name")
         bank_account = agent_data.get('bank_account')
+        middle_name = agent_data.get('middle_name')
+        home_address = agent_data.get('home_address')
+        bvn = agent_data.get('bvn')
 
         uuad = generate_unyte_unique_agent_id(first_name, bank_account)
-
-        agent = Agent.objects.create_user(**agent_data,
-                                          unyte_unique_agent_id=uuad,
-                                          otp=generate_otp(),
-                                          otp_created_at=datetime.now().time())
+        agent = Agent.objects.create(first_name=first_name,
+                                     last_name=last_name,
+                                     middle_name=middle_name,
+                                     home_address=home_address,
+                                     bank_account=bank_account,
+                                     bvn=bvn,
+                                     affiliated_company=insurer,
+                                     unyte_unique_agent_id=uuad,
+                                     otp=generate_otp(),
+                                     user=user,
+                                     otp_created_at=datetime.now().time())
         agent.save()
-
-        agent = Agent.objects.get(email=agent_email)
         current_year = datetime.now().year
 
         context = {
@@ -94,7 +111,7 @@ def create_agent(request) -> Response:
             subject='Welcome email',
             message=plain_html_message,
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[settings.TO_EMAIL, agent_email],
+            recipient_list=[settings.TO_EMAIL, user_email],
             html_message=html_message
         )
 
@@ -141,8 +158,14 @@ def login_agent(request) -> Response:
                 "error": "Failed to authenticate agent"
             }
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
-        agent = Agent.objects.get(email=agent_email)
+        user = get_object_or_404(CustomUser, email=agent_email)
 
+        if not user.is_agent:
+            return Response({
+                "error": "This user is not an agent"
+            }, status.HTTP_400_BAD_REQUEST)
+
+        agent = get_object_or_404(Agent, user=user)
         otp = generate_otp()
         agent.otp = otp
         agent.otp_created_at = datetime.now().time()
@@ -200,13 +223,19 @@ def request_new_otp(request):
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     agent_email = serializer_class.validated_data.get('email')
+    user = get_object_or_404(CustomUser, email=agent_email)
 
-    if not Agent.objects.filter(email=agent_email).exists():
+    if not user.is_agent:
+        return Response({
+            "error": "This user is not an agent"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    if not CustomUser.objects.filter(email=agent_email).exists():
         return Response({
             "message": f"Email: {agent_email} does not exists"
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    agent = Agent.objects.get(email=agent_email)
+    agent = get_object_or_404(Agent, user=user)
 
     otp = generate_otp()
     agent.otp = otp
@@ -267,8 +296,13 @@ def verify_otp_token(request) -> Response:
         otp = serializer_class.validated_data.get('otp')
         agent_email = serializer_class.validated_data.get('email')
 
-        agent = Agent.objects.get(email=agent_email)
+        user = get_object_or_404(CustomUser, email=agent_email)
+        if not user.is_agent:
+            return Response({
+                "error": "This user is not an agent"
+            }, status.HTTP_400_BAD_REQUEST)
 
+        agent = get_object_or_404(Agent, user=user)
         agent_otp = agent.otp
 
         if agent_otp != otp:
@@ -286,7 +320,7 @@ def verify_otp_token(request) -> Response:
             }
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
-        auth_token = RefreshToken.for_user(agent)
+        auth_token = RefreshToken.for_user(user)
 
         message = {
             "login_status": True,
@@ -319,13 +353,14 @@ def forgot_password_email(request) -> Response:
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    agent = get_object_or_404(Agent, email=serializer_class.validated_data.get('email'))
+    user = get_object_or_404(CustomUser, email=serializer_class.validated_data.get('email'))
+    agent = get_object_or_404(Agent, user=user)
 
     agent_email = serializer_class.validated_data.get('email')
 
     try:
-        id_base64 = urlsafe_base64_encode(smart_bytes(agent.id))
-        token = PasswordResetTokenGenerator().make_token(agent)
+        id_base64 = urlsafe_base64_encode(smart_bytes(user.id))
+        token = PasswordResetTokenGenerator().make_token(user)
         absolute_url = gen_absolute_url(id_base64, token)
         name = f"{agent.first_name} + {agent.last_name}"
 
@@ -374,10 +409,10 @@ def forgot_password_email(request) -> Response:
 @api_view(['GET'])
 def password_token_check(request, id_base64, token):
     try:
-        agent_id = smart_str(urlsafe_base64_decode(id_base64))
-        agent = Agent.objects.get(id=agent_id)
+        user_id = smart_str(urlsafe_base64_decode(id_base64))
+        user = get_object_or_404(CustomUser, pk=user_id)
 
-        if not PasswordResetTokenGenerator().check_token(agent, token):
+        if not PasswordResetTokenGenerator().check_token(user, token):
             return Response({
                 "error": "Token is invalid, request a new one"
             }, status.HTTP_400_BAD_REQUEST)
@@ -467,9 +502,28 @@ def refresh_access_token(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_agent_details(request):
-    agent_id = request.user.id
-    agent = get_object_or_404(Agent, pk=agent_id)
-    serializer_class = ViewAgentDetailsSerializer(agent)
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+
+    if not user.is_agent:
+        return Response({
+            "error": "This user is not an agent"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    agent = get_object_or_404(Agent, user=user)
+
+    data = {
+        "id": agent.id,
+        "first_name": agent.first_name,
+        "last_name": agent.last_name,
+        "middle_name": agent.middle_name,
+        "email": user.email
+    }
+    print(data)
+
+    serializer_class = ViewAgentDetailsSerializer(data=data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer_class.data, status.HTTP_200_OK)
 
@@ -490,12 +544,17 @@ def view_agent_details(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_agent_profile(request) -> Response:
-    agent_id = request.user.id
+    user = get_object_or_404(CustomUser, pk=request.user.id)
 
-    agent = get_object_or_404(Agent, pk=agent_id)
+    if not user.is_agent:
+        return Response({
+            "error": "This user is not an agent"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    agent = get_object_or_404(Agent, user=user)
     agent_profile = get_object_or_404(AgentProfile, agent=agent)
 
-    agent_email = agent.email
+    agent_email = user.email
     agent_first_name = agent.first_name
     agent_last_name = agent.last_name
     agent_middle_name = agent.middle_name
