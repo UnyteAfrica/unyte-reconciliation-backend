@@ -17,7 +17,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 
-from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, ForgotPasswordEmailSerializer, \
+from .serializer import CreateInsurerSerializer, LoginInsurerSerializer, OTPSerializer, InsurerForgotPasswordEmailSerializer, \
     ForgotPasswordResetSerializer, SendNewOTPSerializer, ViewInsurerDetails, AgentSerializer, CustomAgentSerializer, \
     ValidateRefreshToken, UpdateProfileImageSerializer, UploadCSVFileSerializer, InsurerProfileSerializer
 from .response_serializers import SuccessfulCreateInsurerSerializer, SuccessfulLoginInsurerSerializer, \
@@ -316,7 +316,7 @@ def verify_otp_token(request) -> Response:
 @swagger_auto_schema(
     method='POST',
     operation_description='Send Verification OTP to Insurer Email',
-    request_body=ForgotPasswordEmailSerializer,
+    request_body=InsurerForgotPasswordEmailSerializer,
     responses={
         200: openapi.Response(
             'OK',
@@ -328,7 +328,7 @@ def verify_otp_token(request) -> Response:
 )
 @api_view(['POST'])
 def forgot_password_email(request) -> Response:
-    serializer_class = ForgotPasswordEmailSerializer(data=request.data)
+    serializer_class = InsurerForgotPasswordEmailSerializer(data=request.data)
 
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -389,7 +389,7 @@ def forgot_password_email(request) -> Response:
         ),
         400: 'Bad Request'
     },
-    tags=['Insurer']
+    tags=['Auth']
 )
 @api_view(['POST'])
 def reset_password(request) -> Response:
