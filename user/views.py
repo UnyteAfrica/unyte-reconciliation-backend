@@ -1,21 +1,29 @@
+from audioop import reverse
+from datetime import datetime
+
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.utils.encoding import DjangoUnicodeDecodeError, smart_str
 from django.utils.http import urlsafe_base64_decode
 from drf_yasg import openapi
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from agents.models import Agent
-from .agent_utils.utils import agent_sign_in, agent_verify_otp_token, agent_forget_email_password, agent_reset_password
+from insurer.models import Insurer
+from insurer.utils import gen_sign_up_url_for_agent
+from .agent_utils.utils import agent_sign_in, agent_verify_otp_token, agent_forget_email_password, agent_reset_password, \
+    agent_view_details, agent_view_profile
 from .insurer_utils.utils import insurer_sign_in_insurer, insurer_verify_otp_token, insurer_forget_email_password, \
-    insurer_reset_password
+    insurer_reset_password, insurer_view_details, insurer_view_profile, insurer_invite_agents, insurer_invite_agents_csv
 from .models import CustomUser
 from .serializer import SignInSerializer, VerifyOTPSerializer, ForgotPasswordEmailSerializer, \
-    ForgotPasswordResetSerializer, SendNewOTPSerializer, ValidateRefreshToken
+    ForgotPasswordResetSerializer, SendNewOTPSerializer, ValidateRefreshToken, AgentSerializer, CustomAgentSerializer
 from django.contrib.auth import authenticate
 from drf_yasg.utils import swagger_auto_schema
 
@@ -292,3 +300,172 @@ def refresh_access_token(request):
     except Exception as e:
         return Response({"error": f"The error '{e}' occurred"}, status.HTTP_400_BAD_REQUEST)
 
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='User details',
+    responses={
+        200: openapi.Response(
+            'OK',
+            # SuccessfulSendNewOTPSerializer
+        ),
+        400: 'Bad Request'
+    },
+    tags=[SWAGGER_APP_TAG]
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_details(request: Request) -> Response:
+    user_id = request.user.id
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    try:
+        agent, insurer, merchant = user.is_agent, user.is_insurer, user.is_merchant
+
+        if agent:
+            return agent_view_details(user)
+
+        if insurer:
+            return insurer_view_details(user)
+
+        if merchant:
+            pass
+
+    except Exception as e:
+        return Response({
+            "error": str(e)
+        }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='User profile',
+    responses={
+        200: openapi.Response(
+            'OK',
+            # SuccessfulSendNewOTPSerializer
+        ),
+        400: 'Bad Request'
+    },
+    tags=[SWAGGER_APP_TAG]
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_profile(request: Request) -> Response:
+    user_id = request.user.id
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    try:
+        agent, insurer, merchant = user.is_agent, user.is_insurer, user.is_merchant
+
+        if agent:
+            return agent_view_profile(user)
+
+        if insurer:
+            return insurer_view_profile(user)
+
+        if merchant:
+            pass
+
+    except Exception as e:
+        return Response({
+            "error": str(e)
+        }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View all agents invited by an Insurer',
+    responses={
+        200: openapi.Response(
+            'OK',
+            # SuccessfulListAllAgentsSerializer(many=True),
+        ),
+        403: 'Unauthorized',
+        404: 'Not Found',
+        400: 'Bad Request'
+    },
+    tags=[SWAGGER_APP_TAG]
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_all_agents_for_insurer(request):
+    user_id = request.user.id
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    insurer = get_object_or_404(Insurer, user=user)
+    query_set = insurer.agent_set.all()
+
+    serializer_class = AgentSerializer(query_set, many=True)
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Generate SignUp Link for Agents',
+    request_body=CustomAgentSerializer,
+    responses={
+        200: openapi.Response(
+            'OK',
+            # SuccessfulInsurerAgentSignupSerializer,
+        ),
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=[SWAGGER_APP_TAG]
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def invite_agents(request):
+
+    user_id = request.user.id
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        return insurer_invite_agents(user, data=request.data)
+
+    except Exception as e:
+        return Response({
+            "error": str(e)
+        }, status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    method='POST',
+    operation_description='Generate SignUp Link for Agents through CSV file',
+    responses={
+        200: openapi.Response(
+            'OK',
+            # SuccessfulInsurerAgentSignupCSVSerializer,
+        ),
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    tags=[SWAGGER_APP_TAG]
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def invite_agents_csv(request):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+
+    try:
+        return insurer_invite_agents_csv(user, request=request)
+
+    except Exception as e:
+        return Response({
+            "error": str(e)
+        }, status.HTTP_400_BAD_REQUEST)

@@ -5,6 +5,7 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 
+from agents.models import Agent
 from .models import CustomUser
 
 
@@ -112,3 +113,73 @@ class SendNewOTPSerializer(serializers.ModelSerializer):
 
 class ValidateRefreshToken(serializers.Serializer):
     refresh_token = serializers.CharField()
+
+
+class ViewInsurerDetailsSerializer(serializers.Serializer):
+    class Meta:
+        fields = [
+            'id',
+            'business_name',
+            'email',
+        ]
+
+
+class ViewAgentDetailsSerializer(serializers.Serializer):
+    class Meta:
+        fields = [
+            'id',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'email',
+        ]
+
+
+class ViewAgentProfileSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    middle_name = serializers.CharField()
+    profile_image = serializers.CharField()
+
+    class Meta:
+        fields = [
+            'email',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'profile_image',
+        ]
+
+
+class ViewInsurerProfileSerializer(serializers.Serializer):
+    business_name = serializers.CharField()
+    email = serializers.EmailField()
+    profile_image = serializers.CharField()
+
+    class Meta:
+        fields = [
+            'email'
+            'business_name',
+            'profile_image',
+        ]
+
+
+class AgentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Agent
+        fields = [
+            'id',
+            'first_name',
+            'last_name',
+            'email'
+        ]
+
+
+class AgentsSignUpListSerializer(serializers.Serializer):
+    names = serializers.CharField()
+    emails = serializers.EmailField()
+
+
+class CustomAgentSerializer(serializers.Serializer):
+    agents_list = AgentsSignUpListSerializer(many=True)

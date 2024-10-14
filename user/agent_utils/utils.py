@@ -12,9 +12,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from agents.models import Agent
+from agents.models import Agent, AgentProfile
 from agents.utils import generate_otp, verify_otp, gen_absolute_url
 from user.models import CustomUser
+from user.serializer import ViewAgentDetailsSerializer, ViewAgentProfileSerializer
 
 
 def agent_sign_in(user: CustomUser, agent_email: str) -> Response:
@@ -174,3 +175,41 @@ def agent_reset_password(user: CustomUser, insurer_email: str) -> Response:
         return Response({
             "error": str(e)
         }, status.HTTP_400_BAD_REQUEST)
+
+
+def agent_view_details(user: CustomUser) -> Response:
+    agent = get_object_or_404(Agent, user=user)
+
+    data = {
+        "id": agent.id,
+        "email": user.email,
+        "first_name": agent.first_name,
+        "last_name": agent.last_name,
+        "middle_name": agent.middle_name
+    }
+    serializer_class = ViewAgentDetailsSerializer(data=data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+def agent_view_profile(user: CustomUser) -> Response:
+    agent = get_object_or_404(Agent, user=user)
+    agent_profile = get_object_or_404(AgentProfile, agent=agent)
+
+    data = {
+        "id": agent.id,
+        "email": user.email,
+        "first_name": agent.first_name,
+        "last_name": agent.last_name,
+        "middle_name": agent.middle_name,
+        "profile_picture": agent_profile.profile_image.path
+    }
+    serializer_class = ViewAgentProfileSerializer(data=data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+
+    return Response(serializer_class.data, status.HTTP_200_OK)
