@@ -164,7 +164,7 @@ class SendNewOTPSerializer(serializers.ModelSerializer):
         ]
 
 
-class ForgotPasswordEmailSerializer(serializers.Serializer):
+class InsurerForgotPasswordEmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     class Meta:
