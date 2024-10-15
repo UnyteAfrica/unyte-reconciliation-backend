@@ -8,9 +8,7 @@ from .views import (
     request_new_otp,
     user_profile,
     user_details,
-    list_all_agents_for_insurer,
-    invite_agents,
-    invite_agents_csv
+    refresh_access_token
 )
 
 urlpatterns = [
@@ -22,7 +20,5 @@ urlpatterns = [
     path('request-new-otp', request_new_otp, name='request_new_otp_endpoint'),
     path('user-details', user_details, name='user_details_endpoint'),
     path('user-profile', user_profile, name='user_profile_endpoint'),
-    path('all-agents', list_all_agents_for_insurer, name='all-insurer-agents'),
-    path('generate-agent-sign-up', invite_agents, name='generate-signup-link-for-agent'),
-    path('generate-agent-sign-up-csv', invite_agents_csv, name='generate-signup-link-for-agent'),
+    path('refresh-access-token', refresh_access_token, name='refresh_access_token_endpoint')
 ]
