@@ -73,6 +73,7 @@ def agent_verify_otp_token(user: CustomUser, otp: str) -> Response:
 
         message = {
             'login_status': True,
+            'USER_TYPE': 'AGENT',
             'AGENT_ID': agent.id,
             'access_token': str(auth_token.access_token),
             'refresh_token': str(auth_token),
