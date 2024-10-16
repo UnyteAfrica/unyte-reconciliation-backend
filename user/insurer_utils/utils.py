@@ -74,6 +74,7 @@ def insurer_verify_otp_token(user: CustomUser, otp: str) -> Response:
 
         message = {
             'login_status': True,
+            'USER_TYPE': 'INSURER',
             'INSURER_ID': insurer.id,
             'access_token': str(auth_token.access_token),
             'refresh_token': str(auth_token),
