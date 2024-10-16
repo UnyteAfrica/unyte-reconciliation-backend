@@ -26,12 +26,12 @@ from rest_framework.authentication import BasicAuthentication, TokenAuthenticati
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Reconciliation Dashboard API",
-        default_version="v1",
-        description="Reconciliation Dashboard for integrated Insurers and Agents",
-        terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="somtochukwuuchegbu@gmail.com"),
-        license=openapi.License(name="BSD License"),
+        title='Reconciliation Dashboard API',
+        default_version='v1',
+        description='Reconciliation Dashboard for integrated Insurers and Agents',
+        terms_of_service='https://www.google.com/policies/terms/',
+        contact=openapi.Contact(email='somtochukwuuchegbu@gmail.com'),
+        license=openapi.License(name='BSD License'),
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
@@ -40,11 +40,11 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("api/insurer/", include(("insurer.urls", "insurer"), namespace="insurer")),
-    path("api/agent/", include(("agents.urls", "agents"), namespace="agents")),
-    path("api/user/", include(("user.urls", "user"), namespace="user")),
-    path("docs/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
-    path("docs/redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-    path("docs/json/", schema_view.without_ui(cache_timeout=0), name="schema-json"),
+    path('admin/', admin.site.urls),
+    path('api/insurer/', include(('insurer.urls', 'insurer'), namespace='insurer')),
+    path('api/agent/', include(('agents.urls', 'agents'), namespace='agents')),
+    path('api/user/', include(('user.urls', 'user'), namespace='user')),
+    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('docs/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('docs/json/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
 ]

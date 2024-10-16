@@ -9,19 +9,19 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("insurer", "0001_initial"),
+        ('insurer', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="insurer",
-            name="user",
+            model_name='insurer',
+            name='user',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
-            model_name="insurerprofile",
-            name="insurer",
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="insurer.insurer"),
+            model_name='insurerprofile',
+            name='insurer',
+            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='insurer.insurer'),
         ),
     ]

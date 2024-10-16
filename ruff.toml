@@ -2,7 +2,7 @@ include = ["**/*.py"]
 line-length = 119
 
 [format]
-quote-style = "double"
+quote-style = "single"
 docstring-code-format = true
 
 [lint]

@@ -11,7 +11,7 @@ from rest_framework.exceptions import APIException
 load_dotenv(find_dotenv())
 
 
-FRONTED_URL = os.getenv("FRONTEND_URL", "unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app")
+FRONTED_URL = os.getenv('FRONTEND_URL', 'unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app')
 
 
 def generate_otp() -> str:
@@ -19,15 +19,14 @@ def generate_otp() -> str:
     return totp.now()
 
 
-
 class CustomValidationError(APIException):
     status_code = 400
-    default_detail = "Invalid input."
-    default_code = "invalid"
+    default_detail = 'Invalid input.'
+    default_code = 'invalid'
 
     def __init__(self, detail=None, code=None):
         if detail is None:
-            detail = {"error": self.default_detail}
+            detail = {'error': self.default_detail}
         self.detail = detail
 
 
@@ -44,15 +43,15 @@ def verify_otp(otp_created_at) -> bool:
 
 
 def gen_absolute_url(id_base64, token):
-    if os.getenv("ENV") != "dev":
-        return f"https://{FRONTED_URL}/company/reset-password/{id_base64}/{token}"
-    return f"http://{FRONTED_URL}/company/reset-password/{id_base64}/{token}"
+    if os.getenv('ENV') != 'dev':
+        return f'https://{FRONTED_URL}/company/reset-password/{id_base64}/{token}'
+    return f'http://{FRONTED_URL}/company/reset-password/{id_base64}/{token}'
 
 
 def gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id):
-    if os.getenv("ENV") != "dev":
-        return f"https://{FRONTED_URL}{relative_link}?invite={unyte_unique_insurer_id!s}"
-    return f"http://{FRONTED_URL}{relative_link}?invite={unyte_unique_insurer_id!s}"
+    if os.getenv('ENV') != 'dev':
+        return f'https://{FRONTED_URL}{relative_link}?invite={unyte_unique_insurer_id!s}'
+    return f'http://{FRONTED_URL}{relative_link}?invite={unyte_unique_insurer_id!s}'
 
 
 def generate_unyte_unique_insurer_id(business_name: str, business_reg_num: str) -> str:

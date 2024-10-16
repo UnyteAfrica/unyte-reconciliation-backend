@@ -11,17 +11,17 @@ from rest_framework.exceptions import APIException
 load_dotenv(find_dotenv())
 
 
-FRONTED_URL = os.getenv("FRONTEND_URL", "unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app")
+FRONTED_URL = os.getenv('FRONTEND_URL', 'unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app')
 
 
 class CustomValidationError(APIException):
     status_code = 400
-    default_detail = "Invalid input."
-    default_code = "invalid"
+    default_detail = 'Invalid input.'
+    default_code = 'invalid'
 
     def __init__(self, detail=None, code=None):
         if detail is None:
-            detail = {"error": self.default_detail}
+            detail = {'error': self.default_detail}
         self.detail = detail
 
 
@@ -43,9 +43,9 @@ def verify_otp(otp_created_at) -> bool:
 
 
 def gen_absolute_url(id_base64, token):
-    if os.getenv("ENV") != "dev":
-        return f"https://{FRONTED_URL}/agent/reset-password/{id_base64}/{token}"
-    return f"http://{FRONTED_URL}/agent/reset-password/{id_base64}/{token}"
+    if os.getenv('ENV') != 'dev':
+        return f'https://{FRONTED_URL}/agent/reset-password/{id_base64}/{token}'
+    return f'http://{FRONTED_URL}/agent/reset-password/{id_base64}/{token}'
 
 
 def generate_unyte_unique_agent_id(first_name: str, bank_account: str) -> str:

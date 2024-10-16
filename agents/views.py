@@ -1,4 +1,3 @@
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -25,50 +24,50 @@ from .response_serializers import (
 
 
 @swagger_auto_schema(
-    method="POST",
+    method='POST',
     manual_parameters=[
-        openapi.Parameter("invite", openapi.IN_QUERY, description="Insurer unique unyte id", type=openapi.TYPE_STRING),
+        openapi.Parameter('invite', openapi.IN_QUERY, description='Insurer unique unyte id', type=openapi.TYPE_STRING),
     ],
     request_body=CreateAgentSerializer,
-    operation_description="Create New Agent",
+    operation_description='Create New Agent',
     responses={
-        "201": openapi.Response(
-            "Created",
+        '201': openapi.Response(
+            'Created',
             SuccessfulCreateAgentSerializer,
         ),
-        "400": "Bad Request",
+        '400': 'Bad Request',
     },
-    tags=["Agent"],
+    tags=['Agent'],
 )
-@api_view(["POST"])
+@api_view(['POST'])
 def create_agent(request) -> Response:
     serializer_class = CreateAgentSerializer(data=request.data)
 
-    if request.query_params.get("invite") is None:
-        return Response({"error": "Can't find your Insurer's identifier"}, status.HTTP_400_BAD_REQUEST)
+    if request.query_params.get('invite') is None:
+        return Response({'error': "Can't find your Insurer's identifier"}, status.HTTP_400_BAD_REQUEST)
 
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user_email = serializer_class.validated_data.get("email")
-        user_password = serializer_class.validated_data.get("password")
+        user_email = serializer_class.validated_data.get('email')
+        user_password = serializer_class.validated_data.get('password')
 
         user = CustomUser.objects.create_user(email=user_email, password=user_password, is_agent=True)
         user.save()
-        uuid = request.query_params.get("invite")
+        uuid = request.query_params.get('invite')
 
         insurer = Insurer.objects.get(unyte_unique_insurer_id=uuid)
 
         agent_data = serializer_class.validated_data
-        agent_data["affiliated_company"] = insurer
+        agent_data['affiliated_company'] = insurer
 
-        first_name = agent_data.get("first_name")
-        last_name = agent_data.get("last_name")
-        bank_account = agent_data.get("bank_account")
-        middle_name = agent_data.get("middle_name")
-        home_address = agent_data.get("home_address")
-        bvn = agent_data.get("bvn")
+        first_name = agent_data.get('first_name')
+        last_name = agent_data.get('last_name')
+        bank_account = agent_data.get('bank_account')
+        middle_name = agent_data.get('middle_name')
+        home_address = agent_data.get('home_address')
+        bvn = agent_data.get('bvn')
 
         uuad = generate_unyte_unique_agent_id(first_name, bank_account)
         agent = Agent.objects.create(
@@ -87,21 +86,21 @@ def create_agent(request) -> Response:
         agent.save()
         current_year = timezone.now().year
 
-        context = {"current_year": current_year, "name": f"{first_name} {last_name}"}
-        html_message = render_to_string("agents/welcome.html", context=context)
+        context = {'current_year': current_year, 'name': f'{first_name} {last_name}'}
+        html_message = render_to_string('agents/welcome.html', context=context)
         plain_html_message = strip_tags(html_message)
 
         send_mail(
-            subject="Welcome email",
+            subject='Welcome email',
             message=plain_html_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[settings.TO_EMAIL, user_email],
             html_message=html_message,
         )
 
-        message = {"id": agent.id, "message": f"Account successfully created for {first_name} {last_name}"}
+        message = {'id': agent.id, 'message': f'Account successfully created for {first_name} {last_name}'}
         return Response(message, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        message = {"error": e.__str__()}
+        message = {'error': e.__str__()}
         return Response(message, status=status.HTTP_400_BAD_REQUEST)

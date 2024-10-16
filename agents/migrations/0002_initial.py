@@ -8,14 +8,14 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("agents", "0001_initial"),
-        ("insurer", "0001_initial"),
+        ('agents', '0001_initial'),
+        ('insurer', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="agent",
-            name="affiliated_company",
-            field=models.ForeignKey(blank=True, on_delete=django.db.models.deletion.CASCADE, to="insurer.insurer"),
+            model_name='agent',
+            name='affiliated_company',
+            field=models.ForeignKey(blank=True, on_delete=django.db.models.deletion.CASCADE, to='insurer.insurer'),
         ),
     ]
