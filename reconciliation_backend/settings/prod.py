@@ -1,8 +1,10 @@
 # prod.py
 
-from dotenv import load_dotenv, find_dotenv
-from .base import *
 import os
+
+from dotenv import find_dotenv, load_dotenv
+
+from .base import *
 
 load_dotenv(find_dotenv())
 
@@ -14,23 +16,10 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SWAGGER_SETTINGS = {
     'SHOW_REQUEST_HEADERS': True,
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header',
-            'realm': 'api'
-        }
-    },
+    'SECURITY_DEFINITIONS': {'Bearer': {'type': 'apiKey', 'name': 'Authorization', 'in': 'header', 'realm': 'api'}},
     'USE_SESSION_AUTH': False,
     'JSON_EDITOR': True,
-    'SUPPORTED_SUBMIT_METHODS': [
-        'get',
-        'post',
-        'put',
-        'delete',
-        'patch'
-    ],
+    'SUPPORTED_SUBMIT_METHODS': ['get', 'post', 'put', 'delete', 'patch'],
     'DEFAULT_API_URL': 'https://unyte-reconciliation-backend-main-ynoamqpukq-uc.a.run.app',
 }
 
@@ -43,7 +32,6 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT'),
         'HOST': '/cloudsql/unyte-project:us-central1:dev-db',
     }
-
 }
 
 LOGGING = {
@@ -62,7 +50,7 @@ LOGGING = {
             'sensitive_data_filter': {
                 '()': 'reconciliation_backend.filters.SensitiveDataFilter',
             },
-        }
+        },
     },
     'root': {
         'handlers': ['console'],
@@ -72,7 +60,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'debug.log'),
+            'filename': BASE_DIR / 'debug.log',
             'formatter': 'verbose',
         },
         'console': {

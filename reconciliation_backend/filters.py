@@ -11,7 +11,7 @@ class SensitiveDataFilter(logging.Filter):
                 'business_registration_number',
                 'email',
                 'password',
-                'gampID'
+                'gampID',
             ]
             for keyword in sensitive_keywords:
                 if keyword in record.msg:

@@ -5,11 +5,9 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
@@ -23,7 +21,10 @@ class Migration(migrations.Migration):
                 ('bvn', models.CharField(help_text='Agent BVN', max_length=11, unique=True)),
                 ('bank_account', models.CharField(help_text='Agent Bank account', max_length=10, unique=True)),
                 ('unyte_unique_agent_id', models.CharField(max_length=70, unique=True)),
-                ('agent_gampID', models.CharField(blank=True, help_text='GAMP ID for users associated with GAMP', null=True)),
+                (
+                    'agent_gamp_id',
+                    models.CharField(blank=True, help_text='GAMP ID for users associated with GAMP', null=True),
+                ),
                 ('otp', models.CharField(blank=True, max_length=6, null=True, unique=True)),
                 ('otp_created_at', models.TimeField(blank=True, null=True)),
             ],
@@ -36,7 +37,19 @@ class Migration(migrations.Migration):
             name='AgentProfile',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('profile_image', django_resized.forms.ResizedImageField(crop=None, default='profile_pic/default.png', force_format=None, keep_meta=True, quality=-1, scale=None, size=[400, 400], upload_to='profile_pic')),
+                (
+                    'profile_image',
+                    django_resized.forms.ResizedImageField(
+                        crop=None,
+                        default='profile_pic/default.png',
+                        force_format=None,
+                        keep_meta=True,
+                        quality=-1,
+                        scale=None,
+                        size=[400, 400],
+                        upload_to='profile_pic',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'AGENT PROFILE',

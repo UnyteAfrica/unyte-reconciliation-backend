@@ -1,0 +1,79 @@
+include = ["**/*.py"]
+line-length = 119
+
+[format]
+quote-style = "single"
+docstring-code-format = true
+
+[lint]
+exclude = ["**/migrations/*.py"]
+select = [
+    "E",
+    "W",
+    "F",
+    "UP",
+    "B",
+    "SIM",
+    "I",
+    "N",
+    "ASYNC",
+    "S",
+#    "BLE",
+    "FBT",
+    "A",
+    "COM",
+    "C4",
+    "DTZ",
+    "DJ",
+    "EM",
+    "EXE",
+    "ISC",
+    "ICN",
+    "LOG",
+    "G",
+    "INP",
+    "PIE",
+    "T20",
+    "PYI",
+    "PT",
+    "RSE",
+    "RET",
+    "SLF",
+    "TID",
+    "TCH",
+    "ARG",
+    "PTH",
+    "PL",
+#    "TRY",
+    "FLY",
+    "PERF",
+    "FURB",
+    "RUF",
+]
+ignore = ["COM812", "ISC001", "DJ008", "PLR0913", "PLR2004", "RUF012", "ARG002", "EM101"]
+
+[lint.isort]
+length-sort = true
+combine-as-imports = true
+length-sort-straight = true
+section-order = ["future", "standard-library", "third-party","django", "restframework","agents", "insurer", "merchant", "user", "first-party", "local-folder"]
+
+[lint.isort.sections]
+"agents" = ["agents"]
+"insurer" = ["insurer"]
+"reconciliation_backend" = ["reconciliation_backend"]
+"merchant" = ["merchant"]
+"user" = ["user"]
+"django" = ["django"]
+"restframework" = ["rest_framework"]
+
+[lint.pycodestyle]
+max-line-length = 120
+
+[lint.per-file-ignores]
+"**/tests.py" = ["S101", "S105", "S106", "ANN201", "PT004", "FBT002"]
+"**/manage.py" = ["S101", "S105", "S106", "ANN201", "PT004"]
+"**/views.py" = ["ARG001", "PLR0911"]
+"**/settings/*.py" = ["F403", "S104", "F405", "S105", "S108"]
+"**/signals.py" = ["ARG001"]
+"loader.py" = ["G004"]

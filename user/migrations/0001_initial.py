@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -18,19 +17,63 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('password', models.CharField(max_length=128, verbose_name='password')),
                 ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
+                (
+                    'is_superuser',
+                    models.BooleanField(
+                        default=False,
+                        help_text='Designates that this user has all permissions without explicitly assigning them.',
+                        verbose_name='superuser status',
+                    ),
+                ),
                 ('email', models.EmailField(max_length=254, unique=True)),
                 ('reference_id', models.CharField(help_text='Reference id for new user', max_length=50)),
-                ('is_active', models.BooleanField(default=True, help_text='Set to know active users on the platform. Instead of deleting a user, set to False')),
+                (
+                    'is_active',
+                    models.BooleanField(
+                        default=True,
+                        help_text='Set to know active users on the platform. Instead of deleting a user, set to False',
+                    ),
+                ),
                 ('is_staff', models.BooleanField(default=False, help_text='Defined to know if a user is a staff')),
                 ('created_at', models.DateTimeField(auto_now_add=True, help_text='Date user was created')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='Date when any update is made to the user model')),
-                ('is_verified', models.BooleanField(default=False, help_text='Check to know whether an agent or insurer is verified')),
-                ('is_insurer', models.BooleanField(default=False, help_text='Check to see if user is of type insurer')),
+                (
+                    'updated_at',
+                    models.DateTimeField(auto_now=True, help_text='Date when any update is made to the user model'),
+                ),
+                (
+                    'is_verified',
+                    models.BooleanField(
+                        default=False, help_text='Check to know whether an agent or insurer is verified'
+                    ),
+                ),
+                (
+                    'is_insurer',
+                    models.BooleanField(default=False, help_text='Check to see if user is of type insurer'),
+                ),
                 ('is_agent', models.BooleanField(default=False, help_text='Check to see if user is of type agent')),
                 ('is_merchant', models.BooleanField(default=False, help_text='Check to see if user if type merchant')),
-                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
-                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
+                (
+                    'groups',
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+                        related_name='user_set',
+                        related_query_name='user',
+                        to='auth.group',
+                        verbose_name='groups',
+                    ),
+                ),
+                (
+                    'user_permissions',
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text='Specific permissions for this user.',
+                        related_name='user_set',
+                        related_query_name='user',
+                        to='auth.permission',
+                        verbose_name='user permissions',
+                    ),
+                ),
             ],
             options={
                 'abstract': False,
