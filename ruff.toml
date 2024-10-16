@@ -76,4 +76,4 @@ max-line-length = 120
 "**/views.py" = ["ARG001", "PLR0911"]
 "**/settings/*.py" = ["F403", "S104", "F405", "S105", "S108"]
 "**/signals.py" = ["ARG001"]
-
+"loader.py" = ["G004"]
