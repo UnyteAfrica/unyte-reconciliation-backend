@@ -1,4 +1,4 @@
-LINT_PATHS = agents/ insurer/ user/ reconciliation_backend/ loader.py manage.py
+LINT_PATHS = agents/ insurer/ user/ reconciliation_backend/ merchants/ loader.py manage.py
 
 ifneq (,$(wildcard ./.env.local))
     include .env.local
