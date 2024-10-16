@@ -30,7 +30,7 @@ DATABASES = {
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASS'),
         'PORT': os.getenv('DB_PORT'),
-        'HOST': '/cloudsql/unyte-project:us-east1:dev-db',
+        'HOST': '/cloudsql/unyte-project:us-central1:dev-db',
     }
 }
 
