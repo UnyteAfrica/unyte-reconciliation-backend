@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import CustomUser
 
 
@@ -13,5 +14,6 @@ class CustomUserAdminModel(admin.ModelAdmin):
             return "MERCHANT"
         if obj.is_insurer:
             return "INSURER"
+        return None
 
-    get_user_type.short_description = 'user_type'
+    get_user_type.short_description = "user_type"

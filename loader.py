@@ -1,10 +1,11 @@
+import os
+import sys
 import json
 import logging
-import sys
+
+from gcloud import storage
 
 from main import RandomDataDBLoader
-from gcloud import storage
-import os
 
 current_dir = os.getcwd()
 credentials_path = os.path.join(current_dir, 'unyte-project-b1cf8568d4c2.json')
@@ -43,7 +44,7 @@ class GCPLoader:
         exists: int = self._check_bucket_exists_and_update_bucket_lists()
         if exists != 200:
             return exists
-        pass
+        return None
 
     def load_all_products(self, insurance_company: str) -> None | int:
         exists: int = self._check_bucket_exists_and_update_bucket_lists()
@@ -61,13 +62,10 @@ class GCPLoader:
                 policies = json.loads(blob.download_as_string().decode('utf-8'))
                 if insurer_name != insurance_company:
                     logging.info(f"Not processing policies from {insurer_name} currently")
-                    pass
                 if insurer_name != insurance_company:
                     logging.info(f"Not processing policies from {insurer_name} currently")
-                    pass
                 elif insurer_policy != 'policies':
                     logging.info(f"Not processing {insurer_policy} from {insurer_name}")
-                    pass
                 else:
                     logging.info(f"Currently processing {len(policies)} policies in {insurer_policy_name} from insurer: {insurer_name}")
                     for policy in policies:
@@ -75,6 +73,7 @@ class GCPLoader:
 
             except Exception as e:
                 logging.warning(f'{e}')
+        return None
 
     def load_insurance_product_and_product_type(self, db_loader: RandomDataDBLoader, insurance_email: str) -> None:
         db_loader.create_arbitrary_products_for_insurer(insurance_email, self.products)
@@ -102,7 +101,6 @@ class GCPLoader:
 
 
 def main():
-    pass
     db_loader = RandomDataDBLoader()
     main_loader = GCPLoader('policies-and-quotes')
 
@@ -112,8 +110,6 @@ def main():
     main_loader.load_all_products(insurance_company)
     main_loader.load_insurance_product_and_product_type(db_loader, insurance_email)
 
-    print(main_loader.validate_load_all_products_for_insurer(db_loader, insurance_email))
-    print(main_loader.validate_load_all_product_types_for_insurer(db_loader, insurance_email))
 
 
 if __name__ == "__main__":

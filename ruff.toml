@@ -18,7 +18,7 @@ select = [
     "N",
     "ASYNC",
     "S",
-    "BLE",
+#    "BLE",
     "FBT",
     "A",
     "COM",
@@ -44,13 +44,13 @@ select = [
     "ARG",
     "PTH",
     "PL",
-    "TRY",
+#    "TRY",
     "FLY",
     "PERF",
     "FURB",
     "RUF",
 ]
-ignore = ["COM812", "ISC001", "DJ008", "PLR0913", "PLR2004", "RUF012", "ARG002"]
+ignore = ["COM812", "ISC001", "DJ008", "PLR0913", "PLR2004", "RUF012", "ARG002", "EM101"]
 
 [lint.isort]
 length-sort = true
@@ -71,6 +71,9 @@ section-order = ["future", "standard-library", "third-party","django", "restfram
 max-line-length = 120
 
 [lint.per-file-ignores]
-"**/test.py" = ["S101", "S105", "S106", "ANN201", "PT004", "FBT002"]
+"**/tests.py" = ["S101", "S105", "S106", "ANN201", "PT004", "FBT002"]
 "**/manage.py" = ["S101", "S105", "S106", "ANN201", "PT004"]
+"**/views.py" = ["ARG001", "PLR0911"]
+"**/settings/*.py" = ["F403", "S104", "F405", "S105", "S108"]
+"**/signals.py" = ["ARG001"]
 

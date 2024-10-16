@@ -159,7 +159,7 @@ class RandomDataDBLoader:
                     "password": 'testing321',
                     "unyte_unique_insurer_id": generate_unyte_unique_insurer_id(business_name,
                                                                                 business_registration_number),
-                    "insurer_gampID": ""
+                    "insurer_gamp_id": ""
                 }
                 if env == 'dev':
                     endpoint = 'insurer/sign-up'
@@ -220,7 +220,7 @@ class RandomDataDBLoader:
                     "bank_account": bank_account,
                     "unyte_unique_agent_id": agent_uuid,
                     "password": password,
-                    "agent_gampID": ""
+                    "agent_gamp_id": ""
                 }
                 endpoint = f'agent/sign-up?invite={affiliated_company.unyte_unique_insurer_id}'
                 endpoint = endpoint.replace("+", '%2B')
