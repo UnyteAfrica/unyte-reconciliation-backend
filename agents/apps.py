@@ -6,4 +6,4 @@ class AgentsConfig(AppConfig):
     name = 'agents'
 
     def ready(self):
-        pass
+        import agents.signals  # noqa
