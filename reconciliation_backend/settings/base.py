@@ -1,14 +1,13 @@
 # base.py
 
 import os
-from datetime import timedelta
 from pathlib import Path
-
-from django.conf import settings
-
+from datetime import timedelta
 
 from google.cloud import storage
 from google.oauth2 import service_account
+
+from django.conf import settings
 
 settings.configure()
 
@@ -34,11 +33,11 @@ INSTALLED_APPS = [
     'user',
     'insurer',
     'agents',
-    'django_extensions'
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -48,64 +47,49 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend'
-]
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = False
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://0.0.0.0:8080",
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://0.0.0.0:8080',
     'http://localhost:3004',
-    "https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app",
-    "https://unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app"
+    'https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app',
+    'https://unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app',
 ]
 
 CORS_ORIGIN_WHITELIST = [
     'localhost',
-    "https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app",
-    "https://unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app",
-    'http://localhost:3004'
+    'https://unyte-reconciliation-backend-dev-ynoamqpukq-uc.a.run.app',
+    'https://unyte-reconciliations-frontend-dev-ynoamqpukq-uc.a.run.app',
+    'http://localhost:3004',
 ]
 
 CORS_ALLOW_METHODS = (
-    "GET",
-    "PATCH",
-    "POST",
-    "PUT",
+    'GET',
+    'PATCH',
+    'POST',
+    'PUT',
 )
 
 CORS_ALLOW_HEADERS = (
-    "accept",
-    "authorization",
-    "content-type",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
+    'accept',
+    'authorization',
+    'content-type',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 )
 
 SWAGGER_SETTINGS = {
     'SHOW_REQUEST_HEADERS': True,
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header',
-            'realm': 'api'
-        }
-    },
+    'SECURITY_DEFINITIONS': {'Bearer': {'type': 'apiKey', 'name': 'Authorization', 'in': 'header', 'realm': 'api'}},
     'USE_SESSION_AUTH': False,
     'JSON_EDITOR': True,
-    'SUPPORTED_SUBMIT_METHODS': [
-        'get',
-        'post',
-        'put',
-        'delete',
-        'patch'
-    ],
+    'SUPPORTED_SUBMIT_METHODS': ['get', 'post', 'put', 'delete', 'patch'],
 }
 
 SIMPLE_JWT = {
@@ -114,12 +98,10 @@ SIMPLE_JWT = {
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework_simplejwt.authentication.JWTAuthentication',),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
-    ]
+    ],
 }
 
 ROOT_URLCONF = 'reconciliation_backend.urls'
@@ -149,8 +131,8 @@ DATABASES = {
     }
 }
 
-DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 
 GS_BUCKET_NAME = 'reconciliations-dashboard'
 STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/static/'
@@ -159,14 +141,16 @@ STATIC_URL = 'https://storage.googleapis.com/reconciliations-dashboard/static/'
 credentials_file_path = os.getenv('GS_CREDENTIALS_PATH')
 
 if not credentials_file_path:
-    credentials_file_path = os.environ.setdefault('GS_CREDENTIALS_PATH', 'gs://reconciliations-dashboard/new-.json-sa.json')
+    credentials_file_path = os.environ.setdefault(
+        'GS_CREDENTIALS_PATH', 'gs://reconciliations-dashboard/new-.json-sa.json'
+    )
 
 # Download the service account file from GCS if it's a GCS URL
 if credentials_file_path.startswith('gs://'):
     bucket_name, blob_name = credentials_file_path.replace('gs://', '').split('/', 1)
 
     # Define the temporary local file path
-    local_temp_file_path = '/tmp/service_account.json'
+    local_temp_file_path = Path('/tmp/service_account.json').resolve()
 
     storage_client = storage.Client(project='unyte-project')
 
@@ -179,7 +163,7 @@ if credentials_file_path.startswith('gs://'):
     GS_CREDENTIALS = service_account.Credentials.from_service_account_file(local_temp_file_path)
 
     # Optionally, you can delete the temporary file after creating the credentials
-    os.remove(local_temp_file_path)
+    local_temp_file_path.unlink()
 else:
     # Use the credentials file directly if it's a local path
     GS_CREDENTIALS = service_account.Credentials.from_service_account_file(credentials_file_path)
@@ -210,7 +194,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'

@@ -1,16 +1,8 @@
-from datetime import datetime
-
-from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
-from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
+from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save
 
-from .models import Insurer
-from .models import InsurerProfile
-
-from django.conf import settings
+from .models import Insurer, InsurerProfile
 
 custom_user = get_user_model()
 
