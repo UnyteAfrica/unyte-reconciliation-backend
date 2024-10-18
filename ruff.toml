@@ -71,7 +71,7 @@ section-order = ["future", "standard-library", "third-party","django", "restfram
 max-line-length = 120
 
 [lint.per-file-ignores]
-"**/tests.py" = ["S101", "S105", "S106", "ANN201", "PT004", "FBT002"]
+"**/tests.py" = ["S101", "S105", "S106", "ANN201", "FBT002", "PT", "B017"]
 "**/manage.py" = ["S101", "S105", "S106", "ANN201", "PT004"]
 "**/views.py" = ["ARG001", "PLR0911"]
 "**/settings/*.py" = ["F403", "S104", "F405", "S105", "S108"]

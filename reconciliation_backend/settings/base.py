@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'user',
     'insurer',
     'agents',
+    'merchants',
     'django_extensions',
 ]
 
