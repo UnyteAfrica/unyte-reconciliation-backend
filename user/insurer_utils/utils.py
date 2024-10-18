@@ -1,6 +1,7 @@
 import csv
 from io import TextIOWrapper
 
+from django.urls import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.conf import settings
@@ -227,7 +228,7 @@ def insurer_invite_agents_csv(user: CustomUser, request: Request) -> Response:
     company_name = insurer.business_name
     current_year = timezone.now().year
 
-    relative_link = '/user/agents/api'
+    relative_link = reverse('agents:register_agent')
     link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
 
     try:
