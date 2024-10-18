@@ -1,8 +1,5 @@
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model
-from user.models import CustomUser
-from .models import Insurer
 
 
 class InsurerAppTest(TestCase):
@@ -11,12 +8,12 @@ class InsurerAppTest(TestCase):
         'admin_name': 'unyte_admin',
         'business_registration_number': '12345678',
         'email': 'testing321@gmail.com',
-        'password': 'password'
+        'password': 'password',
     }
 
     def test_create_insurer(self) -> None:
         route = reverse('insurer:register_insurer')
-        
+
         data = {
             'business_name': self.INSURER_DICT.get('business_name'),
             'admin_name': self.INSURER_DICT.get('admin_name'),
