@@ -41,6 +41,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/merchants/', include(('merchants.urls', 'merchants'), namespace='merchants')),
     path('api/insurer/', include(('insurer.urls', 'insurer'), namespace='insurer')),
     path('api/agent/', include(('agents.urls', 'agents'), namespace='agents')),
     path('api/user/', include(('user.urls', 'user'), namespace='user')),
