@@ -27,7 +27,7 @@ class Merchant(models.Model):
         help_text='The contact email address of the business, for support if any',
     )
     is_active = models.BooleanField(default=False, help_text='Designates if the merchant is active')
-    verified = models.BooleanField(default=False, help_text='Designates if the merchant is verified', null=True)
+    verified = models.BooleanField(default=False, help_text='Designates if the merchant is verified')
     tax_identification_number = models.CharField(
         'TIN',
         null=True,
