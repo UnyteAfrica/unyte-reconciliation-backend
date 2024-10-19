@@ -206,14 +206,14 @@ def invite_agents(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def invite_agents_csv(request):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    if not user.is_insurer:
+        return Response({'error': 'This user is not an insurer'}, status.HTTP_400_BAD_REQUEST)
+
     serializer_class = UploadCSVFileSerializer(data=request.data)
 
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
-
-    user = get_object_or_404(CustomUser, pk=request.user.id)
-    if not user.is_insurer:
-        return Response({'error': 'This user is not an insurer'}, status.HTTP_400_BAD_REQUEST)
 
     insurer = get_object_or_404(Insurer, user=user)
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id

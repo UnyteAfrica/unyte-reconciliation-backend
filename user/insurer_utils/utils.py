@@ -1,10 +1,10 @@
 import csv
 from io import TextIOWrapper
 
-from django.urls import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.conf import settings
+from django.urls import reverse
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -231,7 +231,7 @@ def insurer_invite_agents_csv(user: CustomUser, request: Request) -> Response:
         return Response({
             "error": "This user is not an insurer"
         }, status.HTTP_400_BAD_REQUEST)
-    
+
     serializer_class = UploadCSVFileSerializer(data=request.data)
     insurer = get_object_or_404(Insurer, user=user)
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
