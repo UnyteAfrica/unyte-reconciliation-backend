@@ -14,6 +14,6 @@ class CreateMerchantAPIView(GenericAPIView):
         serializer.save()
 
         return Response(
-            {'data': serializer.data, 'message': 'Merchant account created successfully'},
+            {'data': None, 'message': 'Merchant account created successfully'},
             status=status.HTTP_201_CREATED,
         )
