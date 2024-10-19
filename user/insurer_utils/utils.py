@@ -1,6 +1,7 @@
 import csv
 from io import TextIOWrapper
 
+from django.urls import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.conf import settings
@@ -177,6 +178,11 @@ def insurer_view_profile(user: CustomUser) -> Response:
 
 
 def insurer_invite_agents(user: CustomUser, data) -> Response:
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insuerer"
+        }, status.HTTP_400_BAD_REQUEST)
+
     serializer_class = CustomAgentSerializer(data=data)
     insurer = get_object_or_404(Insurer, user=user)
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
@@ -221,13 +227,18 @@ def insurer_invite_agents(user: CustomUser, data) -> Response:
 
 
 def insurer_invite_agents_csv(user: CustomUser, request: Request) -> Response:
+    if not user.is_insurer:
+        return Response({
+            "error": "This user is not an insurer"
+        }, status.HTTP_400_BAD_REQUEST)
+    
     serializer_class = UploadCSVFileSerializer(data=request.data)
     insurer = get_object_or_404(Insurer, user=user)
     unyte_unique_insurer_id = insurer.unyte_unique_insurer_id
     company_name = insurer.business_name
     current_year = timezone.now().year
 
-    relative_link = '/user/agents/api'
+    relative_link = reverse('agents:register_agent')
     link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
 
     try:
