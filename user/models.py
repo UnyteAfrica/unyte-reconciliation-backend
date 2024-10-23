@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 
 
 class CustomUserManager(BaseUserManager):
@@ -28,34 +28,26 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=40,
-                                  blank=True,
-                                  null=True,
-                                  help_text='User firstname')
-    middle_name = models.CharField(max_length=40,
-                                   blank=True,
-                                   null=True,
-                                   help_text='User middle name')
-    last_name = models.CharField(max_length=40,
-                                 blank=True,
-                                 null=True,
-                                 help_text='User lastname')
-    is_active = models.BooleanField(default=True,
-                                    help_text='Set to know active users on the platform. Instead of deleting a user, '
-                                              'set to False')
-    is_staff = models.BooleanField(default=False,
-                                   help_text='Defined to know if a user is a staff')
-    created_at = models.DateTimeField(auto_now_add=True,
-                                      help_text='Date user was created')
-    updated_at = models.DateTimeField(auto_now=True,
-                                      help_text='Date when any update is made to the user model')
-    is_verified = models.BooleanField(default=False,
-                                      help_text='Check to know whether an agent or insurer is verified')
+    reference_id = models.CharField(max_length=50, null=False, blank=False, help_text='Reference id for new user')
+    is_active = models.BooleanField(
+        default=True, help_text='Set to know active users on the platform. Instead of deleting a user, ' 'set to False'
+    )
+    is_staff = models.BooleanField(default=False, help_text='Defined to know if a user is a staff')
+    created_at = models.DateTimeField(auto_now_add=True, help_text='Date user was created')
+    updated_at = models.DateTimeField(auto_now=True, help_text='Date when any update is made to the user model')
+    is_verified = models.BooleanField(default=False, help_text='Check to know whether an agent or insurer is verified')
+    is_insurer = models.BooleanField(default=False, help_text='Check to see if user is of type insurer')
+    is_agent = models.BooleanField(default=False, help_text='Check to see if user is of type agent')
+    is_merchant = models.BooleanField(default=False, help_text='Check to see if user if type merchant')
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+    class Meta:
+        verbose_name = 'USER'
+        verbose_name_plural = 'USERS'
 
     def __str__(self):
         return self.email

@@ -8,10 +8,12 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/wsgi/
 """
 
 import os
-from dotenv import load_dotenv, find_dotenv
+
+from dotenv import find_dotenv, load_dotenv
+
+from django.conf import settings
 from django.core.wsgi import get_wsgi_application
 from django.contrib.staticfiles.handlers import StaticFilesHandler
-from django.conf import settings
 
 load_dotenv(find_dotenv())
 
@@ -28,7 +30,4 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'reconciliation_backend.settings
 
 # application = get_wsgi_application()
 
-if settings.DEBUG:
-    application = get_wsgi_application()
-else:
-    application = StaticFilesHandler(get_wsgi_application())
+application = get_wsgi_application() if settings.DEBUG else StaticFilesHandler(get_wsgi_application())

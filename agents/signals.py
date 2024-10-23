@@ -1,7 +1,7 @@
-from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import Agent
-from .models import AgentProfile
+from django.db.models.signals import post_save
+
+from .models import Agent, AgentProfile
 
 
 @receiver(post_save, sender=Agent)
@@ -11,5 +11,5 @@ def create_profile(instance, created, **kwargs):
 
 
 @receiver(post_save, sender=Agent)
-def create_profile(instance, **kwargs):
+def save_profile(instance, **kwargs):
     instance.agentprofile.save()

@@ -50,7 +50,10 @@ jobs:
 
       - name: Install Setuptools
         run: pip install --upgrade setuptools
-      
+
+      - name: Run linting
+        run: make lint
+
       - name: Run test
         env:
           DATABASE_HOST_TEST: localhost

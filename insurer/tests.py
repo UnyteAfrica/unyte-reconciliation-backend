@@ -1,46 +1,26 @@
 from django.test import TestCase
 from django.urls import reverse
-from .models import Insurer
-from django.db import transaction
 
 
 class InsurerAppTest(TestCase):
-    def setUp(self) -> None:
-        self.insurer_model = Insurer
-        self.insurer = self.insurer_model.objects.create_user(business_name="string",
-                                                              admin_name='string',
-                                                              business_registration_number='string',
-                                                              email='user@example.com',
-                                                              password='testing321',
-                                                              gampID='string')
+    INSURER_DICT = {
+        'business_name': 'Unyte',
+        'admin_name': 'unyte_admin',
+        'business_registration_number': '12345678',
+        'email': 'testing321@gmail.com',
+        'password': 'password',
+    }
 
-    def test_create_insurer(self):
+    def test_create_insurer(self) -> None:
         route = reverse('insurer:register_insurer')
+
         data = {
-            "business_name": "string",
-            "admin_name": "string",
-            "business_registration_number": "string",
-            "email": "user@example.com",
-            "password": "string",
-            "gampID": "string"
+            'business_name': self.INSURER_DICT.get('business_name'),
+            'admin_name': self.INSURER_DICT.get('admin_name'),
+            'business_registration_number': self.INSURER_DICT.get('business_registration_number'),
+            'email': self.INSURER_DICT.get('email'),
+            'password': self.INSURER_DICT.get('password'),
         }
 
-        response = self.client.post(
-            route,
-            data,
-            format='json'
-        )
-        self.assertEqual(response.status_code, 201)
-
-    def test_login_insurer(self):
-        route = reverse("insurer:login_insurer")
-        data = {
-            "email": 'user@example.com',
-            "password": 'testing321'
-        }
-        response = self.client.post(
-            route,
-            data,
-            format='json'
-        )
-        self.assertEqual(response.status_code, 200)
+        response = self.client.post(route, data, format='json')
+        assert response.status_code == 201

@@ -6,4 +6,4 @@ class InsurerConfig(AppConfig):
     name = 'insurer'
 
     def ready(self):
-        import insurer.signals
+        import insurer.signals  # noqa
