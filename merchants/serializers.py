@@ -1,12 +1,14 @@
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
 from merchants.models import Merchant
 
+
 class MerchantSerializer(serializers.ModelSerializer):
     business_email = serializers.ReadOnlyField(source='user.email')
+
     class Meta:
         model = Merchant
         fields = (
@@ -22,6 +24,7 @@ class MerchantSerializer(serializers.ModelSerializer):
             'registration_number',
             'tax_identification_number',
         )
+
 
 class CreateMerchantSerializer(serializers.ModelSerializer):
     email_address = serializers.EmailField(required=True)
