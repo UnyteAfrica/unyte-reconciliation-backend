@@ -65,3 +65,5 @@ class Merchant(models.Model):
         editable=False,
         default=uuid.uuid4,
     )
+    otp = models.CharField(unique=True, max_length=6, blank=True, null=True)
+    otp_created_at = models.TimeField(blank=True, null=True)

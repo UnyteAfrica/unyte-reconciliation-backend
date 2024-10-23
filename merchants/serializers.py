@@ -39,3 +39,5 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
             is_merchant=True,
         )
         return Merchant.objects.create(user=user, **validated_data)
+
+

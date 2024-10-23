@@ -96,6 +96,15 @@ class ValidateRefreshToken(serializers.Serializer):
     refresh_token = serializers.CharField()
 
 
+class ViewMerchantDetailsSerializer(serializers.Serializer):
+    class Meta:
+        fields = [
+            'id',
+            'name',
+            'email',
+        ]
+
+
 class ViewInsurerDetailsSerializer(serializers.Serializer):
     class Meta:
         fields = [
