@@ -179,9 +179,7 @@ def insurer_view_profile(user: CustomUser) -> Response:
 
 def insurer_invite_agents(user: CustomUser, data) -> Response:
     if not user.is_insurer:
-        return Response({
-            "error": "This user is not an insuerer"
-        }, status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'This user is not an insurer'}, status.HTTP_400_BAD_REQUEST)
 
     serializer_class = CustomAgentSerializer(data=data)
     insurer = get_object_or_404(Insurer, user=user)
@@ -228,9 +226,7 @@ def insurer_invite_agents(user: CustomUser, data) -> Response:
 
 def insurer_invite_agents_csv(user: CustomUser, request: Request) -> Response:
     if not user.is_insurer:
-        return Response({
-            "error": "This user is not an insurer"
-        }, status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'This user is not an insurer'}, status.HTTP_400_BAD_REQUEST)
 
     serializer_class = UploadCSVFileSerializer(data=request.data)
     insurer = get_object_or_404(Insurer, user=user)
