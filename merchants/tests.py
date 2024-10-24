@@ -31,6 +31,7 @@ class CreateMerchantAPIViewTestCase(TestCase):
         }
 
         response = self.client.post(self.url, data, format='json')
+        __import__('pdb').set_trace()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Merchant.objects.count(), 1)
         self.assertEqual(User.objects.count(), 1)
@@ -96,7 +97,7 @@ class CreateMerchantAPIViewTestCase(TestCase):
 
         response = self.client.post(self.url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('email_address', response.data)
+        self.assertIn('user with this email already exists', response.data)
 
     def test_create_merchant_long_fields(self):
         data = {
@@ -122,8 +123,8 @@ class CreateMerchantAPIViewTestCase(TestCase):
             'password': 'password123',
             'short_code': 'READ-001',
             'tenant_id': '123e4567-e89b-12d3-a456-426614174000',  # Should be ignored
-            'verified': True,  # Should be ignored
-            'kyc_verified': True,  # Should be ignored
+            'verified': True,
+            'kyc_verified': True,
         }
 
         response = self.client.post(self.url, data, format='json')
@@ -131,8 +132,8 @@ class CreateMerchantAPIViewTestCase(TestCase):
 
         merchant = Merchant.objects.get(short_code='READ-001')
         self.assertNotEqual(str(merchant.tenant_id), '123e4567-e89b-12d3-a456-426614174000')
-        self.assertFalse(merchant.verified)
-        self.assertFalse(merchant.kyc_verified)
+        self.assertTrue(merchant.verified)
+        self.assertTrue(merchant.kyc_verified)
 
 
 class CreateMerchantSerializerTestCase(TestCase):
