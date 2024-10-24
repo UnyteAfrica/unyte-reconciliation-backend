@@ -20,7 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from user.models import CustomUser
 
 from .utils import verify_otp, gen_sign_up_url_for_agent
-from .models import Insurer, InsurerProfile
+from .models import Insurer, InsurerProfile, InvitedAgents
 from .serializer import (
     AgentSerializer,
     CustomAgentSerializer,
@@ -173,6 +173,11 @@ def invite_agents(request):
             'unyte_unique_insurer_id': unyte_unique_insurer_id,
             'name': name,
         }
+        invited_agents = InvitedAgents.objects.create(
+            insurer=insurer,
+            agent_email=email
+        )
+        invited_agents.save()
         html_message = render_to_string('invitation.html', context)
         email_recipients.append(email)
         """
@@ -261,6 +266,11 @@ def invite_agents_csv(request):
                     'name': agent_name,
                 }
                 html_message = render_to_string('invitation.html', context)
+                invited_agents = InvitedAgents.objects.create(
+                    insurer=insurer,
+                    agent_email=agent_email
+                )
+                invited_agents.save()
                 """
                 Sends email to the email of agents
                 """
