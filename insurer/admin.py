@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Insurer, InsurerProfile
+from .models import Insurer, InvitedAgents, InsurerProfile
 
 
 @admin.register(Insurer)
@@ -33,3 +33,13 @@ class InsurerProfileModelAdmin(admin.ModelAdmin):
     get_insurer_email.short_description = 'email'
     get_insurer_admin_name.short_description = 'admin_name'
     get_insurer_profile_picture.short_description = 'profile_picture'
+
+
+@admin.register(InvitedAgents)
+class InvitedAgentsModelAdmin(admin.ModelAdmin):
+    list_display = 'agent_email', 'get_insurer_business_name'
+
+    def get_insurer_business_name(self, obj) -> str:
+        return obj.insurer.business_name
+
+    get_insurer_business_name.short_description = 'INSURER_BUSINESS_NAME'

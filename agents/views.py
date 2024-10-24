@@ -4,6 +4,7 @@ from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
 from django.utils import timezone
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 
@@ -11,7 +12,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from insurer.models import Insurer
+from insurer.models import Insurer, InvitedAgents
 
 from user.models import CustomUser
 
@@ -50,17 +51,27 @@ def create_agent(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        uuid = request.query_params.get('invite')
+        insurer = get_object_or_404(Insurer, unyte_unique_insurer_id=uuid)
+
         user_email = serializer_class.validated_data.get('email')
         user_password = serializer_class.validated_data.get('password')
 
+        """
+        Check to see if the agent who is attempting to register is under the list of invited agents.
+        """
+        insurer_invited_agents_objs = InvitedAgents.objects.filter(insurer=insurer).values()
+        insurer_invited_agents = [email.get('agent_email') for email in insurer_invited_agents_objs]
+
+        if user_email not in insurer_invited_agents:
+            return Response({
+                "error": "Unauthorized email. No Insurer has invited an agent with this email"
+            }, status.HTTP_400_BAD_REQUEST)
+
         user = CustomUser.objects.create_user(email=user_email, password=user_password, is_agent=True)
         user.save()
-        uuid = request.query_params.get('invite')
-
-        insurer = Insurer.objects.get(unyte_unique_insurer_id=uuid)
 
         agent_data = serializer_class.validated_data
-        agent_data['affiliated_company'] = insurer
 
         first_name = agent_data.get('first_name')
         last_name = agent_data.get('last_name')
@@ -68,8 +79,10 @@ def create_agent(request) -> Response:
         middle_name = agent_data.get('middle_name')
         home_address = agent_data.get('home_address')
         bvn = agent_data.get('bvn')
+        agent_data['affiliated_company'] = insurer
 
         uuad = generate_unyte_unique_agent_id(first_name, bank_account)
+
         agent = Agent.objects.create(
             first_name=first_name,
             last_name=last_name,
