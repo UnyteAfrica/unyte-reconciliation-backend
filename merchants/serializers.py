@@ -55,12 +55,13 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_model = get_user_model()
         try:
-            user = user_model.objects.create(
+            user = user_model.objects.create_user(
                 email=validated_data.pop('email_address'),
                 password=validated_data.pop('password'),
                 is_merchant=True,
             )
+            user.save()
         except IntegrityError:
-            raise serializers.ValidationError(detail='user with this email already exists', code='duplicate_email')
+            raise serializers.ValidationError(detail='user with this email already exists', code='duplicate_email')  # noqa: B904
 
         return Merchant.objects.create(user=user, **validated_data)
