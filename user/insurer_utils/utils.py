@@ -16,7 +16,7 @@ from insurer.utils import verify_otp, generate_otp, gen_absolute_url
 from insurer.models import Insurer, InsurerProfile
 
 from user.models import CustomUser
-from user.serializer import ViewInsurerDetailsSerializer, ViewInsurerProfileSerializer
+from user.serializer import ViewInsurerProfileSerializer
 
 
 def insurer_sign_in_insurer(user: CustomUser, insurer_email: str) -> Response:
