@@ -146,12 +146,8 @@ def insurer_view_details(user: CustomUser) -> Response:
     insurer = get_object_or_404(Insurer, user=user)
 
     data = {'id': insurer.id, 'email': user.email, 'business_name': insurer.business_name}
-    serializer_class = ViewInsurerDetailsSerializer(data=data)
 
-    if not serializer_class.is_valid():
-        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
-
-    return Response(serializer_class.data, status.HTTP_200_OK)
+    return Response(data, status.HTTP_200_OK)
 
 
 def insurer_view_profile(user: CustomUser) -> Response:
