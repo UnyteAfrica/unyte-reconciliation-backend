@@ -202,9 +202,8 @@ class ForgotPasswordResetSerializer(serializers.Serializer):
         return attrs
 
 
-class AgentSerializer(serializers.ModelSerializer):
+class AgentSerializer(serializers.Serializer):
     class Meta:
-        model = Agent
         fields = ['id', 'first_name', 'last_name', 'email']
 
 

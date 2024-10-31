@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -27,10 +26,16 @@ class Migration(migrations.Migration):
                 ('bvn', models.CharField(help_text='Agent BVN', max_length=11, unique=True)),
                 ('bank_account', models.CharField(help_text='Agent Bank account', max_length=10, unique=True)),
                 ('unyte_unique_agent_id', models.CharField(max_length=70, unique=True)),
-                ('agent_gamp_id', models.CharField(blank=True, default='', help_text='GAMP ID for users associated with GAMP')),
+                (
+                    'agent_gamp_id',
+                    models.CharField(blank=True, default='', help_text='GAMP ID for users associated with GAMP'),
+                ),
                 ('otp', models.CharField(blank=True, max_length=6, null=True, unique=True)),
                 ('otp_created_at', models.TimeField(blank=True, null=True)),
-                ('affiliated_company', models.ForeignKey(blank=True, on_delete=django.db.models.deletion.CASCADE, to='insurer.insurer')),
+                (
+                    'affiliated_company',
+                    models.ForeignKey(blank=True, on_delete=django.db.models.deletion.CASCADE, to='insurer.insurer'),
+                ),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -42,7 +47,19 @@ class Migration(migrations.Migration):
             name='AgentProfile',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('profile_image', django_resized.forms.ResizedImageField(crop=None, default='profile_pic/default.png', force_format=None, keep_meta=True, quality=-1, scale=None, size=[400, 400], upload_to='profile_pic')),
+                (
+                    'profile_image',
+                    django_resized.forms.ResizedImageField(
+                        crop=None,
+                        default='profile_pic/default.png',
+                        force_format=None,
+                        keep_meta=True,
+                        quality=-1,
+                        scale=None,
+                        size=[400, 400],
+                        upload_to='profile_pic',
+                    ),
+                ),
                 ('agent', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='agents.agent')),
             ],
             options={
