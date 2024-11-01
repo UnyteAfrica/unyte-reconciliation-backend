@@ -20,10 +20,10 @@ class SuperpoolClient:
         endpoint = kwargs.get('products', 'products')
         url = f"{SUPERPOOL_BACKEND_URL}/{endpoint}"
         response = r.get(url, headers=self.headers)  # noqa: S113
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -32,10 +32,10 @@ class SuperpoolClient:
         endpoint = f'merchants/{merchant_id}/products'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -47,10 +47,10 @@ class SuperpoolClient:
         endpoint = f'merchants/{merchant_id}/policies'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -59,10 +59,10 @@ class SuperpoolClient:
         endpoint = f'merchants/{merchant_id}/claims'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -72,10 +72,10 @@ class SuperpoolClient:
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
 
         response = r.get(url, headers=self.headers)  # noqa: S113
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -85,10 +85,10 @@ class SuperpoolClient:
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
 
         response = r.get(url, self.headers)  # noqa: S113
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -98,10 +98,10 @@ class SuperpoolClient:
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
 
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -111,10 +111,10 @@ class SuperpoolClient:
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
 
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -124,10 +124,10 @@ class SuperpoolClient:
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
 
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
-                'status_code': 400,
-                'error': response.json()
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -137,10 +137,10 @@ class SuperpoolClient:
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
 
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
                 'status_code': response.status_code,
-                'error': response.json()
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
@@ -150,10 +150,10 @@ class SuperpoolClient:
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
 
-        if response.status_code != 200:
+        if response.status_code == 500:
             return {
                 'status_code': response.status_code,
-                'error': response.json()
+                'error': 'Server error from Superpool'
             }
 
         return {'status_code': 200, 'data': response.json()}
