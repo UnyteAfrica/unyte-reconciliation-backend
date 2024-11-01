@@ -14,7 +14,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from agents.models import Agent
+from user.merchant_utils.utils import (
+    merchant_sign_in,
+    merchant_view_details,
+    merchant_reset_password,
+    merchant_verify_otp_token,
+    merchant_forget_email_password,
+)
 
 from .models import CustomUser
 from .serializer import (
@@ -69,19 +75,14 @@ def sign_in(request: Request) -> Response:
 
         user_obj = get_object_or_404(CustomUser, email=email)
         agent, insurer, merchant = user_obj.is_agent, user_obj.is_insurer, user_obj.is_merchant
-        role = ''
         if insurer:
-            role += 'INSURER'
             return insurer_sign_in_insurer(user=user, insurer_email=email)
 
         if agent:
-            role += 'AGENT'
             return agent_sign_in(user=user, agent_email=email)
 
         if merchant:
-            role += 'MERCHANT'
-            # TODO: Update this logic when Isaac implements merchant features
-            get_object_or_404(Agent, user=user_obj).id
+            return merchant_sign_in(user=user, merchant_email=email)
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
@@ -116,7 +117,7 @@ def verify_otp(request: Request) -> Response:
             return agent_verify_otp_token(user, otp)
 
         if merchant:
-            pass
+            return merchant_verify_otp_token(user, otp)
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
@@ -149,7 +150,7 @@ def forgot_email_password(request: Request) -> Response:
             return insurer_forget_email_password(user, email)
 
         if merchant:
-            pass
+            return merchant_forget_email_password(user, email)
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
@@ -241,7 +242,7 @@ def request_new_otp(request):
             return insurer_reset_password(user, email)
 
         if merchant:
-            pass
+            return merchant_reset_password(user, email)
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
@@ -305,7 +306,7 @@ def user_details(request: Request) -> Response:
             return insurer_view_details(user)
 
         if merchant:
-            pass
+            return merchant_view_details(user)
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
