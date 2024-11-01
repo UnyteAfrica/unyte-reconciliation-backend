@@ -28,9 +28,8 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_all_products_one_merchant(self, **kwargs) -> dict:
-        merchant_id = kwargs.get('merchant_id')
-        endpoint = kwargs.get(f'merchants/{merchant_id}/products', f'merchants/{merchant_id}/products')
+    def get_all_products_one_merchant(self, merchant_id) -> dict:
+        endpoint = f'merchants/{merchant_id}/products'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
         if response.status_code != 200:
@@ -41,9 +40,11 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_all_policies_one_merchant(self, **kwargs) -> dict:
-        merchant_id = kwargs.get('merchant_id')
-        endpoint = kwargs.get(f'merchants/{merchant_id}/policies', f'merchants/{merchant_id}/policies')
+    def get_all_policies_one_merchant(self, merchant_id) -> dict:
+        """
+        Error 500
+        """
+        endpoint = f'merchants/{merchant_id}/policies'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
         if response.status_code != 200:
@@ -54,11 +55,11 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_all_claims_one_merchant(self, **kwargs) -> dict:
-        merchant_id = kwargs.get('merchant_id')
-        endpoint = kwargs.get(f'merchants/{merchant_id}/claims', f'merchants/{merchant_id}/claims')
+    def get_all_claims_one_merchant(self, merchant_id) -> dict:
+        endpoint = f'merchants/{merchant_id}/claims'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
+        print(response.status_code)
         if response.status_code != 200:
             return {
                 'status_code': 400,
@@ -119,7 +120,7 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_all_customers_agent_sold_producty_types_for_one_insurer(self, insurer_id) -> dict:
+    def get_all_customers_agent_sold_product_types_for_one_insurer(self, insurer_id) -> dict:
         endpoint = f'insurers/{insurer_id}/agents/customers'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
@@ -145,12 +146,27 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
+    def get_all_customers_agents_has_sold_policies(self, insurer_id) -> dict: 
+        endpoint = f'insurers/{insurer_id}/agents/customers'
+        url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
+        response = r.get(url, headers=self.headers)  # noqa: S113
 
+        if response.status_code != 200:
+            return {
+                'status_code': response.status_code,
+                'error': response.json()
+            }
 
-# def main() -> None:
-#     sc = SuperpoolClient()
+        return {'status_code': 200, 'data': response.json()}
 
-#     print(sc.get_all_policies_one_insurer('3c9c6cb1-0aa8-4153-bf4b-722a6a557e5a'))
+def main() -> None:
+    sc = SuperpoolClient()
 
-# if __name__ == '__main__':
-#     main()
+    """
+    Returning error, 500
+    """
+    # print(sc.get_all_policies_one_merchant('b19bc03a-07e8-4203-b8b9-41cfd830bc32'))
+    # print(sc.get_all_claims_one_merchant('b19bc03a-07e8-4203-b8b9-41cfd830bc32'))
+
+if __name__ == '__main__':
+    main()
