@@ -1,7 +1,8 @@
 from django.db import IntegrityError, transaction
-from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
+
+from user.models import CustomUser
 
 from merchants.models import Merchant
 
@@ -53,14 +54,14 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        user_model = get_user_model()
+        # user_model = get_user_model()
         try:
-            user = user_model.objects.create(
+            user = CustomUser.objects.create_user(
                 email=validated_data.pop('email_address'),
                 password=validated_data.pop('password'),
                 is_merchant=True,
             )
         except IntegrityError:
-            raise serializers.ValidationError(detail='user with this email already exists', code='duplicate_email')
+            raise serializers.ValidationError(detail='user with this email already exists', code='duplicate_email')  # noqa: B904
 
         return Merchant.objects.create(user=user, **validated_data)
