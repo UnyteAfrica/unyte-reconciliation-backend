@@ -20,7 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from user.models import CustomUser
 
 from .utils import verify_otp, gen_sign_up_url_for_agent
-from .models import Insurer, InsurerProfile, InvitedAgents
+from .models import Insurer, InvitedAgents, InsurerProfile
 from .serializer import (
     AgentSerializer,
     CustomAgentSerializer,

@@ -17,7 +17,7 @@ from agents.utils import verify_otp, generate_otp, gen_absolute_url
 from agents.models import Agent, AgentProfile
 
 from user.models import CustomUser
-from user.serializer import ViewAgentDetailsSerializer, ViewAgentProfileSerializer
+from user.serializer import ViewAgentProfileSerializer
 
 
 def agent_sign_in(user: CustomUser, agent_email: str) -> Response:
