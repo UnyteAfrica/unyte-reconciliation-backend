@@ -1,8 +1,7 @@
 from django.db import IntegrityError, transaction
+from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
-
-from user.models import CustomUser
 
 from merchants.models import Merchant
 
@@ -54,7 +53,7 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        # user_model = get_user_model()
+        user_model = get_user_model()
         try:
             user = user_model.objects.create_user(
                 email=validated_data.pop('email_address'),
