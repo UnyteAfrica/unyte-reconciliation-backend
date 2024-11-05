@@ -119,8 +119,8 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_all_customers_agent_sold_product_types_for_one_insurer(self, insurer_id) -> dict:
-        endpoint = f'insurers/{insurer_id}/agents/customers'
+    def get_all_customers_agent_sold_product_types_for_one_insurer(self, insurer_id, email) -> dict:
+        endpoint = f'insurers/{insurer_id}/agents/customers?email={email}'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
 
@@ -157,3 +157,11 @@ class SuperpoolClient:
             }
 
         return {'status_code': 200, 'data': response.json()}
+
+def main() -> None:
+    superpool_handler = SuperpoolClient()
+
+    print(superpool_handler.get_all_products())  # noqa: T201
+
+if __name__ == '__main__':
+    main()
