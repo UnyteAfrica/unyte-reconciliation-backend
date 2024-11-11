@@ -67,19 +67,6 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_all_products_one_insurer(self, insurer_id) -> dict:
-        endpoint = f'insurers/{insurer_id}/products'
-        url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
-
-        response = r.get(url, headers=self.headers)  # noqa: S113
-        if response.status_code == 500:
-            return {
-                'status_code': response.status_code,
-                'error': 'Server error from Superpool'
-            }
-
-        return {'status_code': 200, 'data': response.json()}
-
     def get_all_policies_one_insurer(self, insurer_id) -> dict:
         endpoint = f'insurers/{insurer_id}/policies'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
@@ -132,8 +119,8 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_all_product_sold_by_agent_for_one_insurer(self, insurer_id) -> dict:
-        endpoint = f'insurers/{insurer_id}/agents/products'
+    def get_all_product_sold_by_agent_for_one_insurer(self, insurer_id, product_type: str) -> dict:
+        endpoint = f'insurers/{insurer_id}/agents/products?product_type={product_type}'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         response = r.get(url, headers=self.headers)  # noqa: S113
 
