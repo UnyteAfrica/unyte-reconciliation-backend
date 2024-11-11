@@ -252,6 +252,22 @@ def invite_agents_csv(request):
         csv_file = TextIOWrapper(file.file, encoding='utf-8')
         csv_reader = csv.reader(csv_file, delimiter=',')
         all_rows = list(csv_reader)
+        name_header = all_rows[0][0]
+        email_header = all_rows[0][1]
+
+        """
+        Check csv file headers for correct agent invitation header format. 
+        """
+        if name_header not in ['name', 'names']:
+            return Response({
+                "error": f"Invalid header {name_header}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if email_header not in ['email', 'emails']:
+            return Response({
+                "error": f"Invalid header {email_header}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         for agent in range(len(all_rows)):
             if agent == 0:
                 pass
