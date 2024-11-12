@@ -58,7 +58,7 @@ class ForgotPasswordResetSerializer(serializers.Serializer):
         fields = ['new_password', 'confirm_password', 'token', 'id_base64']
 
     def validate(self, attrs):
-        try:
+        try :
             token = attrs.get('token')
             id_base64 = attrs.get('id_base64')
             new_password = attrs.get('new_password')

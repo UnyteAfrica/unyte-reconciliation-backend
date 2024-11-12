@@ -6,6 +6,7 @@ from django.conf import settings
 
 class Insurer(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    insurer_id = models.UUIDField(null=True, blank=True)
     business_name = models.CharField(
         unique=True, max_length=50, null=False, blank=False, help_text='Business name of insurer'
     )
