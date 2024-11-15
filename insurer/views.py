@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -43,11 +44,14 @@ load_dotenv(find_dotenv())
     method='POST',
     request_body=CreateInsurerSerializer,
     operation_description='Create new insurer',
+    manual_parameters=[
+        openapi.Parameter('superpool', openapi.IN_QUERY, description='Request from Superpool', type=openapi.TYPE_STRING),
+    ],
     responses={201: openapi.Response('Created', SuccessfulCreateInsurerSerializer), 400: 'Bad Request'},
     tags=['Insurer'],
 )
 @api_view(['POST'])
-def create_insurer(request) -> Response:
+def create_insurer(request: Request) -> Response:
     """
     Create insurer by using params from CreateInsurerSerializer
     :param request:
@@ -59,6 +63,8 @@ def create_insurer(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        superpool_request = request.query_params.get('superpool')
+
         business_name = serializer_class.validated_data.get('business_name')
         insurer_email = serializer_class.validated_data.get('email')
 
@@ -85,9 +91,12 @@ def create_insurer(request) -> Response:
             recipient_list=[settings.TO_EMAIL, insurer_email],
             html_message=html_message,
         )
+        if superpool_request is None:
+            message = {'id': insurer.id, 'message': f'Account successfully created for user: {business_name}'}
+            return Response(message, status=status.HTTP_201_CREATED)
 
-        message = {'id': insurer.id, 'message': f'Account successfully created for user: {business_name}'}
-        return Response(message, status=status.HTTP_201_CREATED)
+        # send request to superpool to create insurer at their own side.
+        return Response({"message": "successfully created insurer on superpool as well"}, status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({f'The error {e.__str__()} occurred'}, status=status.HTTP_400_BAD_REQUEST)
@@ -252,6 +261,22 @@ def invite_agents_csv(request):
         csv_file = TextIOWrapper(file.file, encoding='utf-8')
         csv_reader = csv.reader(csv_file, delimiter=',')
         all_rows = list(csv_reader)
+        name_header = all_rows[0][0]
+        email_header = all_rows[0][1]
+
+        """
+        Check csv file headers for correct agent invitation header format.
+        """
+        if name_header not in ['name', 'names']:
+            return Response({
+                "error": f"Invalid header {name_header}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if email_header not in ['email', 'emails']:
+            return Response({
+                "error": f"Invalid header {email_header}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         for agent in range(len(all_rows)):
             if agent == 0:
                 pass
