@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import os
 import json
 
@@ -7,16 +6,12 @@ from dotenv import find_dotenv, load_dotenv
 
 from django.db import IntegrityError, transaction
 from django.forms import ValidationError
-=======
-from django.db import transaction
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
 from merchants.models import Merchant
 
-<<<<<<< HEAD
 load_dotenv(find_dotenv())
 
 SUPERPOOL_BACKEND_URL = os.getenv('SUPERPOOL_BACKEND_URL')
@@ -41,18 +36,11 @@ class MerchantSerializer(serializers.ModelSerializer):
             'tax_identification_number',
         )
 
-=======
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 
 class CreateMerchantSerializer(serializers.ModelSerializer):
     email_address = serializers.EmailField(required=True)
     password = serializers.CharField(required=True)
 
-<<<<<<< HEAD
-=======
-    business_email = serializers.ReadOnlyField(source='user.email')
-
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
     class Meta:
         model = Merchant
         fields = (
@@ -65,7 +53,6 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
             'kyc_verified',
             'email_address',
             'support_email',
-<<<<<<< HEAD
             'registration_number',
             'tax_identification_number',
         )
@@ -120,20 +107,4 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
         validated_data.pop('email_address')
         validated_data.pop('password')
 
-=======
-            'business_email',
-            'registration_number',
-            'tax_identification_number',
-        )
-        read_only_fields = ('tenant_id',)
-
-    @transaction.atomic
-    def create(self, validated_data):
-        user_model = get_user_model()
-        user = user_model.objects.create(
-            email=validated_data.pop('email_address'),
-            password=validated_data.pop('password'),
-            is_merchant=True,
-        )
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
         return Merchant.objects.create(user=user, **validated_data)

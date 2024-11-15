@@ -13,10 +13,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 
 from rest_framework import status
-<<<<<<< HEAD
 from rest_framework.request import Request
-=======
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -24,11 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from user.models import CustomUser
 
 from .utils import verify_otp, gen_sign_up_url_for_agent
-<<<<<<< HEAD
 from .models import Insurer, InvitedAgents, InsurerProfile
-=======
-from .models import Insurer, InsurerProfile
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 from .serializer import (
     AgentSerializer,
     CustomAgentSerializer,
@@ -51,12 +44,9 @@ load_dotenv(find_dotenv())
     method='POST',
     request_body=CreateInsurerSerializer,
     operation_description='Create new insurer',
-<<<<<<< HEAD
     manual_parameters=[
         openapi.Parameter('superpool', openapi.IN_QUERY, description='Request from Superpool', type=openapi.TYPE_STRING),
     ],
-=======
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
     responses={201: openapi.Response('Created', SuccessfulCreateInsurerSerializer), 400: 'Bad Request'},
     tags=['Insurer'],
 )
@@ -105,13 +95,8 @@ def create_insurer(request: Request) -> Response:
             message = {'id': insurer.id, 'message': f'Account successfully created for user: {business_name}'}
             return Response(message, status=status.HTTP_201_CREATED)
 
-<<<<<<< HEAD
         # send request to superpool to create insurer at their own side.
         return Response({"message": "successfully created insurer on superpool as well"}, status.HTTP_201_CREATED)
-=======
-        message = {'id': insurer.id, 'message': f'Account successfully created for user: {business_name}'}
-        return Response(message, status=status.HTTP_201_CREATED)
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 
     except Exception as e:
         return Response({f'The error {e.__str__()} occurred'}, status=status.HTTP_400_BAD_REQUEST)
@@ -197,14 +182,11 @@ def invite_agents(request):
             'unyte_unique_insurer_id': unyte_unique_insurer_id,
             'name': name,
         }
-<<<<<<< HEAD
         invited_agents = InvitedAgents.objects.create(
             insurer=insurer,
             agent_email=email
         )
         invited_agents.save()
-=======
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
         html_message = render_to_string('invitation.html', context)
         email_recipients.append(email)
         """
@@ -279,7 +261,6 @@ def invite_agents_csv(request):
         csv_file = TextIOWrapper(file.file, encoding='utf-8')
         csv_reader = csv.reader(csv_file, delimiter=',')
         all_rows = list(csv_reader)
-<<<<<<< HEAD
         name_header = all_rows[0][0]
         email_header = all_rows[0][1]
 
@@ -296,8 +277,6 @@ def invite_agents_csv(request):
                 "error": f"Invalid header {email_header}"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-=======
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
         for agent in range(len(all_rows)):
             if agent == 0:
                 pass
@@ -312,14 +291,11 @@ def invite_agents_csv(request):
                     'name': agent_name,
                 }
                 html_message = render_to_string('invitation.html', context)
-<<<<<<< HEAD
                 invited_agents = InvitedAgents.objects.create(
                     insurer=insurer,
                     agent_email=agent_email
                 )
                 invited_agents.save()
-=======
->>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
                 """
                 Sends email to the email of agents
                 """
