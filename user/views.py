@@ -117,7 +117,11 @@ def verify_otp(request: Request) -> Response:
             return agent_verify_otp_token(user, otp)
 
         if merchant:
+<<<<<<< HEAD
             return merchant_verify_otp_token(user, otp)
+=======
+            pass
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
@@ -150,7 +154,11 @@ def forgot_email_password(request: Request) -> Response:
             return insurer_forget_email_password(user, email)
 
         if merchant:
+<<<<<<< HEAD
             return merchant_forget_email_password(user, email)
+=======
+            pass
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
@@ -242,7 +250,11 @@ def request_new_otp(request):
             return insurer_reset_password(user, email)
 
         if merchant:
+<<<<<<< HEAD
             return merchant_reset_password(user, email)
+=======
+            pass
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)
@@ -306,7 +318,11 @@ def user_details(request: Request) -> Response:
             return insurer_view_details(user)
 
         if merchant:
+<<<<<<< HEAD
             return merchant_view_details(user)
+=======
+            pass
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 
     except Exception as e:
         return Response({'error': str(e)}, status.HTTP_400_BAD_REQUEST)

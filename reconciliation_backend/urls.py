@@ -45,7 +45,10 @@ urlpatterns = [
     path('api/insurer/', include(('insurer.urls', 'insurer'), namespace='insurer')),
     path('api/agent/', include(('agents.urls', 'agents'), namespace='agents')),
     path('api/user/', include(('user.urls', 'user'), namespace='user')),
+<<<<<<< HEAD
     path('api/dashboard/', include(('superpool_proxy.urls', 'superpool_proxy'), namespace='superpool_proxy')),
+=======
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('docs/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('docs/json/', schema_view.without_ui(cache_timeout=0), name='schema-json'),

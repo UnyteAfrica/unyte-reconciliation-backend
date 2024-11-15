@@ -51,6 +51,14 @@ def create_agent(request) -> Response:
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+<<<<<<< HEAD
+=======
+        user_email = serializer_class.validated_data.get('email')
+        user_password = serializer_class.validated_data.get('password')
+
+        user = CustomUser.objects.create_user(email=user_email, password=user_password, is_agent=True)
+        user.save()
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
         uuid = request.query_params.get('invite')
         insurer = get_object_or_404(Insurer, unyte_unique_insurer_id=uuid)
 
@@ -79,10 +87,15 @@ def create_agent(request) -> Response:
         middle_name = agent_data.get('middle_name')
         home_address = agent_data.get('home_address')
         bvn = agent_data.get('bvn')
+<<<<<<< HEAD
         agent_data['affiliated_company'] = insurer
 
         uuad = generate_unyte_unique_agent_id(first_name, bank_account)
 
+=======
+
+        uuad = generate_unyte_unique_agent_id(first_name, bank_account)
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
         agent = Agent.objects.create(
             first_name=first_name,
             last_name=last_name,

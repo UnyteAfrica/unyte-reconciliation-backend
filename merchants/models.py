@@ -1,7 +1,10 @@
 import uuid
 
+<<<<<<< HEAD
 from django_resized import ResizedImageField
 
+=======
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
 from django.db import models
 from django.conf import settings
 
@@ -67,6 +70,7 @@ class Merchant(models.Model):
         editable=False,
         default=uuid.uuid4,
     )
+<<<<<<< HEAD
     otp = models.CharField(unique=True, max_length=6, blank=True, null=True)
     otp_created_at = models.TimeField(blank=True, null=True)
 
@@ -74,3 +78,5 @@ class Merchant(models.Model):
 class MerchantProfile(models.Model):
     merchant = models.ForeignKey(Merchant, on_delete=models.CASCADE)
     profile_image = ResizedImageField(size=[400, 400], default='profile_pic/default.png', upload_to='profile_pic')
+=======
+>>>>>>> a3ce70caa0861a9a376333afa9b3cce82b721d8a
