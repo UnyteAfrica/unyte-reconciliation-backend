@@ -6,6 +6,7 @@ from django.conf import settings
 
 class Insurer(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    insurer_id = models.UUIDField(null=True, blank=True)
     business_name = models.CharField(
         unique=True, max_length=50, null=False, blank=False, help_text='Business name of insurer'
     )
@@ -31,6 +32,16 @@ class Insurer(models.Model):
     def __str__(self):
         return self.business_name
 
+class InvitedAgents(models.Model):
+    insurer = models.ForeignKey(Insurer, on_delete=models.CASCADE, help_text='Insurer who invited agent')
+    agent_email = models.EmailField(help_text='Agent email')
+
+    class Meta:
+        verbose_name = 'INVITED AGENT'
+        verbose_name_plural = 'INVITED AGENTS'
+
+    def __str__(self):
+        return self.agent_email
 
 class InsurerProfile(models.Model):
     insurer = models.OneToOneField(Insurer, on_delete=models.CASCADE)

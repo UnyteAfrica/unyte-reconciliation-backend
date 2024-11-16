@@ -17,7 +17,7 @@ from agents.utils import verify_otp, generate_otp, gen_absolute_url
 from agents.models import Agent, AgentProfile
 
 from user.models import CustomUser
-from user.serializer import ViewAgentDetailsSerializer, ViewAgentProfileSerializer
+from user.serializer import ViewAgentProfileSerializer
 
 
 def agent_sign_in(user: CustomUser, agent_email: str) -> Response:
@@ -162,12 +162,8 @@ def agent_view_details(user: CustomUser) -> Response:
         'last_name': agent.last_name,
         'middle_name': agent.middle_name,
     }
-    serializer_class = ViewAgentDetailsSerializer(data=data)
 
-    if not serializer_class.is_valid():
-        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
-
-    return Response(serializer_class.data, status.HTTP_200_OK)
+    return Response(data, status.HTTP_200_OK)
 
 
 def agent_view_profile(user: CustomUser) -> Response:

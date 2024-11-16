@@ -17,12 +17,10 @@ from agents.utils import generate_unyte_unique_agent_id
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'reconciliation_backend.settings.scripts')
 django.setup()
 
-from policies.models import Policies, AgentPolicy, PolicyProductType
+from agents.models import Agent  # noqa: E402
 
-from agents.models import Agent
-
-from insurer.utils import generate_unyte_unique_insurer_id
-from insurer.models import Insurer
+from insurer.utils import generate_unyte_unique_insurer_id  # noqa: E402
+from insurer.models import Insurer  # noqa: E402
 
 load_dotenv(find_dotenv())
 

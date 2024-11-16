@@ -1,5 +1,7 @@
 import uuid
 
+from django_resized import ResizedImageField
+
 from django.db import models
 from django.conf import settings
 
@@ -65,3 +67,10 @@ class Merchant(models.Model):
         editable=False,
         default=uuid.uuid4,
     )
+    otp = models.CharField(unique=True, max_length=6, blank=True, null=True)
+    otp_created_at = models.TimeField(blank=True, null=True)
+
+
+class MerchantProfile(models.Model):
+    merchant = models.ForeignKey(Merchant, on_delete=models.CASCADE)
+    profile_image = ResizedImageField(size=[400, 400], default='profile_pic/default.png', upload_to='profile_pic')
