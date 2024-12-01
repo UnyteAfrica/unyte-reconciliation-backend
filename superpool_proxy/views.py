@@ -11,8 +11,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from merchants.models import Merchant
 from user.models import CustomUser
+
+from merchants.models import Merchant
 
 from .superpool_client import SuperpoolClient
 
@@ -53,14 +54,14 @@ def get_all_products(request: Request) -> Response:
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_all_products_one_merchant(request: Request) -> Response:
+def get_all_products_for_one_merchant(request: Request) -> Response:
     user = get_object_or_404(CustomUser, pk=request.user.id)
     if user.is_agent or user.is_insurer:
         return Response({
             'error': 'Unathorized entity access'
         }, status.HTTP_403_FORBIDDEN)
     merchant = get_object_or_404(Merchant, user=user)
-    response = SUPERPOOL_HANDLER.get_all_products_one_merchant(merchant.tenant_id)
+    response = SUPERPOOL_HANDLER.get_all_products_for_one_merchant(merchant.tenant_id)
     status_code = response.get('status_code')
     error = response.get('error')
     data = response.get('data')
@@ -79,14 +80,14 @@ def get_all_products_one_merchant(request: Request) -> Response:
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_all_policies_one_merchant(request: Request) -> Response:
+def get_all_policies_for_one_merchant(request: Request) -> Response:
     user = get_object_or_404(CustomUser, pk=request.user.id)
     if user.is_agent or user.is_insurer:
         return Response({
             'error': 'Unathorized entity access'
         }, status.HTTP_403_FORBIDDEN)
     merchant = get_object_or_404(Merchant, user=user)
-    response = SUPERPOOL_HANDLER.get_all_policies_one_merchant(merchant.tenant_id)
+    response = SUPERPOOL_HANDLER.get_all_policies_for_one_merchant(merchant.tenant_id)
     status_code = response.get('status_code')
     error = response.get('error')
     data = response.get('data')
@@ -105,14 +106,14 @@ def get_all_policies_one_merchant(request: Request) -> Response:
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_all_claims_one_merchant(request: Request) -> Response:
+def get_all_claims_for_one_merchant(request: Request) -> Response:
     user = get_object_or_404(CustomUser, pk=request.user.id)
     if user.is_agent or user.is_insurer:
         return Response({
             'error': 'Unathorized entity access'
         }, status.HTTP_403_FORBIDDEN)
     merchant = get_object_or_404(Merchant, user=user)
-    response = SUPERPOOL_HANDLER.get_all_claims_one_merchant(merchant.tenant_id)
+    response = SUPERPOOL_HANDLER.get_all_claims_for_one_merchant(merchant.tenant_id)
     status_code = response.get('status_code')
     error = response.get('error')
     data = response.get('data')
