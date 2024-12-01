@@ -291,7 +291,7 @@ def refresh_access_token(request):
     tags=[SWAGGER_APP_TAG],
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def user_details(request: Request) -> Response:
     user_id = request.user.id
     user = get_object_or_404(CustomUser, pk=user_id)
