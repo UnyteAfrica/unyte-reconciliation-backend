@@ -198,20 +198,6 @@ class ViewAgentDetailsSerializer(serializers.Serializer):
         ]
 
 
-class PolicyProductTypeSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=100, allow_blank=False, help_text='Name of policy product type')
-    premium = serializers.CharField(max_length=100, allow_blank=False, help_text='Price of product type')
-    flat_fee = serializers.CharField(max_length=3, allow_blank=False, help_text='Flat fee availability')
-
-
-class AgentSellPolicySerializer(serializers.Serializer):
-    policy_name = serializers.CharField(max_length=100, min_length=1, allow_blank=False)
-    product_type = PolicyProductTypeSerializer(many=True)
-
-    class Meta:
-        fields = ['policy_name', 'product_type']
-
-
 class ViewAgentProfile(serializers.Serializer):
     email = serializers.EmailField()
     first_name = serializers.CharField()
