@@ -10,7 +10,9 @@ from django.template.loader import render_to_string
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.request import Request
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from insurer.models import Insurer, InvitedAgents
 
@@ -22,7 +24,9 @@ from .serializer import CreateAgentSerializer
 from .response_serializers import (
     SuccessfulCreateAgentSerializer,
 )
+from superpool_proxy.superpool_client import SuperpoolClient
 
+SUPERPPOOL_HANDLER = SuperpoolClient()
 
 @swagger_auto_schema(
     method='POST',
@@ -122,3 +126,82 @@ def create_agent(request) -> Response:
     except Exception as e:
         message = {'error': e.__str__()}
         return Response(message, status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Products From Insurer',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_products_for_insurer(request: Request):
+    agent = get_object_or_404(Agent, pk=request.user.id)
+    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company)
+
+    # TODO: Change insurer_id to added insurer UUID for proper fetching of insurer from DB after syncing with superpool
+    response = SUPERPPOOL_HANDLER.get_all_products_for_one_insurer(insurer_id=insurer.id)
+    status_code = response.get('status_code')
+    error = response.get('error')
+    data = response.get('data')
+
+    if status_code != 200:
+        return Response(error, status.HTTP_400_BAD_REQUEST)
+
+    return Response(data, status.HTTP_200_OK)
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Policies From Insurer',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_policies_for_insurer(request: Request):
+    agent = get_object_or_404(Agent, pk=request.user.id)
+    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company)
+
+    # TODO: Change insurer_id to added insurer UUID for proper fetching of insurer from DB after syncing with superpool
+    response = SUPERPPOOL_HANDLER.get_all_policies_for_one_insurer(insurer_id=insurer.id)
+    status_code = response.get('status_code')
+    error = response.get('error')
+    data = response.get('data')
+
+    if status_code != 200:
+        return Response(error, status.HTTP_400_BAD_REQUEST)
+
+    return Response(data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Policies From Insurer',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_claims_for_insurer(request: Request):
+    agent = get_object_or_404(Agent, pk=request.user.id)
+    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company)
+
+    # TODO: Change insurer_id to added insurer UUID for proper fetching of insurer from DB after syncing with superpool
+    response = SUPERPPOOL_HANDLER.get_all_claims_for_one_insurer(insurer_id=insurer.id)
+    status_code = response.get('status_code')
+    error = response.get('error')
+    data = response.get('data')
+
+    if status_code != 200:
+        return Response(error, status.HTTP_400_BAD_REQUEST)
+
+    return Response(data, status.HTTP_200_OK)

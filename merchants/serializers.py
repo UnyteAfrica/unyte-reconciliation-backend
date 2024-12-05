@@ -1,5 +1,4 @@
 import os
-import json
 
 import requests as r
 from dotenv import find_dotenv, load_dotenv

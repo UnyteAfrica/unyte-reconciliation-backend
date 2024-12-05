@@ -1,7 +1,10 @@
 from django.urls import path
 
-from . import views
+from .views import create_agent, view_claims_for_insurer, view_policies_for_insurer, view_products_for_insurer
 
 urlpatterns = [
-    path('sign-up', views.create_agent, name='register_agent'),
+    path('sign-up', create_agent, name='register-agent'),
+    path('products', view_products_for_insurer, name='view-products-for-insurer'),
+    path('policies', view_policies_for_insurer, name='view-policies-for-insurer'),
+    path('claims', view_claims_for_insurer, name='view-claims-for-insurer'),
 ]
