@@ -28,7 +28,6 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    reference_id = models.CharField(max_length=50, null=False, blank=False, help_text='Reference id for new user')
     is_active = models.BooleanField(
         default=True, help_text='Set to know active users on the platform. Instead of deleting a user, ' 'set to False'
     )
