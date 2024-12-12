@@ -118,7 +118,7 @@ def create_insurer(request: Request) -> Response:
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_all_agents_for_insurer(request):
+def list_all_agents_for_insurer(request: Request):
     user_id = request.user.id
     user = get_object_or_404(CustomUser, pk=user_id)
 
