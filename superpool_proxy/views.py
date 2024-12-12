@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from insurer.models import Insurer
+
 from user.models import CustomUser
 
 from merchants.models import Merchant
