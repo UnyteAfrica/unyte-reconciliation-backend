@@ -1,5 +1,3 @@
-import uuid
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -9,6 +7,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 
 from insurer.models import Insurer
@@ -21,6 +20,7 @@ from .superpool_client import SuperpoolClient
 
 SUPERPOOL_HANDLER = SuperpoolClient()
 SUPERPOOL_PROXY_TAG = 'Dashboard'
+PAGINATION_PAGE_SIZE = 10
 
 
 @swagger_auto_schema(
@@ -45,7 +45,11 @@ def get_all_products(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    return Response(data, status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = PAGINATION_PAGE_SIZE
+    paginated_data = paginator.paginate_queryset(data, request)
+
+    return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -71,7 +75,11 @@ def get_all_products_for_one_merchant(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    return Response(data, status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = PAGINATION_PAGE_SIZE
+    paginated_data = paginator.paginate_queryset(data, request)
+
+    return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -97,7 +105,11 @@ def get_all_policies_for_one_merchant(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    return Response(data, status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = PAGINATION_PAGE_SIZE
+    paginated_data = paginator.paginate_queryset(data, request)
+
+    return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -123,7 +135,11 @@ def get_all_claims_for_one_merchant(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    return Response(data, status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = PAGINATION_PAGE_SIZE
+    paginated_data = paginator.paginate_queryset(data, request)
+
+    return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -150,7 +166,11 @@ def get_all_policies_one_insurer(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    return Response(data, status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = PAGINATION_PAGE_SIZE
+    paginated_data = paginator.paginate_queryset(data, request)
+
+    return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -177,7 +197,11 @@ def get_all_claims_one_insurer(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    return Response(data, status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = PAGINATION_PAGE_SIZE
+    paginated_data = paginator.paginate_queryset(data, request)
+
+    return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -204,4 +228,8 @@ def get_all_products_for_one_insurer(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    return Response(data, status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = PAGINATION_PAGE_SIZE
+    paginated_data = paginator.paginate_queryset(data, request)
+
+    return paginator.get_paginated_response(paginated_data)
