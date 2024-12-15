@@ -205,3 +205,18 @@ def view_claims_for_insurer(request: Request):
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
     return Response(data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description='View Policies From Insurer',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sell_policy(request: Request) -> Response:
+    pass

@@ -256,3 +256,231 @@ class UploadCSVFileSerializer(serializers.Serializer):
 
     class Meta:
         fields = ['otp', 'agents_csv']
+
+
+class CustomerResidentialAddress(serializers.Serializer):
+    house_number = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The number of the customer's house on their street"
+    )
+    street = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The name of the street customer resides in"
+    )
+    city = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The name of the city customer resides in"
+    )
+    state = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The name of state customer currently resides in"
+    )
+    postal_code = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The postal code of home customer currently resides in"
+    )
+    country = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The name of country customer currently resides in"
+    )
+
+class CustomerDetailsSerializer(serializers.Serializer):
+    firstname = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's first name"
+    )
+    lastname = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's last name"
+    )
+    email = serializers.EmailField()
+    residential_address = CustomerResidentialAddress()
+    date_of_birth = serializers.DateField()
+    gender = serializers.CharField(
+        max_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's gender"
+    )
+    occupation = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's occupation"
+    )
+
+    # TODO: Discuss with Eri on how to efficiently process send customer images to Superpool
+    identity_card_img = serializers.CharField()
+    utility_bill_img = serializers.CharField()
+    identity_card_type =  serializers.CharField()
+    identity_card_number = serializers.CharField()
+
+
+class TravelPolicyAdditionalInformationSerializer(serializers.Serializer):
+    age = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's age"
+    )
+    departure_date = serializers.DateField(
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's travel departure date"
+    )
+    return_date = serializers.DateField(
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's travel return date"
+    )
+    insurance_options = serializers.CharField(
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's travel insurance option"
+    )
+    destination = serializers.CharField(
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's travel destination"
+    )
+    international_flight = serializers.BooleanField(default=False)
+
+
+class GadgetInformationSerializer(serializers.Serializer):
+    more_gadget_information = serializers.CharField()
+    class Meta:
+        fields = ['more_gadget_information']
+
+
+class GadgetUsageHistorySerializer(serializers.Serializer):
+    gadget_usage_history = serializers.CharField()
+    class Meta:
+        fields = ['gadget_usage_history']
+
+
+class DevicePolicyAdditionalInformationSerializer(serializers.Serializer):
+    gadget_type = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Gadget type or Gadget brand. E.g iPhone, Samsung, etc."
+    )
+    gadget_value = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Gadget value"
+    )
+    gadget_information = GadgetInformationSerializer()
+    usage_history = GadgetUsageHistorySerializer()
+    insurance_options = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        default="Device Policy"
+    )
+
+
+class MotorPolicyAdditionalInformationSerializer(serializers.Serializer):
+    vehicle_type = serializers.CharField(max_length=50)
+    vehicle_make = serializers.CharField(max_length=50)
+    vehicle_model = serializers.CharField(max_length=50)
+    vehicle_year = serializers.IntegerField()
+    vehicle_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    vehicle_usage = serializers.CharField(max_length=50)
+    vehicle_category = serializers.CharField(max_length=50)
+    insurance_options = serializers.CharField(max_length=50)
+
+
+class BikePolicyAdditionalInformationSerializer(serializers.Serializer):
+    vehicle_type = serializers.CharField(max_length=50)
+    vehicle_make = serializers.CharField(max_length=50)
+    vehicle_model = serializers.CharField(max_length=50)
+    vehicle_year = serializers.IntegerField()
+    vehicle_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    vehicle_usage = serializers.CharField(max_length=50)
+    insurance_options = serializers.CharField(max_length=50)
+
+
+class ShipmentCarrierDetailsSerializer(serializers.Serializer):
+    tracking_number = serializers.CharField(
+        max_length=50,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment tracking number"
+    )
+    service_type = serializers.CharField(
+        max_length=50,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment service type"
+    )
+
+
+class ShipmentAdditionalInformationSerializer(serializers.Serializer):
+    shipment_type = serializers.CharField(
+        max_length=50,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment type"
+    )
+    shipment_value = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment value or price"
+    )
+    shipment_origin = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment origin location"
+    )
+    shipment_destination = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment destination location"
+    )
+    shipment_carrier = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment carrier"
+    )
+    shipment_carrier_details = ShipmentCarrierDetailsSerializer()
+    exchange_rate = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment exchange rate"
+    )
