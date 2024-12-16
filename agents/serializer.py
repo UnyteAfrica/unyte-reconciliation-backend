@@ -266,7 +266,7 @@ class CustomerResidentialAddress(serializers.Serializer):
     )
 
 class CustomerDetailsSerializer(serializers.Serializer):
-    firstname = serializers.CharField(
+    first_name = serializers.CharField(
         max_length=255,
         min_length=1,
         allow_blank=False,
@@ -274,7 +274,7 @@ class CustomerDetailsSerializer(serializers.Serializer):
         help_text="Customer's first name",
         default="Chukwuemeka"
     )
-    lastname = serializers.CharField(
+    last_name = serializers.CharField(
         max_length=255,
         min_length=1,
         allow_blank=False,
@@ -336,24 +336,21 @@ class CustomerDetailsSerializer(serializers.Serializer):
         help_text="Customer's identity card number",
         default="ARES0n0Fzews"
     )
+    identity_card_expiry_date = serializers.DateField()
 
-class TravelPolicInsuranceDetailsSerializer(serializers.Serializer):
-    user_age = serializers.CharField(
-        max_length=255,
-        min_length=1,
-        allow_blank=False,
-        allow_null=False,
-        help_text="Customer's age",
-        default="34"
-    )
-    product_type = serializers.CharField(
-        max_length=255,
-        min_length=1,
-        allow_blank=False,
-        allow_null=False,
-        help_text="Product type for travel",
-        default="Travel"
-    )
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+    def validate(self, attrs):
+        # date_of_birth_date_object = attrs.get('date_of_birth')
+        # str_date_of_birth = date_of_birth_date_object.strftime('%Y/%m/%d')
+        attrs['date_of_birth'] = attrs['date_of_birth'].isoformat()
+        attrs['identity_card_expiry_date'] = attrs['identity_card_expiry_date'].isoformat()
+        return attrs
+
+class TravelPolicyAdditionalInformationSerializer(serializers.Serializer):
     departure_date = serializers.DateField(
         help_text="Customer's travel departure date"
     )
@@ -376,15 +373,42 @@ class TravelPolicInsuranceDetailsSerializer(serializers.Serializer):
 
     class Meta:
         fields = [
-            'age',
-            'depature_date',
-            'return_date',
-            'insurance_option',
-            'destination',
-            'international_flight'
+            '__all__'
         ]
 
-class TravelPolicyAdditionalInformationSerializer(serializers.Serializer):
+    def validate(self, attrs):
+        attrs['departure_date'] = attrs['departure_date'].isoformat()
+        attrs['return_date'] = attrs['return_date'].isoformat()
+
+        return attrs
+
+
+
+class TravelPolicInsuranceDetailsSerializer(serializers.Serializer):
+    user_age = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's age",
+        default="34"
+    )
+    product_type = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Product type for travel",
+        default="Travel"
+    )
+    additional_information = TravelPolicyAdditionalInformationSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class TravelPolicySerializer(serializers.Serializer):
     customer_metadata = CustomerDetailsSerializer()
     insurance_details = TravelPolicInsuranceDetailsSerializer()
 

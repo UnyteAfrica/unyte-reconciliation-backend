@@ -1,3 +1,4 @@
+from pprint import pprint
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -29,6 +30,7 @@ from .serializer import (
     MotorPolicyAdditionalInformationSerializer,
     DevicePolicyAdditionalInformationSerializer,
     TravelPolicyAdditionalInformationSerializer,
+    TravelPolicySerializer,
 )
 from .response_serializers import (
     SuccessfulCreateAgentSerializer,
@@ -216,7 +218,7 @@ def view_claims_for_insurer(request: Request):
 @swagger_auto_schema(
     methods=['POST'],
     operation_description='Travel Policy data needed to generate quotes',
-    request_body=TravelPolicyAdditionalInformationSerializer,
+    request_body=TravelPolicySerializer,
     responses={
         '200': 'OK',
         '400': 'Bad Request',
@@ -226,24 +228,34 @@ def view_claims_for_insurer(request: Request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def travel_policy(request: Request, product_name: str):
-    agents = get_object_or_404(Agent, request.user.id)
-    insurer = get_object_or_404(Insurer, agents.affiliated_company)
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agents = get_object_or_404(Agent, user=user.id)
+    insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
     insurer_business_name = insurer.business_name
-    serializer_class = TravelPolicyAdditionalInformationSerializer(data=request.data)
+    serializer_class = TravelPolicySerializer(data=request.data)
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
     customer_metadata = serializer_class.validated_data.get('customer_metadata')
     insurance_details = serializer_class.validated_data.get('insurance_details')
     response = SUPERPPOOL_HANDLER.get_quote(customer_metadata, insurance_details, coverage_preferences={})
+    status_code = response.get('status_code')
+
+    if status_code != 200:
+        return Response(response.get('error'), status.HTTP_400_BAD_REQUEST)
+
     quotes = response.get('data').get('data')
-    product_quote = [company_quotes.get('provider') == insurer_business_name for company_quotes in quotes]
-    result = None
+    insurer_quotes = []
+    result = []
+    for product in quotes:
+        if insurer_business_name == product.get('provider'):
+            insurer_quotes.append(product)  # noqa: PERF401
 
-    for product in product_quote:
-        if product.get('product') == product_name and result is None:
-            result = product
+    for policy in insurer_quotes:
+        if policy.get('product') == product_name:
+            result.append(policy)  # noqa: PERF401
 
-    return Response(result, status.HTTP_200_OK)
+    return Response({"data": result[0]}, status.HTTP_200_OK)
+
 
 
 @swagger_auto_schema(
