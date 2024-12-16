@@ -57,6 +57,7 @@ class CreateAgentSerializer(serializers.Serializer):
         #         raise CustomValidationError({"error": "Email already exists"})
 
         if CustomUser.objects.filter(email=email).exists():
+            # print(CustomUser.)
             raise CustomValidationError({'error': 'Email already exists!'})
 
         if Agent.objects.filter(home_address=home_address).exists():
@@ -86,7 +87,7 @@ class CreateAgentSerializer(serializers.Serializer):
         #     if Agent.objects.filter(bank_account=bank_account).exists():
         #         raise CustomValidationError({"error": "bank_account already exists"})
         #
-        #     pattern = f'{first_name}+{bank_account}@getgamp.com'
+        #     pattern = f'{first_name}+{bank_account}@getgamAGENTp.com'
         #
         #     if agent_gamp_id != pattern:
         #         raise CustomValidationError({"error": "Invalid GampID"})
@@ -213,3 +214,323 @@ class ViewAgentProfile(serializers.Serializer):
             'middle_name',
             'profile_image',
         ]
+
+class CustomerResidentialAddress(serializers.Serializer):
+    house_number = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The number of the customer's house on their street",
+        default="12"
+    )
+    street = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The name of the street customer resides in",
+        default="Adeola Odeku Street"
+    )
+    city = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The name of the city customer resides in",
+        default="Lagos"
+    )
+    state = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The name of state customer currently resides in",
+        default="Lagos"
+    )
+    postal_code = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The postal code of home customer currently resides in",
+        default="101241"
+    )
+    country = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="The name of country customer currently resides in",
+        default="Nigeria"
+    )
+
+class CustomerDetailsSerializer(serializers.Serializer):
+    first_name = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's first name",
+        default="Chukwuemeka"
+    )
+    last_name = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's last name",
+        default="Okoro"
+    )
+    email = serializers.EmailField(
+        default="chukwuemeka.okoro@example.com"
+    )
+    residential_address = CustomerResidentialAddress()
+    date_of_birth = serializers.DateField()
+    customer_gender = serializers.CharField(
+        max_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's gender",
+        default="M"
+    )
+    occupation = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's occupation",
+        default="Civil Engineer"
+    )
+
+    # TODO: Discuss with Eri on how to efficiently process send customer images to Superpool
+    identity_card_img = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's identity card image",
+        default="https://www.example.com/back"
+    )
+    utility_bill_img = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's utility bill image",
+        default="https://www.example.com/back"
+    )
+    identity_card_type =  serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's identity card type",
+        default="driver_license"
+    )
+    identity_card_number = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's identity card number",
+        default="ARES0n0Fzews"
+    )
+    identity_card_expiry_date = serializers.DateField()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+    def validate(self, attrs):
+        # date_of_birth_date_object = attrs.get('date_of_birth')
+        # str_date_of_birth = date_of_birth_date_object.strftime('%Y/%m/%d')
+        attrs['date_of_birth'] = attrs['date_of_birth'].isoformat()
+        attrs['identity_card_expiry_date'] = attrs['identity_card_expiry_date'].isoformat()
+        return attrs
+
+class TravelPolicyAdditionalInformationSerializer(serializers.Serializer):
+    departure_date = serializers.DateField(
+        help_text="Customer's travel departure date"
+    )
+    return_date = serializers.DateField(
+        help_text="Customer's travel return date"
+    )
+    insurance_options = serializers.CharField(
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's travel insurance option",
+        default="EUROPE SCHENGEN"
+    )
+    destination = serializers.CharField(
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's travel destination",
+        default="France"
+    )
+    international_flight = serializers.BooleanField(default=False)
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+    def validate(self, attrs):
+        attrs['departure_date'] = attrs['departure_date'].isoformat()
+        attrs['return_date'] = attrs['return_date'].isoformat()
+
+        return attrs
+
+
+
+class TravelPolicInsuranceDetailsSerializer(serializers.Serializer):
+    user_age = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's age",
+        default="34"
+    )
+    product_type = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Product type for travel",
+        default="Travel"
+    )
+    additional_information = TravelPolicyAdditionalInformationSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class TravelPolicySerializer(serializers.Serializer):
+    customer_metadata = CustomerDetailsSerializer()
+    insurance_details = TravelPolicInsuranceDetailsSerializer()
+
+    class Meta:
+        fields = [
+            'customer_metadata',
+            'insurance_details'
+        ]
+
+class GadgetInformationSerializer(serializers.Serializer):
+    more_gadget_information = serializers.CharField()
+    class Meta:
+        fields = ['more_gadget_information']
+
+
+class GadgetUsageHistorySerializer(serializers.Serializer):
+    gadget_usage_history = serializers.CharField()
+    class Meta:
+        fields = ['gadget_usage_history']
+
+
+class DevicePolicyAdditionalInformationSerializer(serializers.Serializer):
+    customer_metadata = CustomerDetailsSerializer()
+    gadget_type = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Gadget type or Gadget brand. E.g iPhone, Samsung, etc."
+    )
+    gadget_value = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Gadget value"
+    )
+    gadget_information = GadgetInformationSerializer()
+    usage_history = GadgetUsageHistorySerializer()
+    insurance_options = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        default="Device Policy"
+    )
+
+
+class MotorPolicyAdditionalInformationSerializer(serializers.Serializer):
+    customer_metadata = CustomerDetailsSerializer()
+    vehicle_type = serializers.CharField(max_length=50)
+    vehicle_make = serializers.CharField(max_length=50)
+    vehicle_model = serializers.CharField(max_length=50)
+    vehicle_year = serializers.IntegerField()
+    vehicle_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    vehicle_usage = serializers.CharField(max_length=50)
+    vehicle_category = serializers.CharField(max_length=50)
+    insurance_options = serializers.CharField(max_length=50)
+
+
+class BikePolicyAdditionalInformationSerializer(serializers.Serializer):
+    customer_metadata = CustomerDetailsSerializer()
+    vehicle_type = serializers.CharField(max_length=50)
+    vehicle_make = serializers.CharField(max_length=50)
+    vehicle_model = serializers.CharField(max_length=50)
+    vehicle_year = serializers.IntegerField()
+    vehicle_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    vehicle_usage = serializers.CharField(max_length=50)
+    insurance_options = serializers.CharField(max_length=50)
+
+
+class ShipmentCarrierDetailsSerializer(serializers.Serializer):
+    tracking_number = serializers.CharField(
+        max_length=50,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment tracking number"
+    )
+    service_type = serializers.CharField(
+        max_length=50,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment service type"
+    )
+
+
+class ShipmentAdditionalInformationSerializer(serializers.Serializer):
+    customer_metadata = CustomerDetailsSerializer()
+    shipment_type = serializers.CharField(
+        max_length=50,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment type"
+    )
+    shipment_value = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment value or price"
+    )
+    shipment_origin = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment origin location"
+    )
+    shipment_destination = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment destination location"
+    )
+    shipment_carrier = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment carrier"
+    )
+    shipment_carrier_details = ShipmentCarrierDetailsSerializer()
+    exchange_rate = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment exchange rate"
+    )

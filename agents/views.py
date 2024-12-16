@@ -1,3 +1,4 @@
+from pprint import pprint
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -9,8 +10,8 @@ from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
@@ -18,13 +19,22 @@ from insurer.models import Insurer, InvitedAgents
 
 from user.models import CustomUser
 
+from superpool_proxy.superpool_client import SuperpoolClient
+
 from .utils import generate_otp, generate_unyte_unique_agent_id
 from .models import Agent
-from .serializer import CreateAgentSerializer
+from .serializer import (
+    CreateAgentSerializer,
+    ShipmentAdditionalInformationSerializer,
+    BikePolicyAdditionalInformationSerializer,
+    MotorPolicyAdditionalInformationSerializer,
+    DevicePolicyAdditionalInformationSerializer,
+    TravelPolicyAdditionalInformationSerializer,
+    TravelPolicySerializer,
+)
 from .response_serializers import (
     SuccessfulCreateAgentSerializer,
 )
-from superpool_proxy.superpool_client import SuperpoolClient
 
 SUPERPPOOL_HANDLER = SuperpoolClient()
 
@@ -58,8 +68,6 @@ def create_agent(request) -> Response:
         user_email = serializer_class.validated_data.get('email')
         user_password = serializer_class.validated_data.get('password')
 
-        user = CustomUser.objects.create_user(email=user_email, password=user_password, is_agent=True)
-        user.save()
         uuid = request.query_params.get('invite')
         insurer = get_object_or_404(Insurer, unyte_unique_insurer_id=uuid)
 
@@ -205,3 +213,110 @@ def view_claims_for_insurer(request: Request):
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
     return Response(data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description='Travel Policy data needed to generate quotes',
+    request_body=TravelPolicySerializer,
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def travel_policy(request: Request, product_name: str):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agents = get_object_or_404(Agent, user=user.id)
+    insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
+    insurer_business_name = insurer.business_name
+    serializer_class = TravelPolicySerializer(data=request.data)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    customer_metadata = serializer_class.validated_data.get('customer_metadata')
+    insurance_details = serializer_class.validated_data.get('insurance_details')
+    response = SUPERPPOOL_HANDLER.get_quote(customer_metadata, insurance_details, coverage_preferences={})
+    status_code = response.get('status_code')
+
+    if status_code != 200:
+        return Response(response.get('error'), status.HTTP_400_BAD_REQUEST)
+
+    quotes = response.get('data').get('data')
+    insurer_quotes = []
+    result = []
+    for product in quotes:
+        if insurer_business_name == product.get('provider'):
+            insurer_quotes.append(product)  # noqa: PERF401
+
+    for policy in insurer_quotes:
+        if policy.get('product') == product_name:
+            result.append(policy)  # noqa: PERF401
+
+    return Response({"data": result[0]}, status.HTTP_200_OK)
+
+
+
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description='Device Policy data needed to generate quotes',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def device_policy(request: Request):
+    serializer_class = DevicePolicyAdditionalInformationSerializer()
+    return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description='Motor Policy data needed to generate quotes',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def motor_policy(request: Request):
+    serializer_class = MotorPolicyAdditionalInformationSerializer()
+    return Response(serializer_class.validate, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description='Bike Policy data needed to generate quotes',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def bike_policy(request: Request):
+    serializer_class = BikePolicyAdditionalInformationSerializer()
+    return Response(serializer_class.validate, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description='Shipment Policy data needed to generate quotes',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def shipment_policy(request: Request):
+    serializer_class = ShipmentAdditionalInformationSerializer()
+    return Response(serializer_class.validate, status.HTTP_200_OK)
