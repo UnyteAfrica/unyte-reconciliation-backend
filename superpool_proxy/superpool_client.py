@@ -106,13 +106,13 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_quote(self, customer_metadata: dict, insurance_details: dict) -> dict:
+    def get_quote(self, customer_metadata: dict, insurance_details: dict, coverage_preferences: dict) -> dict:
         endpoint = 'quotes'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         payload = {
             'customer_metadata': customer_metadata,
             'insurance_details': insurance_details,
-            'coverage_preferences': {}
+            'coverage_preferences': coverage_preferences
         }
 
         response = r.post(url, json=payload, headers=self.headers)  # noqa: S113
@@ -128,7 +128,7 @@ class SuperpoolClient:
             }
         return {'status_code': 200, 'data': response.json()}
 
-    def sell_policy(self, customer_info: dict, quote_code: str, )
+    # def sell_policy(self, customer_info: dict, quote_code: str, )
 
 def main() -> None:
     superpool_handler = SuperpoolClient()
@@ -166,7 +166,8 @@ def main() -> None:
         "international_flight": True
         }
     }
-    quotes = superpool_handler.get_quote(customer_metadata, insurance_details=insurance_details)
+    coverage_preferences = {}
+    quotes = superpool_handler.get_quote(customer_metadata, insurance_details=insurance_details, coverage_preferences=coverage_preferences)
     available_quotes = quotes.get('data').get('data')
     heirs = 'Heirs Insurance Group'
     heirs_quotes = []

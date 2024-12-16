@@ -165,7 +165,7 @@ def invite_agents(request):
     agent_list = serializer_class.validated_data.get('agents_list')
     email_recipients = []
 
-    relative_link = reverse('agents:register_agent')
+    relative_link = reverse('agents:register-agent')
     relative_link = relative_link.replace('/api/', '/')
     link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
 
@@ -234,7 +234,7 @@ def invite_agents_csv(request):
     company_name = insurer.business_name
     current_year = timezone.now().year
 
-    relative_link = reverse('agents:register_agent')
+    relative_link = reverse('agents:register-agent')
     relative_link = relative_link.replace('/api/', '/')
     link = gen_sign_up_url_for_agent(relative_link, unyte_unique_insurer_id)
 
