@@ -729,6 +729,7 @@ class ShipmentInsuranceDetialsSerializer(serializers.Serializer):
         help_text = "Shipment exchange rate",
         default = "Cargo"
     )
+    additional_information = ShipmentAdditionalInformationSerializer()
 
     class Meta:
         fields = [
@@ -736,5 +737,10 @@ class ShipmentInsuranceDetialsSerializer(serializers.Serializer):
         ]
 
 class ShipmentPolicySerializer(serializers.Serializer):
-    custom_metadata = CustomerDetailsSerializer()
+    customer_metadata = CustomerDetailsSerializer()
     insurance_details = ShipmentInsuranceDetialsSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]

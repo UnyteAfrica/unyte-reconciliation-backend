@@ -25,9 +25,11 @@ from superpool_proxy.superpool_client import SuperpoolClient
 from .utils import generate_otp, generate_unyte_unique_agent_id
 from .models import Agent
 from .serializer import (
+    BikePolicySerializer,
     CreateAgentSerializer,
     DevicePolicySerializer,
     MotorPolicySerializer,
+    ShipmentPolicySerializer,
     TravelPolicySerializer,
     ShipmentAdditionalInformationSerializer,
     BikePolicyAdditionalInformationSerializer,
@@ -243,7 +245,7 @@ def generate_travel_quotes(request: Request, product_name: str):
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
     customer_metadata = serializer_class.validated_data.get('customer_metadata')
     insurance_details = serializer_class.validated_data.get('insurance_details')
-    response = SUPERPPOOL_HANDLER.get_travel_quote(customer_metadata, insurance_details, coverage_preferences={})
+    response = SUPERPPOOL_HANDLER.get_quote(customer_metadata, insurance_details, coverage_preferences={})
     status_code = response.get('status_code')
 
     if status_code != 200:
@@ -280,12 +282,12 @@ def generate_motor_quotes(request: Request, product_name: str):
     agents = get_object_or_404(Agent, user=user.id)
     insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
     insurer_business_name = insurer.business_name
-    serializer_class = TravelPolicySerializer(data=request.data)
+    serializer_class = MotorPolicySerializer(data=request.data)
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
     customer_metadata = serializer_class.validated_data.get('customer_metadata')
     insurance_details = serializer_class.validated_data.get('insurance_details')
-    response = SUPERPPOOL_HANDLER.get_motor_quote(customer_metadata, insurance_details, coverage_preferences={})
+    response = SUPERPPOOL_HANDLER.get_quote(customer_metadata, insurance_details, coverage_preferences={})
     status_code = response.get('status_code')
 
     if status_code != 200:
@@ -302,7 +304,7 @@ def generate_motor_quotes(request: Request, product_name: str):
         if policy.get('product') == product_name:
             result.append(policy)  # noqa: PERF401
 
-    return Response({"data": result[0]}, status.HTTP_200_OK)
+    return Response({"data": quotes}, status.HTTP_200_OK)
 
 
 
@@ -328,7 +330,7 @@ def generate_device_quotes(request: Request, product_name: str):
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
     customer_metadata = serializer_class.validated_data.get('customer_metadata')
     insurance_details = serializer_class.validated_data.get('insurance_details')
-    response = SUPERPPOOL_HANDLER.get_device_quotes(customer_metadata, insurance_details, coverage_preferences={})
+    response = SUPERPPOOL_HANDLER.get_quote(customer_metadata, insurance_details, coverage_preferences={})
     status_code = response.get('status_code')
 
     if status_code != 200:
@@ -346,6 +348,91 @@ def generate_device_quotes(request: Request, product_name: str):
             result.append(policy)  # noqa: PERF401
 
     return Response({"data": result[0]}, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description='Bike Policy data needed to generate quotes',
+    request_body=BikePolicySerializer(),
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_bike_quotes(request: Request, product_name: str):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agents = get_object_or_404(Agent, user=user.id)
+    insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
+    insurer_business_name = insurer.business_name
+    serializer_class = BikePolicySerializer(data=request.data)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    customer_metadata = serializer_class.validated_data.get('customer_metadata')
+    insurance_details = serializer_class.validated_data.get('insurance_details')
+    response = SUPERPPOOL_HANDLER.get_quote(customer_metadata, insurance_details, coverage_preferences={})
+    status_code = response.get('status_code')
+
+    if status_code != 200:
+        return Response(response.get('error'), status.HTTP_400_BAD_REQUEST)
+
+    quotes = response.get('data').get('data')
+    insurer_quotes = []
+    result = []
+    for product in quotes:
+        if insurer_business_name == product.get('provider'):
+            insurer_quotes.append(product)  # noqa: PERF401
+
+    for policy in insurer_quotes:
+        if policy.get('product') == product_name:
+            result.append(policy)  # noqa: PERF401
+
+    return Response({"data": quotes}, status.HTTP_200_OK)
+
+
+
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description='Shipment Policy data needed to generate quotes',
+    request_body=ShipmentPolicySerializer(),
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_shipment_quotes(request: Request, product_name: str):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agents = get_object_or_404(Agent, user=user.id)
+    insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
+    insurer_business_name = insurer.business_name
+    serializer_class = ShipmentPolicySerializer(data=request.data)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    customer_metadata = serializer_class.validated_data.get('customer_metadata')
+    insurance_details = serializer_class.validated_data.get('insurance_details')
+    response = SUPERPPOOL_HANDLER.get_quote(customer_metadata, insurance_details, coverage_preferences={})
+    status_code = response.get('status_code')
+
+    if status_code != 200:
+        return Response(response.get('error'), status.HTTP_400_BAD_REQUEST)
+
+    quotes = response.get('data').get('data')
+    insurer_quotes = []
+    result = []
+    for product in quotes:
+        if insurer_business_name == product.get('provider'):
+            insurer_quotes.append(product)  # noqa: PERF401
+
+    for policy in insurer_quotes:
+        if policy.get('product') == product_name:
+            result.append(policy)  # noqa: PERF401
+
+    return Response({"data": quotes}, status.HTTP_200_OK)
 
 
 
