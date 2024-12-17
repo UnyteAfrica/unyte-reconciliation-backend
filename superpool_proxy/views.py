@@ -45,11 +45,12 @@ def get_all_products(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = PAGINATION_PAGE_SIZE
-    paginated_data = paginator.paginate_queryset(data, request)
+    # paginator = PageNumberPagination()
+    # paginator.page_size = PAGINATION_PAGE_SIZE
+    # paginated_data = paginator.paginate_queryset(data, request)
 
-    return paginator.get_paginated_response(paginated_data)
+    return Response(data, status.HTTP_200_OK)
+    # return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -75,11 +76,12 @@ def get_all_products_for_one_merchant(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = PAGINATION_PAGE_SIZE
-    paginated_data = paginator.paginate_queryset(data, request)
+    # paginator = PageNumberPagination()
+    # paginator.page_size = PAGINATION_PAGE_SIZE
+    # paginated_data = paginator.paginate_queryset(data, request)
 
-    return paginator.get_paginated_response(paginated_data)
+    return Response(data, status.HTTP_200_OK)
+    # return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -105,11 +107,12 @@ def get_all_policies_for_one_merchant(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = PAGINATION_PAGE_SIZE
-    paginated_data = paginator.paginate_queryset(data, request)
+    # paginator = PageNumberPagination()
+    # paginator.page_size = PAGINATION_PAGE_SIZE
+    # paginated_data = paginator.paginate_queryset(data, request)
 
-    return paginator.get_paginated_response(paginated_data)
+    return Response(data, status.HTTP_200_OK)
+    # return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -135,11 +138,12 @@ def get_all_claims_for_one_merchant(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = PAGINATION_PAGE_SIZE
-    paginated_data = paginator.paginate_queryset(data, request)
+    # paginator = PageNumberPagination()
+    # paginator.page_size = PAGINATION_PAGE_SIZE
+    # paginated_data = paginator.paginate_queryset(data, request)
 
-    return paginator.get_paginated_response(paginated_data)
+    return Response(data, status.HTTP_200_OK)
+    # return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -166,11 +170,12 @@ def get_all_policies_one_insurer(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = PAGINATION_PAGE_SIZE
-    paginated_data = paginator.paginate_queryset(data, request)
+    # paginator = PageNumberPagination()
+    # paginator.page_size = PAGINATION_PAGE_SIZE
+    # paginated_data = paginator.paginate_queryset(data, request)
 
-    return paginator.get_paginated_response(paginated_data)
+    return Response(data, status.HTTP_200_OK)
+    # return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -197,11 +202,12 @@ def get_all_claims_one_insurer(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = PAGINATION_PAGE_SIZE
-    paginated_data = paginator.paginate_queryset(data, request)
+    # paginator = PageNumberPagination()
+    # paginator.page_size = PAGINATION_PAGE_SIZE
+    # paginated_data = paginator.paginate_queryset(data, request)
 
-    return paginator.get_paginated_response(paginated_data)
+    return Response(data, status.HTTP_200_OK)
+    # return paginator.get_paginated_response(paginated_data)
 
 
 @swagger_auto_schema(
@@ -228,8 +234,9 @@ def get_all_products_for_one_insurer(request: Request) -> Response:
     if status_code != 200:
         return Response(error, status.HTTP_400_BAD_REQUEST)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = PAGINATION_PAGE_SIZE
-    paginated_data = paginator.paginate_queryset(data, request)
+    # paginator = PageNumberPagination()
+    # paginator.page_size = PAGINATION_PAGE_SIZE
+    # paginated_data = paginator.paginate_queryset(data, request)
 
-    return paginator.get_paginated_response(paginated_data)
+    return Response(data, status.HTTP_200_OK)
+    # return paginator.get_paginated_response(paginated_data)
