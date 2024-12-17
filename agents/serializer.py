@@ -431,20 +431,21 @@ class GadgetUsageHistorySerializer(serializers.Serializer):
 
 
 class DevicePolicyAdditionalInformationSerializer(serializers.Serializer):
-    customer_metadata = CustomerDetailsSerializer()
     gadget_type = serializers.CharField(
         max_length=255,
         min_length=1,
         allow_blank=False,
         allow_null=False,
-        help_text="Gadget type or Gadget brand. E.g iPhone, Samsung, etc."
+        help_text="Gadget type or Gadget brand. E.g iPhone, Samsung, etc.",
+        default = "Smartphone"
     )
     gadget_value = serializers.CharField(
-        max_length=255,
+        max_length=15,
         min_length=1,
         allow_blank=False,
         allow_null=False,
-        help_text="Gadget value"
+        help_text="Gadget value",
+        default = "1000000"
     )
     gadget_information = GadgetInformationSerializer()
     usage_history = GadgetUsageHistorySerializer()
@@ -456,28 +457,197 @@ class DevicePolicyAdditionalInformationSerializer(serializers.Serializer):
         default="Device Policy"
     )
 
+class DeviceInsuranceDetailsSerializer(serializers.Serializer):
+    product_type = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Product type",
+        default = "Gadget"
+    )
+    additional_information = DevicePolicyAdditionalInformationSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class DevicePolicySerializer(serializers.Serializer):
+    customer_metadata = CustomerDetailsSerializer()
+    insurance_details = DeviceInsuranceDetailsSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
 
 class MotorPolicyAdditionalInformationSerializer(serializers.Serializer):
-    customer_metadata = CustomerDetailsSerializer()
-    vehicle_type = serializers.CharField(max_length=50)
-    vehicle_make = serializers.CharField(max_length=50)
-    vehicle_model = serializers.CharField(max_length=50)
-    vehicle_year = serializers.IntegerField()
-    vehicle_value = serializers.DecimalField(max_digits=10, decimal_places=2)
-    vehicle_usage = serializers.CharField(max_length=50)
-    vehicle_category = serializers.CharField(max_length=50)
-    insurance_options = serializers.CharField(max_length=50)
+    vehicle_type = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Type",
+        default = "Car"
+    )
+    vehicle_make = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Make",
+        default = "Honda"
+    )
+    vehicle_model = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle model",
+        default = "Civic"
+    )
+    vehicle_year = serializers.CharField(
+        max_length=4,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Year",
+        default = "2020"
+    )
+    vehicle_value = serializers.CharField(
+        max_length=15,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Type",
+        default = "20000.00"
+    )
+    vehicle_usage = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Usage",
+        default = "Private"
+    )
+    vehicle_category = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Type",
+        default = "Saloon"
+    )
+    insurance_options = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Insurance options",
+        default = "Comprehensive"
+    )
 
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class MotorPolicyInsuranceDetailsSerializer(serializers.Serializer):
+    product_type = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Product type",
+        default = "Auto"
+    )
+    additional_information = MotorPolicyAdditionalInformationSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class MotorPolicySerializer(serializers.Serializer):
+    customer_metadata = CustomerDetailsSerializer()
+    insurance_details = MotorPolicyInsuranceDetailsSerializer()
+
+    class Meta:
+        fields = [
+            'customer_metadata',
+            'insurance_details'
+        ]
 
 class BikePolicyAdditionalInformationSerializer(serializers.Serializer):
+    vehicle_type = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Type",
+        default = "Bike"
+    )
+    vehicle_make = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Make",
+        default = "Yamaha"
+    )
+    vehicle_model = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle model",
+        default = "R1"
+    )
+    vehicle_year = serializers.CharField(
+        max_length=4,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Year",
+        default = "2021"
+    )
+    vehicle_value = serializers.CharField(
+        max_length=15,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Type",
+        default = "50000.00"
+    )
+    vehicle_usage = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Vehicle Usage",
+        default = "Private"
+    )
+    insurance_options = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Insurance options",
+        default = "Comprehensive"
+    )
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class BikePolicyInsuranceDetailsSerializer(serializers.Serializer):
+    product_type = serializers.CharField(
+        max_length=50,
+        allow_null = False,
+        allow_blank = False,
+        help_text = "Product type",
+        default = "Auto"
+    )
+    additional_information = BikePolicyAdditionalInformationSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class BikePolicySerializer(serializers.Serializer):
     customer_metadata = CustomerDetailsSerializer()
-    vehicle_type = serializers.CharField(max_length=50)
-    vehicle_make = serializers.CharField(max_length=50)
-    vehicle_model = serializers.CharField(max_length=50)
-    vehicle_year = serializers.IntegerField()
-    vehicle_value = serializers.DecimalField(max_digits=10, decimal_places=2)
-    vehicle_usage = serializers.CharField(max_length=50)
-    insurance_options = serializers.CharField(max_length=50)
+    insurance_details = BikePolicyInsuranceDetailsSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
 
 
 class ShipmentCarrierDetailsSerializer(serializers.Serializer):
@@ -485,52 +655,86 @@ class ShipmentCarrierDetailsSerializer(serializers.Serializer):
         max_length=50,
         allow_null=False,
         allow_blank=False,
-        help_text = "Shipment tracking number"
+        help_text = "Shipment tracking number",
+        default = "NG987654321"
     )
     service_type = serializers.CharField(
         max_length=50,
         allow_null=False,
         allow_blank=False,
-        help_text = "Shipment service type"
+        help_text = "Shipment service type",
+        default = "Air Freight"
     )
 
+    class Meta:
+        fields = [
+            '__all__'
+        ]
 
 class ShipmentAdditionalInformationSerializer(serializers.Serializer):
-    customer_metadata = CustomerDetailsSerializer()
     shipment_type = serializers.CharField(
         max_length=50,
         allow_null=False,
         allow_blank=False,
-        help_text = "Shipment type"
+        help_text = "Shipment type",
+        default = "international"
     )
     shipment_value = serializers.CharField(
         max_length=100,
         allow_null=False,
         allow_blank=False,
-        help_text = "Shipment value or price"
+        help_text = "Shipment value or price",
+        default = "750000.50"
     )
     shipment_origin = serializers.CharField(
         max_length=100,
         allow_null=False,
         allow_blank=False,
-        help_text = "Shipment origin location"
+        help_text = "Shipment origin location",
+        default = "Lagos, Nigeria"
     )
     shipment_destination = serializers.CharField(
         max_length=100,
         allow_null=False,
         allow_blank=False,
-        help_text = "Shipment destination location"
+        help_text = "Shipment destination location",
+        default = "Accra, Ghana"
     )
     shipment_carrier = serializers.CharField(
         max_length=100,
         allow_null=False,
         allow_blank=False,
-        help_text = "Shipment carrier"
+        help_text = "Shipment carrier",
+        default = "XYZ Couriers"
     )
     shipment_carrier_details = ShipmentCarrierDetailsSerializer()
     exchange_rate = serializers.CharField(
         max_length=100,
         allow_null=False,
         allow_blank=False,
-        help_text = "Shipment exchange rate"
+        help_text = "Shipment exchange rate",
+        default = "750.00"
     )
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class ShipmentInsuranceDetialsSerializer(serializers.Serializer):
+    product_type = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Shipment exchange rate",
+        default = "Cargo"
+    )
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class ShipmentPolicySerializer(serializers.Serializer):
+    custom_metadata = CustomerDetailsSerializer()
+    insurance_details = ShipmentInsuranceDetialsSerializer()

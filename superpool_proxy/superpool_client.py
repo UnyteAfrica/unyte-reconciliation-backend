@@ -106,7 +106,7 @@ class SuperpoolClient:
 
         return {'status_code': 200, 'data': response.json()}
 
-    def get_quote(self, customer_metadata: dict, insurance_details: dict, coverage_preferences: dict) -> dict:
+    def get_travel_quote(self, customer_metadata: dict, insurance_details: dict, coverage_preferences: dict) -> dict:
         endpoint = 'quotes'
         url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
         payload = {
@@ -128,7 +128,50 @@ class SuperpoolClient:
             }
         return {'status_code': 200, 'data': response.json()}
 
-    # def sell_policy(self, customer_info: dict, quote_code: str, )
+    def get_motor_quote(self, customer_metadata: dict, insurance_details: dict, coverage_preferences: dict) -> dict:
+        endpoint = 'quotes'
+        url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
+        payload = {
+            'customer_metadata': customer_metadata,
+            'insurance_details': insurance_details,
+            'coverage_preferences': coverage_preferences
+        }
+
+        response = r.post(url, json=payload, headers=self.headers)  # noqa: S113
+        if response.status_code == 500:
+            return {
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
+            }
+        if response.status_code != 200:  # noqa: RET503, RUF100
+            return {
+                'status_code': response.status_code,
+                'error': response.json()
+            }
+        return {'status_code': 200, 'data': response.json()}
+
+    def get_device_quote(self, customer_metadata: dict, insurance_details: dict, coverage_preferences: dict) -> dict:
+        endpoint = 'quotes'
+        url = f'{SUPERPOOL_BACKEND_URL}/{endpoint}'
+        payload = {
+            'customer_metadata': customer_metadata,
+            'insurance_details': insurance_details,
+            'coverage_preferences': coverage_preferences
+        }
+
+        response = r.post(url, json=payload, headers=self.headers)  # noqa: S113
+        if response.status_code == 500:
+            return {
+                'status_code': response.status_code,
+                'error': 'Server error from Superpool'
+            }
+        if response.status_code != 200:  # noqa: RET503, RUF100
+            return {
+                'status_code': response.status_code,
+                'error': response.json()
+            }
+        return {'status_code': 200, 'data': response.json()}
+
 
 def main() -> None:
     superpool_handler = SuperpoolClient()
