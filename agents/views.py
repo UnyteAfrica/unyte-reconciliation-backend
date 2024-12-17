@@ -1,4 +1,5 @@
 from pprint import pprint
+
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -25,12 +26,13 @@ from .utils import generate_otp, generate_unyte_unique_agent_id
 from .models import Agent
 from .serializer import (
     CreateAgentSerializer,
+    DevicePolicySerializer,
+    MotorPolicySerializer,
+    TravelPolicySerializer,
     ShipmentAdditionalInformationSerializer,
     BikePolicyAdditionalInformationSerializer,
     MotorPolicyAdditionalInformationSerializer,
     DevicePolicyAdditionalInformationSerializer,
-    TravelPolicyAdditionalInformationSerializer,
-    TravelPolicySerializer,
 )
 from .response_serializers import (
     SuccessfulCreateAgentSerializer,
@@ -147,11 +149,12 @@ def create_agent(request) -> Response:
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_products_for_insurer(request: Request):
-    agent = get_object_or_404(Agent, pk=request.user.id)
-    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company)
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agent = get_object_or_404(Agent, user=user)
+    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company_id)
 
     # TODO: Change insurer_id to added insurer UUID for proper fetching of insurer from DB after syncing with superpool
-    response = SUPERPPOOL_HANDLER.get_all_products_for_one_insurer(insurer_id=insurer.id)
+    response = SUPERPPOOL_HANDLER.get_all_products_for_one_insurer(insurer_id=insurer.insurer_id)
     status_code = response.get('status_code')
     error = response.get('error')
     data = response.get('data')
@@ -173,11 +176,12 @@ def view_products_for_insurer(request: Request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_policies_for_insurer(request: Request):
-    agent = get_object_or_404(Agent, pk=request.user.id)
-    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company)
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agent = get_object_or_404(Agent, user=user)
+    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company_id)
 
     # TODO: Change insurer_id to added insurer UUID for proper fetching of insurer from DB after syncing with superpool
-    response = SUPERPPOOL_HANDLER.get_all_policies_for_one_insurer(insurer_id=insurer.id)
+    response = SUPERPPOOL_HANDLER.get_all_policies_for_one_insurer(insurer_id=insurer.insurer_id)
     status_code = response.get('status_code')
     error = response.get('error')
     data = response.get('data')
@@ -200,11 +204,13 @@ def view_policies_for_insurer(request: Request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_claims_for_insurer(request: Request):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agent = get_object_or_404(Agent, user=user)
     agent = get_object_or_404(Agent, pk=request.user.id)
-    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company)
+    insurer = get_object_or_404(Insurer, pk=agent.affiliated_company_id)
 
     # TODO: Change insurer_id to added insurer UUID for proper fetching of insurer from DB after syncing with superpool
-    response = SUPERPPOOL_HANDLER.get_all_claims_for_one_insurer(insurer_id=insurer.id)
+    response = SUPERPPOOL_HANDLER.get_all_claims_for_one_insurer(insurer_id=insurer.insurer_id)
     status_code = response.get('status_code')
     error = response.get('error')
     data = response.get('data')
@@ -227,7 +233,7 @@ def view_claims_for_insurer(request: Request):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def travel_policy(request: Request, product_name: str):
+def generate_travel_quotes(request: Request, product_name: str):
     user = get_object_or_404(CustomUser, pk=request.user.id)
     agents = get_object_or_404(Agent, user=user.id)
     insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
@@ -237,7 +243,92 @@ def travel_policy(request: Request, product_name: str):
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
     customer_metadata = serializer_class.validated_data.get('customer_metadata')
     insurance_details = serializer_class.validated_data.get('insurance_details')
-    response = SUPERPPOOL_HANDLER.get_quote(customer_metadata, insurance_details, coverage_preferences={})
+    response = SUPERPPOOL_HANDLER.get_travel_quote(customer_metadata, insurance_details, coverage_preferences={})
+    status_code = response.get('status_code')
+
+    if status_code != 200:
+        return Response(response.get('error'), status.HTTP_400_BAD_REQUEST)
+
+    quotes = response.get('data').get('data')
+    insurer_quotes = []
+    result = []
+    for product in quotes:
+        if insurer_business_name == product.get('provider'):
+            insurer_quotes.append(product)  # noqa: PERF401
+
+    for policy in insurer_quotes:
+        if policy.get('product') == product_name:
+            result.append(policy)  # noqa: PERF401
+
+    return Response({"data": result[0]}, status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description='Motor Policy data needed to generate quotes',
+    request_body=MotorPolicySerializer(),
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_motor_quotes(request: Request, product_name: str):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agents = get_object_or_404(Agent, user=user.id)
+    insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
+    insurer_business_name = insurer.business_name
+    serializer_class = TravelPolicySerializer(data=request.data)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    customer_metadata = serializer_class.validated_data.get('customer_metadata')
+    insurance_details = serializer_class.validated_data.get('insurance_details')
+    response = SUPERPPOOL_HANDLER.get_motor_quote(customer_metadata, insurance_details, coverage_preferences={})
+    status_code = response.get('status_code')
+
+    if status_code != 200:
+        return Response(response.get('error'), status.HTTP_400_BAD_REQUEST)
+
+    quotes = response.get('data').get('data')
+    insurer_quotes = []
+    result = []
+    for product in quotes:
+        if insurer_business_name == product.get('provider'):
+            insurer_quotes.append(product)  # noqa: PERF401
+
+    for policy in insurer_quotes:
+        if policy.get('product') == product_name:
+            result.append(policy)  # noqa: PERF401
+
+    return Response({"data": result[0]}, status.HTTP_200_OK)
+
+
+
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description='Device Policy data needed to generate quotes',
+    request_body=DevicePolicySerializer(),
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_device_quotes(request: Request, product_name: str):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agents = get_object_or_404(Agent, user=user.id)
+    insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
+    insurer_business_name = insurer.business_name
+    serializer_class = DevicePolicySerializer(data=request.data)
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    customer_metadata = serializer_class.validated_data.get('customer_metadata')
+    insurance_details = serializer_class.validated_data.get('insurance_details')
+    response = SUPERPPOOL_HANDLER.get_device_quotes(customer_metadata, insurance_details, coverage_preferences={})
     status_code = response.get('status_code')
 
     if status_code != 200:
