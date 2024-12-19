@@ -22,19 +22,15 @@ from user.models import CustomUser
 
 from superpool_proxy.superpool_client import SuperpoolClient
 
-from .utils import create_merchant_on_superpool, generate_otp, generate_unyte_unique_agent_id
+from .utils import generate_otp, create_merchant_on_superpool, generate_unyte_unique_agent_id
 from .models import Agent
 from .serializer import (
     BikePolicySerializer,
     CreateAgentSerializer,
     MotorPolicySerializer,
-    DevicePolicySerializer,
+    GadgetPolicySerializer,
     TravelPolicySerializer,
     ShipmentPolicySerializer,
-    ShipmentAdditionalInformationSerializer,
-    BikePolicyAdditionalInformationSerializer,
-    MotorPolicyAdditionalInformationSerializer,
-    DevicePolicyAdditionalInformationSerializer,
 )
 from .response_serializers import (
     SuccessfulCreateAgentSerializer,
@@ -321,8 +317,8 @@ def generate_motor_quotes(request: Request, product_name: str):
 
 @swagger_auto_schema(
     methods=['POST'],
-    operation_description='Device Policy data needed to generate quotes',
-    request_body=DevicePolicySerializer(),
+    operation_description='Gadget Policy data needed to generate quotes',
+    request_body=GadgetPolicySerializer(),
     responses={
         '200': 'OK',
         '400': 'Bad Request',
@@ -331,12 +327,12 @@ def generate_motor_quotes(request: Request, product_name: str):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def generate_device_quotes(request: Request, product_name: str):
+def generate_gadget_quotes(request: Request, product_name: str):
     user = get_object_or_404(CustomUser, pk=request.user.id)
     agents = get_object_or_404(Agent, user=user.id)
     insurer = get_object_or_404(Insurer, pk=agents.affiliated_company_id)
     insurer_business_name = insurer.business_name
-    serializer_class = DevicePolicySerializer(data=request.data)
+    serializer_class = GadgetPolicySerializer(data=request.data)
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
     customer_metadata = serializer_class.validated_data.get('customer_metadata')
@@ -449,7 +445,7 @@ def generate_shipment_quotes(request: Request, product_name: str):
 
 @swagger_auto_schema(
     methods=['GET'],
-    operation_description='Device Policy data needed to generate quotes',
+    operation_description='Travel Policy data needed to generate quotes',
     responses={
         '200': 'OK',
         '400': 'Bad Request',
@@ -458,8 +454,23 @@ def generate_shipment_quotes(request: Request, product_name: str):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def device_policy(request: Request):
-    serializer_class = DevicePolicyAdditionalInformationSerializer()
+def get_travel_quote_response(request: Request):
+    serializer_class = TravelPolicySerializer()
+    return Response(serializer_class.data)
+
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description='Gadget Policy data needed to generate quotes',
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_gadget_quote_response(request: Request):
+    serializer_class = GadgetPolicySerializer()
     return Response(serializer_class.data, status.HTTP_200_OK)
 
 
@@ -474,9 +485,9 @@ def device_policy(request: Request):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def motor_policy(request: Request):
-    serializer_class = MotorPolicyAdditionalInformationSerializer()
-    return Response(serializer_class.validate, status.HTTP_200_OK)
+def get_motor_quote_response(request: Request):
+    serializer_class = MotorPolicySerializer()
+    return Response(serializer_class.data, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -490,9 +501,9 @@ def motor_policy(request: Request):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def bike_policy(request: Request):
-    serializer_class = BikePolicyAdditionalInformationSerializer()
-    return Response(serializer_class.validate, status.HTTP_200_OK)
+def get_bike_quote_response(request: Request):
+    serializer_class = BikePolicySerializer()
+    return Response(serializer_class.data, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -506,6 +517,6 @@ def bike_policy(request: Request):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def shipment_policy(request: Request):
-    serializer_class = ShipmentAdditionalInformationSerializer()
-    return Response(serializer_class.validate, status.HTTP_200_OK)
+def get_shipment_quote_response(request: Request):
+    serializer_class = ShipmentPolicySerializer()
+    return Response(serializer_class.data, status.HTTP_200_OK)

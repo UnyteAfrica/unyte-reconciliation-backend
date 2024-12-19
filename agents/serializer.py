@@ -459,7 +459,7 @@ class GadgetUsageHistorySerializer(serializers.Serializer):
         fields = ['gadget_usage_history']
 
 
-class DevicePolicyAdditionalInformationSerializer(serializers.Serializer):
+class GadgetPolicyAdditionalInformationSerializer(serializers.Serializer):
     gadget_type = serializers.CharField(
         max_length=255,
         min_length=1,
@@ -483,10 +483,10 @@ class DevicePolicyAdditionalInformationSerializer(serializers.Serializer):
         min_length=1,
         allow_blank=False,
         allow_null=False,
-        default="Device Policy"
+        default="Gadget Policy"
     )
 
-class DeviceInsuranceDetailsSerializer(serializers.Serializer):
+class GadgetInsuranceDetailsSerializer(serializers.Serializer):
     product_type = serializers.CharField(
         max_length=50,
         allow_null = False,
@@ -494,16 +494,16 @@ class DeviceInsuranceDetailsSerializer(serializers.Serializer):
         help_text = "Product type",
         default = "Gadget"
     )
-    additional_information = DevicePolicyAdditionalInformationSerializer()
+    additional_information = GadgetPolicyAdditionalInformationSerializer()
 
     class Meta:
         fields = [
             '__all__'
         ]
 
-class DevicePolicySerializer(serializers.Serializer):
+class GadgetPolicySerializer(serializers.Serializer):
     customer_metadata = CustomerDetailsSerializer()
-    insurance_details = DeviceInsuranceDetailsSerializer()
+    insurance_details = GadgetInsuranceDetailsSerializer()
 
     class Meta:
         fields = [
