@@ -22,15 +22,15 @@ from user.models import CustomUser
 
 from superpool_proxy.superpool_client import SuperpoolClient
 
-from .utils import generate_otp, generate_unyte_unique_agent_id
+from .utils import create_merchant_on_superpool, generate_otp, generate_unyte_unique_agent_id
 from .models import Agent
 from .serializer import (
     BikePolicySerializer,
     CreateAgentSerializer,
-    DevicePolicySerializer,
     MotorPolicySerializer,
-    ShipmentPolicySerializer,
+    DevicePolicySerializer,
     TravelPolicySerializer,
+    ShipmentPolicySerializer,
     ShipmentAdditionalInformationSerializer,
     BikePolicyAdditionalInformationSerializer,
     MotorPolicyAdditionalInformationSerializer,
@@ -71,7 +71,8 @@ def create_agent(request) -> Response:
     try:
         user_email = serializer_class.validated_data.get('email')
         user_password = serializer_class.validated_data.get('password')
-
+        first_name = serializer_class.validated_data.get('first_name')
+        last_name = serializer_class.validated_data.get('last_name')
         uuid = request.query_params.get('invite')
         insurer = get_object_or_404(Insurer, unyte_unique_insurer_id=uuid)
 
@@ -89,13 +90,21 @@ def create_agent(request) -> Response:
                 "error": "Unauthorized email. No Insurer has invited an agent with this email"
             }, status.HTTP_400_BAD_REQUEST)
 
+        data = {
+            'company_name': f"{first_name} {last_name}",
+            'business_email': user_email,
+            'support_email': user_email
+        }
+        superpool_merchant = create_merchant_on_superpool(data)
+        if superpool_merchant.get("status_code") != 201:
+            return Response({
+                'error': superpool_merchant.get('error')
+            }, status=status.HTTP_400_BAD_REQUEST)
         user = CustomUser.objects.create_user(email=user_email, password=user_password, is_agent=True)
         user.save()
 
         agent_data = serializer_class.validated_data
 
-        first_name = agent_data.get('first_name')
-        last_name = agent_data.get('last_name')
         bank_account = agent_data.get('bank_account')
         middle_name = agent_data.get('middle_name')
         home_address = agent_data.get('home_address')
@@ -114,6 +123,8 @@ def create_agent(request) -> Response:
             affiliated_company=insurer,
             unyte_unique_agent_id=uuad,
             otp=generate_otp(),
+            merchant_code = superpool_merchant.get('result').get('data').get('short_code'),
+            tenant_id = superpool_merchant.get('result').get('data').get('tenant_id'),
             user=user,
             otp_created_at=timezone.now().time(),
         )

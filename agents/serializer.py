@@ -1,3 +1,5 @@
+import os
+
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
@@ -17,13 +19,40 @@ from .models import Agent
 
 
 class CreateAgentSerializer(serializers.Serializer):
-    first_name = serializers.CharField(max_length=30, required=True, allow_null=False, allow_blank=False)
-    last_name = serializers.CharField(max_length=30, required=True, allow_null=False, allow_blank=False)
-    middle_name = serializers.CharField(allow_blank=False, allow_null=False)
-    home_address = serializers.CharField(max_length=255, allow_null=False, allow_blank=False)
+    first_name = serializers.CharField(
+        max_length=30,
+        required=True,
+        allow_null=False,
+        allow_blank=False
+    )
+    last_name = serializers.CharField(
+        max_length=30,
+        required=True,
+        allow_null=False,
+        allow_blank=False
+    )
+    middle_name = serializers.CharField(
+        allow_blank=False,
+        allow_null=False
+    )
+    home_address = serializers.CharField(
+        max_length=255,
+        allow_null=False,
+        allow_blank=False
+    )
     email = serializers.EmailField()
-    bank_account = serializers.CharField(min_length=10, max_length=10, allow_blank=False, allow_null=False)
-    bvn = serializers.CharField(min_length=11, max_length=11, allow_null=False, allow_blank=False)
+    bank_account = serializers.CharField(
+        min_length=10,
+        max_length=10,
+        allow_blank=False,
+        allow_null=False
+    )
+    bvn = serializers.CharField(
+        min_length=11,
+        max_length=11,
+        allow_null=False,
+        allow_blank=False
+    )
     # agent_gamp_id = serializers.CharField(allow_null=True,
     #                                      allow_blank=True)
     password = serializers.CharField(max_length=16, allow_blank=False, allow_null=False)

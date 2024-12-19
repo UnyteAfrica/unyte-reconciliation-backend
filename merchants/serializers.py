@@ -47,6 +47,7 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
             'address',
             'verified',
             'tenant_id',
+            'merchant_code',
             'password',
             'short_code',
             'kyc_verified',
@@ -59,7 +60,7 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
             'email_address': {'write_only': True},
         }
-        read_only_fields = ('tenant_id',)
+        read_only_fields = ('tenant_id', 'merchant_code')
 
     def create_merchant_on_superpool(self, validated_data: dict) -> dict:
         """
@@ -99,7 +100,9 @@ class CreateMerchantSerializer(serializers.ModelSerializer):
             user.save()
             superpool_merchant = self.create_merchant_on_superpool(validated_data)
             superpool_merchant_tenant_id = superpool_merchant.get('data').get('tenant_id')
+            superpool_merchant_short_code = superpool_merchant.get('data').get('short_code')
             validated_data['tenant_id'] = superpool_merchant_tenant_id
+            validated_data['merchant_code'] = superpool_merchant_short_code
         except IntegrityError:
             raise serializers.ValidationError(detail='user with this email already exists', code='duplicate_email')  # noqa: B904
 
