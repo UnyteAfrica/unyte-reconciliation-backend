@@ -22,7 +22,7 @@ from user.models import CustomUser
 
 from superpool_proxy.superpool_client import SuperpoolClient
 
-from .utils import generate_otp, create_merchant_on_superpool, generate_unyte_unique_agent_id
+from .utils import add_string_to_all_fields_in_travel_serializer, generate_otp, create_merchant_on_superpool, generate_unyte_unique_agent_id
 from .models import Agent
 from .serializer import (
     BikePolicySerializer,
@@ -499,9 +499,10 @@ def sell_travel_policy(request: Request):
     tags=['Agent'],
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def get_travel_quote_response(request: Request):
     serializer_class = TravelPolicySerializer()
+    add_string_to_all_fields_in_travel_serializer(serializer_class.data)
     return Response(serializer_class.data, status.HTTP_200_OK)
 
 @swagger_auto_schema(

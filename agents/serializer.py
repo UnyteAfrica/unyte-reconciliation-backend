@@ -381,8 +381,6 @@ class CustomerDetailsSerializer(serializers.Serializer):
         ]
 
     def validate(self, attrs):
-        # date_of_birth_date_object = attrs.get('date_of_birth')
-        # str_date_of_birth = date_of_birth_date_object.strftime('%Y/%m/%d')
         attrs['date_of_birth'] = attrs['date_of_birth'].isoformat()
         attrs['identity_card_expiry_date'] = attrs['identity_card_expiry_date'].isoformat()
         return attrs
