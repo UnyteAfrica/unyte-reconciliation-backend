@@ -399,9 +399,8 @@ def generate_bike_quotes(request: Request, product_name: str):
     for policy in insurer_quotes:
         if policy.get('product') == product_name:
             result.append(policy)  # noqa: PERF401
-
+            
     return Response({"data": result}, status.HTTP_200_OK)
-
 
 
 @swagger_auto_schema(
@@ -446,6 +445,7 @@ def generate_shipment_quotes(request: Request, product_name: str):
     return Response({"data": result}, status.HTTP_200_OK)
 
 
+
 @swagger_auto_schema(
     methods=['POST'],
     operation_description='Sell Travel Policy',
@@ -488,8 +488,6 @@ def sell_travel_policy(request: Request):
     return Response({
         "message": response.get('data')
     }, status.HTTP_201_CREATED)
-
-
 
 @swagger_auto_schema(
     methods=['POST'],
@@ -579,7 +577,6 @@ def sell_motor_policy(request: Request):
     return Response({
         "message": response.get('data')
     }, status.HTTP_201_CREATED)
-
 
 @swagger_auto_schema(
     methods=['GET'],

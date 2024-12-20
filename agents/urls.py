@@ -6,6 +6,8 @@ from .views import (
     sell_travel_policy,
     generate_bike_quotes,
     sell_shipment_policy,
+    sell_travel_policy,
+    generate_bike_quotes,
     generate_motor_quotes,
     generate_gadget_quotes,
     generate_travel_quotes,
