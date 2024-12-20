@@ -108,7 +108,7 @@ def add_string_to_all_fields_in_travel_serializer(data):
     data['customer_metadata']['identity_card_type'] = "string"
     data['customer_metadata']['identity_card_number'] = "string"
     data['customer_metadata']['identity_card_expiry_date'] = "date"
-    data['insurance_details']['user_age'] = "string"
+    data['insurance_details']['user_age'] = "number"
     data['insurance_details']['product_type'] = "string"
     data['insurance_details']['additional_information']['departure_date'] = "date"
     data['insurance_details']['additional_information']['return_date'] = "date"

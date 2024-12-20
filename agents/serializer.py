@@ -961,3 +961,95 @@ class SellShipmentPolicySerializer(serializers.Serializer):
             '__all__'
         ]
 
+
+class SellMotorAdditionalInformationSerializer(serializers.Serializer):
+    make = serializers.CharField(
+        max_length=255,
+        default="Honda",
+        allow_blank=False,
+        allow_null=False
+    )
+    model = serializers.CharField(
+        max_length=255,
+        default="CBR600RR",
+        allow_blank=False,
+        allow_null=False
+    )
+
+    #TODO: Ask Eri for the true datatype of the field
+    value = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="15000.00"
+    )
+    owner = serializers.CharField(
+        max_length=255,
+        default="Alex Rider",
+        allow_blank=False,
+        allow_null=False
+    )
+    year = serializers.DateField()
+    usecase = serializers.CharField(
+        max_length=255,
+        default="private",
+        allow_blank=False,
+        allow_null=False
+    )
+    vehicle_type = serializers.CharField(
+        max_length=255,
+        default="saloon",
+        allow_blank=False,
+        allow_null=False
+    )
+    engine_number = serializers.CharField(
+        max_length=255,
+        default="ENG567890",
+        allow_blank=False,
+        allow_null=False
+    )
+    chassis_number = serializers.CharField(
+        max_length=255,
+        default="CHS678901",
+        allow_blank=False,
+        allow_null=False
+    )
+    registration_number = serializers.CharField(
+        max_length=255,
+        default="MOT1234",
+        allow_blank=False,
+        allow_null=False
+    )
+
+    def validate(self, attrs):
+        attrs['year'] = attrs['year'].isoformat()
+        return attrs
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class SellMotorPolicySerializer(serializers.Serializer):
+    quote_code = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+    )
+    product_type = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="Auto"
+    )
+    use_existing_quote_information = serializers.BooleanField(
+        default=False
+    )
+    additional_information = SellMotorAdditionalInformationSerializer()
+    activation_metadata = SellPolicyActivationMetadata()
+    customer_metadata = CustomerDetailsSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
