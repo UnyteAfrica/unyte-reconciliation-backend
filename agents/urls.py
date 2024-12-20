@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     create_agent,
+    sell_travel_policy,
     generate_bike_quotes,
     generate_motor_quotes,
     generate_gadget_quotes,
@@ -33,4 +34,6 @@ urlpatterns = [
     path('response/motor', get_motor_quote_response, name='response for motor quotes'),
     path('response/bike', get_bike_quote_response, name='response for bike quotes'),
     path('response/shipment', get_shipment_quote_response, name='response for shipmen quotes'),
+
+    path('sell-policy/travel', sell_travel_policy, name='sell travel policy')
 ]
