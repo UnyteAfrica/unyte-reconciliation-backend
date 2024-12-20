@@ -29,6 +29,7 @@ from .serializer import (
     CreateAgentSerializer,
     MotorPolicySerializer,
     GadgetPolicySerializer,
+    SellMotorPolicySerializer,
     SellShipmentPolicySerializer,
     TravelPolicySerializer,
     ShipmentPolicySerializer,
@@ -506,6 +507,52 @@ def sell_shipment_policy(request: Request):
     user = get_object_or_404(CustomUser, pk=request.user.id)
     agent = get_object_or_404(Agent, user=user)
     serializer_class = SellShipmentPolicySerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    data = serializer_class.validated_data
+    customer_metadata = data.get('customer_metadata')
+    additional_information = data.get('additional_information')
+    activation_metadata = data.get('activation_metadata')
+    quote_code = data.get('quote_code')
+    product_type = data.get('product_type')
+
+    response = SUPERPPOOL_HANDLER.sell_policy(
+        customer_metadata=customer_metadata,
+        additional_information=additional_information,
+        quote_code=quote_code,
+        product_type=product_type,
+        merchant_code=agent.merchant_code,
+        activation_metadata=activation_metadata
+    )
+    if response.get('status_code') != 201:
+        return Response({
+            "error": response.get('error')
+        }, status.HTTP_400_BAD_REQUEST)
+
+    return Response({
+        "message": response.get('data')
+    }, status.HTTP_201_CREATED)
+
+
+
+
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description='Sell Motor Policy',
+    request_body=SellMotorPolicySerializer,
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def sell_motor_policy(request: Request):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agent = get_object_or_404(Agent, user=user)
+    serializer_class = SellMotorPolicySerializer(data=request.data)
 
     if not serializer_class.is_valid():
         return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
