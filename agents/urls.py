@@ -4,6 +4,7 @@ from .views import (
     create_agent,
     sell_travel_policy,
     generate_bike_quotes,
+    sell_shipment_policy,
     generate_motor_quotes,
     generate_gadget_quotes,
     generate_travel_quotes,
@@ -35,5 +36,6 @@ urlpatterns = [
     path('response/bike', get_bike_quote_response, name='response for bike quotes'),
     path('response/shipment', get_shipment_quote_response, name='response for shipmen quotes'),
 
-    path('sell-policy/travel', sell_travel_policy, name='sell travel policy')
+    path('sell-policy/travel', sell_travel_policy, name='sell travel policy'),
+    path('sell-policy/shipment', sell_shipment_policy, name='sell shipment policy'),
 ]

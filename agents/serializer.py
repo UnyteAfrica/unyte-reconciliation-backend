@@ -482,8 +482,8 @@ class GadgetPolicyAdditionalInformationSerializer(serializers.Serializer):
         help_text="Gadget value",
         default = "1000000"
     )
-    gadget_information = GadgetInformationSerializer()
-    usage_history = GadgetUsageHistorySerializer()
+    gadget_information = serializers.DictField()
+    usage_history = serializers.DictField()
     insurance_options = serializers.CharField(
         max_length=255,
         min_length=1,
@@ -834,7 +834,7 @@ class SellTravelPolicySerializerAdditionalInformation(serializers.Serializer):
 
         return attrs
 
-class SellTravelPolicyActivationMetadata(serializers.Serializer):
+class SellPolicyActivationMetadata(serializers.Serializer):
     policy_expiry_date = serializers.DateField(
         help_text='Policy expiration date'
     )
@@ -856,7 +856,7 @@ class SellTravelPolicyActivationMetadata(serializers.Serializer):
 class SellTravelPolicySerializer(serializers.Serializer):
     customer_metadata = CustomerDetailsSerializer()
     additional_information = SellTravelPolicySerializerAdditionalInformation()
-    activation_metadata = SellTravelPolicyActivationMetadata()
+    activation_metadata = SellPolicyActivationMetadata()
     quote_code =  serializers.CharField(
         max_length=200,
         allow_null=False,
@@ -875,3 +875,89 @@ class SellTravelPolicySerializer(serializers.Serializer):
         fields = [
             '__all__'
         ]
+
+class SellShipmentPolicyAdditionalInformationSerializer(serializers.Serializer):
+    originating_port = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="Lagos Port"
+    )
+    destination_port = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="New York Harbor"
+    )
+    currency = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="USD"
+    )
+    bank_name = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="Global Bank"
+    )
+    invoice_number = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="INV-0001"
+    )
+    cac_number = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="CAC-12345678"
+    )
+    tin_number = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="TIN-987654321"
+    )
+    lc_number = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="LC-2023-001"
+    )
+    cargo = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="50 tons of electronics"
+    )
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+class SellShipmentPolicySerializer(serializers.Serializer):
+    quote_code = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+    )
+    product_type = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        allow_null=False,
+        default="Cargo"
+    )
+    use_existing_quote_information = serializers.BooleanField(
+        default=False
+    )
+    additional_information = SellShipmentPolicyAdditionalInformationSerializer()
+    activation_metadata = SellPolicyActivationMetadata()
+    customer_metadata = CustomerDetailsSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+

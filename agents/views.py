@@ -29,6 +29,7 @@ from .serializer import (
     CreateAgentSerializer,
     MotorPolicySerializer,
     GadgetPolicySerializer,
+    SellShipmentPolicySerializer,
     TravelPolicySerializer,
     ShipmentPolicySerializer,
     SellTravelPolicySerializer,
@@ -304,6 +305,7 @@ def generate_motor_quotes(request: Request, product_name: str):
     quotes = response.get('data').get('data')
     insurer_quotes = []
     result = []
+
     for product in quotes:
         if insurer_business_name == product.get('provider'):
             insurer_quotes.append(product)  # noqa: PERF401
@@ -312,7 +314,7 @@ def generate_motor_quotes(request: Request, product_name: str):
         if policy.get('product') == product_name:
             result.append(policy)  # noqa: PERF401
 
-    return Response({"data": quotes}, status.HTTP_200_OK)
+    return Response({"data": result}, status.HTTP_200_OK)
 
 
 
@@ -397,7 +399,7 @@ def generate_bike_quotes(request: Request, product_name: str):
         if policy.get('product') == product_name:
             result.append(policy)  # noqa: PERF401
 
-    return Response({"data": quotes}, status.HTTP_200_OK)
+    return Response({"data": result}, status.HTTP_200_OK)
 
 
 
@@ -440,12 +442,12 @@ def generate_shipment_quotes(request: Request, product_name: str):
         if policy.get('product') == product_name:
             result.append(policy)  # noqa: PERF401
 
-    return Response({"data": quotes}, status.HTTP_200_OK)
+    return Response({"data": result}, status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
     methods=['POST'],
-    operation_description='Travel Policy data needed to generate quotes',
+    operation_description='Sell Travel Policy',
     request_body=SellTravelPolicySerializer,
     responses={
         '200': 'OK',
@@ -469,8 +471,6 @@ def sell_travel_policy(request: Request):
     quote_code = data.get('quote_code')
     product_type = data.get('product_type')
 
-    # print(customer_metadata, additional_information, activation_metadata, quote_code, product_type)
-    print(agent.merchant_code)
     response = SUPERPPOOL_HANDLER.sell_policy(
         customer_metadata=customer_metadata,
         additional_information=additional_information,
@@ -479,7 +479,6 @@ def sell_travel_policy(request: Request):
         merchant_code=agent.merchant_code,
         activation_metadata=activation_metadata
     )
-    print(response)
     if response.get('status_code') != 201:
         return Response({
             "error": response.get('error')
@@ -488,6 +487,52 @@ def sell_travel_policy(request: Request):
     return Response({
         "message": response.get('data')
     }, status.HTTP_201_CREATED)
+
+
+
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description='Sell Shipment Policy',
+    request_body=SellShipmentPolicySerializer,
+    responses={
+        '200': 'OK',
+        '400': 'Bad Request',
+    },
+    tags=['Agent'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def sell_shipment_policy(request: Request):
+    user = get_object_or_404(CustomUser, pk=request.user.id)
+    agent = get_object_or_404(Agent, user=user)
+    serializer_class = SellShipmentPolicySerializer(data=request.data)
+
+    if not serializer_class.is_valid():
+        return Response(serializer_class.errors, status.HTTP_400_BAD_REQUEST)
+    data = serializer_class.validated_data
+    customer_metadata = data.get('customer_metadata')
+    additional_information = data.get('additional_information')
+    activation_metadata = data.get('activation_metadata')
+    quote_code = data.get('quote_code')
+    product_type = data.get('product_type')
+
+    response = SUPERPPOOL_HANDLER.sell_policy(
+        customer_metadata=customer_metadata,
+        additional_information=additional_information,
+        quote_code=quote_code,
+        product_type=product_type,
+        merchant_code=agent.merchant_code,
+        activation_metadata=activation_metadata
+    )
+    if response.get('status_code') != 201:
+        return Response({
+            "error": response.get('error')
+        }, status.HTTP_400_BAD_REQUEST)
+
+    return Response({
+        "message": response.get('data')
+    }, status.HTTP_201_CREATED)
+
 
 @swagger_auto_schema(
     methods=['GET'],
