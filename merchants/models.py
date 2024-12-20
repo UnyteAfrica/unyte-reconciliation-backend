@@ -67,6 +67,11 @@ class Merchant(models.Model):
         editable=False,
         default=uuid.uuid4,
     )
+    merchant_code = models.CharField(
+        max_length=10, null=False,
+        default='MER-123',
+        help_text='Agent merchant code for merchant representation on superpool'
+    )
     otp = models.CharField(unique=True, max_length=6, blank=True, null=True)
     otp_created_at = models.TimeField(blank=True, null=True)
 

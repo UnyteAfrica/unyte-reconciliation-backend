@@ -16,6 +16,8 @@ class Agent(models.Model):
     bank_account = models.CharField(
         unique=True, max_length=10, null=False, blank=False, help_text='Agent Bank account'
     )
+    tenant_id = models.UUIDField(default='9249517e-3db5-4e8c-8ffd-28839ea8d815', null=False, help_text='Agent tenant uuid merchant representation on superpool')
+    merchant_code = models.CharField(max_length=10, null=False, help_text='Agent merchant code for merchant representation on superpool')
     affiliated_company = models.ForeignKey('insurer.Insurer', on_delete=models.CASCADE, null=False, blank=True)
     unyte_unique_agent_id = models.CharField(max_length=70, unique=True, null=False, blank=False)
     agent_gamp_id = models.CharField(default='', blank=True, help_text='GAMP ID for users associated with GAMP')
