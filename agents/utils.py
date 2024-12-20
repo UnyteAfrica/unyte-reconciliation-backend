@@ -1,11 +1,11 @@
 import os
 from datetime import datetime
 
-from django.forms import ValidationError
 import pyotp
 import requests as r
 from dotenv import find_dotenv, load_dotenv
 
+from django.forms import ValidationError
 from django.utils import timezone
 
 from rest_framework.exceptions import APIException
@@ -88,3 +88,32 @@ def create_merchant_on_superpool(validated_data: dict) -> dict:
             "status_code": response.status_code,
             "result": response.json()
         }
+
+def add_string_to_all_fields_in_travel_serializer(data):
+    data['customer_metadata']['first_name'] = "string"
+    data['customer_metadata']['last_name'] = "string"
+    data['customer_metadata']['phone'] = "string"
+    data['customer_metadata']['email'] = "string"
+    data['customer_metadata']['residential_address']['house_number'] = "string"
+    data['customer_metadata']['residential_address']['street'] = "string"
+    data['customer_metadata']['residential_address']['city'] = "string"
+    data['customer_metadata']['residential_address']['state'] = "string"
+    data['customer_metadata']['residential_address']['postal_code'] = "string"
+    data['customer_metadata']['residential_address']['country'] = "string"
+    data['customer_metadata']['date_of_birth'] = "string"
+    data['customer_metadata']['customer_gender'] = "string"
+    data['customer_metadata']['occupation'] = "string"
+    data['customer_metadata']['identity_card_img'] = "string"
+    data['customer_metadata']['utility_bill_img'] = "string"
+    data['customer_metadata']['identity_card_type'] = "string"
+    data['customer_metadata']['identity_card_number'] = "string"
+    data['customer_metadata']['identity_card_expiry_date'] = "date"
+    data['insurance_details']['user_age'] = "string"
+    data['insurance_details']['product_type'] = "string"
+    data['insurance_details']['additional_information']['departure_date'] = "date"
+    data['insurance_details']['additional_information']['return_date'] = "date"
+    data['insurance_details']['additional_information']['insurance_options'] = "string"
+    data['insurance_details']['additional_information']['destination'] = "string"
+    data['insurance_details']['additional_information']['international_flight'] = "boolean"
+
+    return data
