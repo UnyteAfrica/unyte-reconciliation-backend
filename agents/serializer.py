@@ -311,6 +311,14 @@ class CustomerDetailsSerializer(serializers.Serializer):
         help_text="Customer's last name",
         default="Okoro"
     )
+    phone = serializers.CharField(
+        max_length=255,
+        min_length=1,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Customer's phone number",
+        default="08012332456"
+    )
     email = serializers.EmailField(
         default="chukwuemeka.okoro@example.com"
     )
@@ -768,6 +776,102 @@ class ShipmentInsuranceDetialsSerializer(serializers.Serializer):
 class ShipmentPolicySerializer(serializers.Serializer):
     customer_metadata = CustomerDetailsSerializer()
     insurance_details = ShipmentInsuranceDetialsSerializer()
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+
+class SellTravelPolicySerializerAdditionalInformation(serializers.Serializer):
+    destination = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Travel Destination",
+        default="France"
+    )
+    departure_date = serializers.DateField(
+        help_text = "Travel departure date",
+        default="2024-12-15"
+    )
+    return_date = serializers.DateField(
+        help_text = "Travel return date",
+        default="2025-01-05"
+    )
+    travel_purpose = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Travel purpose",
+        default="Tourism"
+    )
+    travel_mode = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Travel mode",
+        default="Air"
+    )
+    international_flight = serializers.BooleanField(
+        help_text = "Internation flight",
+        default=True
+    )
+    insurance_options = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Travel insurance option",
+        default="TRAVELLER (WORLD WIDE)"
+    )
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+    def validate(self, attrs):
+        attrs['departure_date'] = attrs['departure_date'].isoformat()
+        attrs['return_date'] = attrs['return_date'].isoformat()
+
+        return attrs
+
+class SellTravelPolicyActivationMetadata(serializers.Serializer):
+    policy_expiry_date = serializers.DateField(
+        help_text='Policy expiration date'
+    )
+    renew = serializers.BooleanField(
+        help_text = 'Should the policy be renewed or not',
+        default=False
+    )
+
+    class Meta:
+        fields = [
+            '__all__'
+        ]
+
+    def validate(self, attrs):
+        attrs['policy_expiry_date'] = attrs['policy_expiry_date'].isoformat()
+        return attrs
+
+
+class SellTravelPolicySerializer(serializers.Serializer):
+    customer_metadata = CustomerDetailsSerializer()
+    additional_information = SellTravelPolicySerializerAdditionalInformation()
+    activation_metadata = SellTravelPolicyActivationMetadata()
+    quote_code =  serializers.CharField(
+        max_length=200,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Quote code generated for selling this particular policy"
+    )
+    product_type = serializers.CharField(
+        max_length=100,
+        allow_null=False,
+        allow_blank=False,
+        help_text = "Product type",
+        default = "Travel"
+    )
 
     class Meta:
         fields = [
